@@ -105,76 +105,75 @@ function RoomCard({ room }: { room: StudyRoom }) {
 
   return (
     <Link href={`/study-room/${room.id}`} className="group block">
-      <div className="relative aspect-video bg-gray-900 rounded-3xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
+      <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
         {/* 썸네일 대신 테마 기반 그라데이션 배경 */}
         <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getThemeGradient(room.theme)}`}>
           <div className="text-center">
-            <BookOpen className="w-14 h-14 text-orange-300 mx-auto mb-3" />
-            <span className="text-orange-400 text-base font-medium">Study With Me</span>
+            <BookOpen className="w-16 h-16 text-orange-300 mx-auto mb-3" />
+            <span className="text-orange-400 text-lg font-medium">Study With Me</span>
           </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="w-20 h-20 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
-            <Play className="w-9 h-9 text-gray-900 ml-1" fill="currentColor" />
+          <div className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
+            <Play className="w-7 h-7 text-gray-900 ml-1" fill="currentColor" />
           </div>
         </div>
 
         {/* 라이브 여부 및 참여자 수 */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
+        <div className="absolute top-3 left-3 flex items-center gap-2">
           {isLive ? (
             <>
-              <div className="bg-red-500 px-3 py-1.5 rounded-full text-sm font-bold text-white flex items-center gap-2 shadow-lg">
-                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
+              <div className="bg-red-500 px-2.5 py-1 rounded text-xs font-bold text-white flex items-center gap-1.5 shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                 LIVE
               </div>
-              <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm text-white flex items-center gap-1.5">
-                <Users className="w-4 h-4" />
+              <div className="bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded text-xs text-white flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" />
                 {room.current_participants}
               </div>
             </>
           ) : (
-            <div className="bg-gray-500 px-3 py-1.5 rounded-full text-sm font-medium text-white shadow-lg">
+            <div className="bg-gray-500 px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg">
               대기중
             </div>
           )}
         </div>
 
         {/* 참여자 현황 */}
-        <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-xl text-base text-white flex items-center gap-2">
-          <Users className="w-4 h-4 text-orange-400" />
+        <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded text-sm text-white flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-orange-400" />
           {room.current_participants}/{room.max_participants}
         </div>
 
         {/* 카테고리 */}
-        <div className="absolute bottom-4 left-4">
-          <span className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700">
+        <div className="absolute bottom-3 left-3">
+          <span className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded text-xs font-medium text-gray-700">
             {CATEGORIES.find(c => c.id === room.theme)?.label || '공부'}
           </span>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-3">
         <div className="flex-shrink-0">
           <Avatar
             src={room.creator?.avatar_url}
             alt={room.creator?.nickname}
             size="md"
-            className="w-12 h-12 ring-2 ring-orange-100"
+            className="w-10 h-10 ring-2 ring-orange-100"
           />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
             {room.name}
           </h3>
-          <p className="text-gray-500 text-base mt-1 truncate">
+          <p className="text-gray-500 text-sm mt-0.5 truncate">
             {room.creator?.nickname}
           </p>
-          <p className="text-gray-400 text-sm flex items-center gap-1.5 mt-1">
-            <Users className="w-4 h-4" />
+          <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
             <span>{room.current_participants}명 참여중</span>
             <span>•</span>
             <span>{getRelativeTime(room.created_at)}</span>
@@ -413,7 +412,7 @@ export default function StudyWithMeClient({
           </div>
 
           {filteredRooms.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredRooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
@@ -435,7 +434,7 @@ export default function StudyWithMeClient({
       ) : (
         <section className="mt-4">
           {allRooms.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {allRooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
