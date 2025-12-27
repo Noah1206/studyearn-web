@@ -101,7 +101,7 @@ function RoomCard({ room }: { room: StudyRoom }) {
 
   return (
     <Link href={`/study-room/${room.id}`} className="group block">
-      <div className="relative aspect-[4/3] bg-gray-900 rounded-3xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
+      <div className="relative aspect-video bg-gray-900 rounded-3xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
         {/* 썸네일 대신 테마 기반 그라데이션 배경 */}
         <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getThemeGradient(room.theme)}`}>
           <div className="text-center">
@@ -290,31 +290,31 @@ export default function StudyWithMeClient({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-400/20 rounded-full blur-3xl" />
           </div>
 
-          <div className="relative z-10 px-10 py-16 md:px-14 md:py-20 lg:py-24">
-            <div className="flex flex-wrap items-center gap-4 mb-6">
-              <div className="inline-flex items-center gap-2 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-lg">
-                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
+          <div className="relative z-10 px-10 py-8 md:px-14 md:py-10">
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <div className="inline-flex items-center gap-2 bg-red-500 text-white text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                 LIVE
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
               함께 공부해요
             </h1>
 
-            <p className="text-white/80 text-lg md:text-xl mb-10 max-w-xl">
+            <p className="text-white/80 text-base md:text-lg mb-6 max-w-xl">
               다양한 크리에이터와 함께 공부하고, 성장하세요.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3">
               <Link href="/study-with-me/create">
-                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl gap-3 text-lg px-8 py-6">
+                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl gap-2 px-6">
                   <Users className="w-5 h-5" />
                   스터디룸 만들기
                 </Button>
               </Link>
               <Link href="/explore">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-3 text-lg px-8 py-6">
+                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2 px-6">
                   <Play className="w-5 h-5" />
                   둘러보기
                 </Button>
