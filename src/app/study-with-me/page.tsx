@@ -386,7 +386,7 @@ async function StudyWithMeContent() {
 
 export default function StudyWithMePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <main className="w-full pl-0 pr-4 sm:pr-6 lg:pr-10 py-6">
         <Suspense fallback={<LoadingSection />}>
           <StudyWithMeContent />
