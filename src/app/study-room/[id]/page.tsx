@@ -1245,64 +1245,167 @@ export default function StudyRoomPage() {
 
   // 비디오 트랙에서 썸네일 캡처
   const captureAndUploadThumbnail = useCallback(async (videoTrack: ICameraVideoTrack) => {
-    if (!roomId || !videoTrack) return;
+    if (!roomId || !videoTrack) {
+      console.log('[StudyRoom] Cannot capture: no roomId or videoTrack');
+      return;
+    }
+
+    console.log('[StudyRoom] Starting thumbnail capture...');
 
     try {
-      // 비디오 트랙에서 MediaStreamTrack 가져오기
-      const mediaStreamTrack = videoTrack.getMediaStreamTrack();
-      if (!mediaStreamTrack) return;
+      // 방법 1: Agora가 생성한 video 요소 찾기 (모든 video 요소 검사)
+      const videoElements = document.querySelectorAll('video');
+      let videoElement: HTMLVideoElement | null = null;
 
-      // ImageCapture API 사용 (지원되는 경우)
-      if ('ImageCapture' in window) {
-        const imageCapture = new (window as any).ImageCapture(mediaStreamTrack);
-        const bitmap = await imageCapture.grabFrame();
+      console.log('[StudyRoom] Found', videoElements.length, 'video elements');
 
-        // Canvas로 변환
-        const canvas = document.createElement('canvas');
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(bitmap, 0, 0);
-
-        // Blob으로 변환
-        const blob = await new Promise<Blob | null>((resolve) => {
-          canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.7);
+      // 유효한 video 요소 찾기 (dimensions이 있고 재생 중인 것)
+      for (const vid of Array.from(videoElements)) {
+        console.log('[StudyRoom] Video element:', {
+          videoWidth: vid.videoWidth,
+          videoHeight: vid.videoHeight,
+          readyState: vid.readyState,
+          paused: vid.paused,
+          hasSrcObject: !!vid.srcObject,
         });
 
-        if (!blob) return;
+        // videoWidth와 videoHeight가 0보다 크면 유효
+        if (vid.videoWidth > 0 && vid.videoHeight > 0 && vid.readyState >= 2) {
+          videoElement = vid;
+          console.log('[StudyRoom] Found valid video element:', vid.videoWidth, 'x', vid.videoHeight);
+          break;
+        }
+      }
 
-        // Supabase Storage에 업로드
-        const supabase = createClient();
-        const fileName = `thumbnails/${roomId}/${Date.now()}.jpg`;
+      // 방법 2: MediaStreamTrack에서 직접 캡처 (ImageCapture API)
+      if (!videoElement) {
+        console.log('[StudyRoom] No valid video element, trying ImageCapture API...');
 
-        const { error: uploadError } = await supabase.storage
-          .from('study-rooms')
-          .upload(fileName, blob, {
-            contentType: 'image/jpeg',
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error('[StudyRoom] Thumbnail upload failed:', uploadError);
+        const mediaStreamTrack = videoTrack.getMediaStreamTrack();
+        if (!mediaStreamTrack) {
+          console.log('[StudyRoom] No MediaStreamTrack available');
           return;
         }
 
-        // Public URL 가져오기
-        const { data: { publicUrl } } = supabase.storage
-          .from('study-rooms')
-          .getPublicUrl(fileName);
+        console.log('[StudyRoom] MediaStreamTrack:', {
+          kind: mediaStreamTrack.kind,
+          enabled: mediaStreamTrack.enabled,
+          readyState: mediaStreamTrack.readyState,
+        });
 
-        // 방 정보 업데이트
-        await supabase
-          .from('study_with_me_rooms')
-          .update({ thumbnail_url: publicUrl })
-          .eq('id', roomId);
+        if ('ImageCapture' in window) {
+          try {
+            const imageCapture = new (window as any).ImageCapture(mediaStreamTrack);
+            const bitmap = await imageCapture.grabFrame();
+            console.log('[StudyRoom] ImageCapture successful:', bitmap.width, 'x', bitmap.height);
 
-        console.log('[StudyRoom] Thumbnail updated:', publicUrl);
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.drawImage(bitmap, 0, 0);
+
+            await uploadCanvasAsThumbnail(canvas);
+            return;
+          } catch (imgErr) {
+            console.error('[StudyRoom] ImageCapture failed:', imgErr);
+          }
+        } else {
+          console.log('[StudyRoom] ImageCapture API not supported');
+        }
+        return;
       }
+
+      // Canvas에 비디오 프레임 그리기
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.log('[StudyRoom] Cannot get canvas context');
+        return;
+      }
+
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      console.log('[StudyRoom] Canvas drawn from video element');
+      await uploadCanvasAsThumbnail(canvas);
     } catch (err) {
       console.error('[StudyRoom] Failed to capture thumbnail:', err);
+    }
+  }, [roomId]);
+
+  // 캔버스를 썸네일로 업로드
+  const uploadCanvasAsThumbnail = useCallback(async (canvas: HTMLCanvasElement) => {
+    if (!roomId) return;
+
+    try {
+      // Blob으로 변환
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.7);
+      });
+
+      if (!blob) {
+        console.log('[StudyRoom] Failed to create blob from canvas');
+        return;
+      }
+
+      console.log('[StudyRoom] Uploading thumbnail blob, size:', blob.size, 'bytes');
+
+      // Supabase Storage에 업로드
+      const supabase = createClient();
+
+      // 고유한 파일명 생성 (roomId + timestamp)
+      const fileName = `thumbnails/${roomId}/thumbnail_${Date.now()}.jpg`;
+      console.log('[StudyRoom] Uploading to:', fileName);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('study-rooms')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('[StudyRoom] Thumbnail upload failed:', uploadError.message);
+
+        // 버킷이 없거나 권한 문제일 수 있음
+        if (uploadError.message.includes('Bucket not found') ||
+            uploadError.message.includes('bucket') ||
+            uploadError.message.includes('not found')) {
+          console.error('[StudyRoom] Storage bucket "study-rooms" does not exist!');
+          console.error('[StudyRoom] Please create it in Supabase Dashboard:');
+          console.error('[StudyRoom] 1. Go to Supabase Dashboard > Storage');
+          console.error('[StudyRoom] 2. Click "New bucket"');
+          console.error('[StudyRoom] 3. Name it "study-rooms"');
+          console.error('[StudyRoom] 4. Enable "Public bucket"');
+        }
+        return;
+      }
+
+      console.log('[StudyRoom] Upload successful:', uploadData);
+
+      // Public URL 가져오기
+      const { data: { publicUrl } } = supabase.storage
+        .from('study-rooms')
+        .getPublicUrl(fileName);
+
+      console.log('[StudyRoom] Public URL:', publicUrl);
+
+      // 방 정보 업데이트
+      const { error: updateError } = await supabase
+        .from('study_with_me_rooms')
+        .update({ thumbnail_url: publicUrl })
+        .eq('id', roomId);
+
+      if (updateError) {
+        console.error('[StudyRoom] Failed to update thumbnail_url:', updateError);
+        return;
+      }
+
+      console.log('[StudyRoom] Thumbnail updated successfully!');
+    } catch (err) {
+      console.error('[StudyRoom] Upload error:', err);
     }
   }, [roomId]);
 
@@ -1313,8 +1416,13 @@ export default function StudyRoomPage() {
       clearInterval(thumbnailIntervalRef.current);
     }
 
-    // 즉시 첫 캡처
-    captureAndUploadThumbnail(videoTrack);
+    console.log('[StudyRoom] Starting thumbnail capture with delay...');
+
+    // 2초 후에 첫 캡처 (비디오가 렌더링될 시간 확보)
+    setTimeout(() => {
+      console.log('[StudyRoom] First thumbnail capture after delay');
+      captureAndUploadThumbnail(videoTrack);
+    }, 2000);
 
     // 30초마다 캡처
     thumbnailIntervalRef.current = setInterval(() => {
