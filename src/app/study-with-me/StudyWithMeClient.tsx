@@ -322,7 +322,7 @@ export default function StudyWithMeClient({
             <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-black/20 rounded-full blur-3xl" />
           </div>
 
-          <div className="relative z-10 px-8 py-10 md:px-10 md:py-12">
+          <div className="relative z-10 px-10 py-12 md:px-14 md:py-16">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <div className="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded">
                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
@@ -408,7 +408,7 @@ export default function StudyWithMeClient({
           </div>
 
           {filteredContents.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
               {filteredContents.map((content: any) => (
                 <ContentCard key={content.id} content={content} />
               ))}
@@ -437,8 +437,8 @@ export default function StudyWithMeClient({
                 title="지금 인기있는 스터디"
                 href="/ranking"
               />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-8">
-                {popularContents.slice(0, 10).map((content: any) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                {popularContents.slice(0, 8).map((content: any) => (
                   <ContentCard key={content.id} content={content} />
                 ))}
               </div>
@@ -453,8 +453,8 @@ export default function StudyWithMeClient({
                 title="새로 올라온 스터디"
                 href="/explore"
               />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-8">
-                {latestContents.slice(0, 10).map((content: any) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                {latestContents.slice(0, 8).map((content: any) => (
                   <ContentCard key={content.id} content={content} />
                 ))}
               </div>
