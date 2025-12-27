@@ -147,7 +147,7 @@ export default function ContactPage() {
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <h3 className="font-medium text-gray-900 mb-1">이메일</h3>
-            <p className="text-sm text-gray-500">support@stuple.co.kr</p>
+            <p className="text-sm text-gray-500">support@stuple.kr</p>
           </Card>
 
           <Card variant="outlined" className="text-center p-4">

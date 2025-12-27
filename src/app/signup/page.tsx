@@ -100,7 +100,7 @@ export default function SignupPage() {
       <Card variant="elevated" className="w-full max-w-lg px-12 py-20">
         <CardHeader className="text-center pb-8">
           <CardTitle className="text-2xl">회원가입</CardTitle>
-          <p className="text-gray-500 mt-3">Earn과 함께 성장하세요</p>
+          <p className="text-gray-500 mt-3">스터플과 함께 성장하세요</p>
         </CardHeader>
         <CardContent className="pt-0">
           {/* Email Signup Form */}
@@ -145,7 +145,7 @@ export default function SignupPage() {
 
           {/* 약관 동의 텍스트 (앱과 동일) */}
           <p className="mt-8 text-center text-xs text-gray-500">
-            회원가입을 요청하면 14세 이상이며, Earn의{' '}
+            회원가입을 요청하면 14세 이상이며, 스터플의{' '}
             <Link href="/privacy" className="text-gray-700 underline">
               개인정보처리방침
             </Link>

@@ -56,7 +56,7 @@ function LoginForm() {
       <Card variant="elevated" className="w-full max-w-lg px-12 py-20">
         <CardHeader className="text-center pb-8">
           <CardTitle className="text-2xl">로그인</CardTitle>
-          <p className="text-gray-500 mt-3">Earn에 다시 오신 것을 환영합니다</p>
+          <p className="text-gray-500 mt-3">스터플에 다시 오신 것을 환영합니다</p>
         </CardHeader>
         <CardContent className="pt-0">
           {/* Email Login Form */}
