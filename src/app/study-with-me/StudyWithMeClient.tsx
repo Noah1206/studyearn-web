@@ -101,76 +101,76 @@ function RoomCard({ room }: { room: StudyRoom }) {
 
   return (
     <Link href={`/study-room/${room.id}`} className="group block">
-      <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden mb-3 shadow-sm group-hover:shadow-lg transition-shadow">
+      <div className="relative aspect-[4/3] bg-gray-900 rounded-3xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
         {/* 썸네일 대신 테마 기반 그라데이션 배경 */}
         <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getThemeGradient(room.theme)}`}>
           <div className="text-center">
-            <BookOpen className="w-10 h-10 text-orange-300 mx-auto mb-2" />
-            <span className="text-orange-400 text-sm font-medium">Study With Me</span>
+            <BookOpen className="w-14 h-14 text-orange-300 mx-auto mb-3" />
+            <span className="text-orange-400 text-base font-medium">Study With Me</span>
           </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-            <Play className="w-6 h-6 text-gray-900 ml-1" fill="currentColor" />
+          <div className="w-20 h-20 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
+            <Play className="w-9 h-9 text-gray-900 ml-1" fill="currentColor" />
           </div>
         </div>
 
         {/* 라이브 여부 및 참여자 수 */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
+        <div className="absolute top-4 left-4 flex items-center gap-2">
           {isLive ? (
             <>
-              <div className="bg-red-500 px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              <div className="bg-red-500 px-3 py-1.5 rounded-full text-sm font-bold text-white flex items-center gap-2 shadow-lg">
+                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
                 LIVE
               </div>
-              <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-white flex items-center gap-1">
-                <Users className="w-3 h-3" />
+              <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm text-white flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
                 {room.current_participants}
               </div>
             </>
           ) : (
-            <div className="bg-gray-500 px-2.5 py-1 rounded-full text-xs font-medium text-white shadow-lg">
+            <div className="bg-gray-500 px-3 py-1.5 rounded-full text-sm font-medium text-white shadow-lg">
               대기중
             </div>
           )}
         </div>
 
         {/* 참여자 현황 */}
-        <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-lg text-sm text-white flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-orange-400" />
+        <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-xl text-base text-white flex items-center gap-2">
+          <Users className="w-4 h-4 text-orange-400" />
           {room.current_participants}/{room.max_participants}
         </div>
 
         {/* 카테고리 */}
-        <div className="absolute bottom-3 left-3">
-          <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-medium text-gray-700">
+        <div className="absolute bottom-4 left-4">
+          <span className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700">
             {CATEGORIES.find(c => c.id === room.theme)?.label || '공부'}
           </span>
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <div className="flex-shrink-0">
           <Avatar
             src={room.creator?.avatar_url}
             alt={room.creator?.nickname}
-            size="sm"
-            className="w-10 h-10 ring-2 ring-orange-100"
+            size="md"
+            className="w-12 h-12 ring-2 ring-orange-100"
           />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-[15px] leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+          <h3 className="font-bold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
             {room.name}
           </h3>
-          <p className="text-gray-500 text-[13px] mt-1 truncate">
+          <p className="text-gray-500 text-base mt-1 truncate">
             {room.creator?.nickname}
           </p>
-          <p className="text-gray-400 text-[13px] flex items-center gap-1 mt-0.5">
-            <Users className="w-3 h-3" />
+          <p className="text-gray-400 text-sm flex items-center gap-1.5 mt-1">
+            <Users className="w-4 h-4" />
             <span>{room.current_participants}명 참여중</span>
             <span>•</span>
             <span>{getRelativeTime(room.created_at)}</span>
@@ -283,38 +283,39 @@ export default function StudyWithMeClient({
       {/* 오른쪽 메인 콘텐츠 영역 */}
       <div className="flex-1 min-w-0 space-y-8">
         {/* 히어로 섹션 */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-gray-900 rounded-2xl">
+        <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-gray-900 rounded-3xl">
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-black/20 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-black/20 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-400/20 rounded-full blur-3xl" />
           </div>
 
-          <div className="relative z-10 px-8 py-10 md:px-10 md:py-12">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded">
-                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+          <div className="relative z-10 px-10 py-16 md:px-14 md:py-20 lg:py-24">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <div className="inline-flex items-center gap-2 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-lg">
+                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
                 LIVE
               </div>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
               함께 공부해요
             </h1>
 
-            <p className="text-white/80 text-sm md:text-base mb-6 max-w-md">
+            <p className="text-white/80 text-lg md:text-xl mb-10 max-w-xl">
               다양한 크리에이터와 함께 공부하고, 성장하세요.
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               <Link href="/study-with-me/create">
-                <Button className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg gap-2">
-                  <Users className="w-4 h-4" />
+                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl gap-3 text-lg px-8 py-6">
+                  <Users className="w-5 h-5" />
                   스터디룸 만들기
                 </Button>
               </Link>
               <Link href="/explore">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
-                  <Play className="w-4 h-4" />
+                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-3 text-lg px-8 py-6">
+                  <Play className="w-5 h-5" />
                   둘러보기
                 </Button>
               </Link>
@@ -375,7 +376,7 @@ export default function StudyWithMeClient({
           </div>
 
           {filteredRooms.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
               {filteredRooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
@@ -404,7 +405,7 @@ export default function StudyWithMeClient({
                 title="지금 인기있는 스터디룸"
                 href="/ranking"
               />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {popularRooms.slice(0, 10).map((room) => (
                   <RoomCard key={room.id} room={room} />
                 ))}
@@ -420,7 +421,7 @@ export default function StudyWithMeClient({
                 title="새로 만들어진 스터디룸"
                 href="/explore"
               />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {latestRooms.slice(0, 10).map((room) => (
                   <RoomCard key={room.id} room={room} />
                 ))}
