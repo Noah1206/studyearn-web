@@ -375,7 +375,7 @@ export default function StudyWithMeClient({
           </div>
 
           {filteredRooms.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
               {filteredRooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
@@ -404,8 +404,8 @@ export default function StudyWithMeClient({
                 title="지금 인기있는 스터디룸"
                 href="/ranking"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-                {popularRooms.slice(0, 8).map((room) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
+                {popularRooms.slice(0, 10).map((room) => (
                   <RoomCard key={room.id} room={room} />
                 ))}
               </div>
@@ -420,8 +420,8 @@ export default function StudyWithMeClient({
                 title="새로 만들어진 스터디룸"
                 href="/explore"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-                {latestRooms.slice(0, 8).map((room) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
+                {latestRooms.slice(0, 10).map((room) => (
                   <RoomCard key={room.id} room={room} />
                 ))}
               </div>
