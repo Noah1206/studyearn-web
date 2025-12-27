@@ -433,37 +433,31 @@ export default function StudyWithMeClient({
           )}
         </section>
       ) : (
-        <>
-          {/* 인기 스터디룸 */}
-          {popularRooms.length > 0 && (
-            <section className="mt-4">
-              <SectionHeader
-                icon={<Flame className="w-5 h-5 text-red-500" />}
-                title="지금 인기있는 스터디룸"
-              />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                {popularRooms.slice(0, 10).map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))}
+        <section className="mt-4">
+          <SectionHeader
+            icon={<BookOpen className="w-5 h-5 text-orange-500" />}
+            title="스터디룸"
+          />
+          {allRooms.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              {allRooms.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="w-8 h-8 text-gray-300" />
               </div>
-            </section>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                아직 스터디룸이 없어요
+              </h3>
+              <p className="text-gray-500 text-sm">
+                첫 번째 스터디룸을 만들어보세요!
+              </p>
+            </div>
           )}
-
-          {/* 최신 스터디룸 */}
-          {latestRooms.length > 0 && (
-            <section className="mt-10">
-              <SectionHeader
-                icon={<Clock className="w-5 h-5 text-orange-500" />}
-                title="새로 만들어진 스터디룸"
-              />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                {latestRooms.slice(0, 10).map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))}
-              </div>
-            </section>
-          )}
-        </>
+        </section>
       )}
         </div>
       </div>
