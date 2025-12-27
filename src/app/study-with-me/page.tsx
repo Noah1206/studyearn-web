@@ -29,13 +29,13 @@ async function getStudyContents() {
       .select('id, title, description, thumbnail_url, content_type, view_count, like_count, price, access_level, category, created_at, creator_id')
       .eq('is_published', true)
       .order('view_count', { ascending: false })
-      .limit(10),
+      .limit(8),
     supabase
       .from('contents')
       .select('id, title, description, thumbnail_url, content_type, view_count, like_count, price, access_level, category, created_at, creator_id')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(8),
     supabase
       .from('creator_settings')
       .select('id, user_id, display_name, profile_image_url, bio, total_subscribers')
