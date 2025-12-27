@@ -233,7 +233,7 @@ export default function StudyWithMeClient({
     <div className="flex gap-6 w-full">
       {/* 왼쪽 사이드바 - 유튜브 스타일 */}
       <aside className="hidden lg:block w-60 flex-shrink-0">
-        <div className="sticky top-6 space-y-2 pr-3">
+        <div className="sticky top-6 space-y-2 pl-4 pr-3">
           {/* 메인 네비게이션 */}
           <div className="space-y-1">
             <Link href="/study-with-me" className="flex items-center gap-5 px-3 py-2.5 rounded-xl bg-gray-100 text-gray-900 font-medium">
