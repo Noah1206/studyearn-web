@@ -224,15 +224,31 @@ export default function StudyWithMeClient({
       {/* 왼쪽 사이드바 - 유튜브 스타일 */}
       <aside className="hidden lg:block w-60 flex-shrink-0">
         <div className="sticky top-6 space-y-2 pl-4 pr-3">
+          {/* 검색바 */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="스터디룸 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2.5 bg-gray-100 border-0 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           {/* 메인 네비게이션 */}
-          <div className="space-y-1">
+          <div className="space-y-1 mt-3">
             <Link href="/study-with-me" className="flex items-center gap-5 px-3 py-2.5 rounded-xl bg-gray-100 text-gray-900 font-medium">
               <Home className="w-5 h-5" />
               <span className="text-sm">홈</span>
-            </Link>
-            <Link href="/shorts" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors">
-              <Play className="w-5 h-5" />
-              <span className="text-sm">Shorts</span>
             </Link>
           </div>
 
@@ -350,8 +366,29 @@ export default function StudyWithMeClient({
           </div>
         </section>
 
-        {/* 모바일용 필터 (가로 스크롤) */}
-        <div className="md:hidden bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+        {/* 모바일용 검색 & 필터 */}
+        <div className="lg:hidden bg-white border border-gray-200 rounded-xl p-3 shadow-sm space-y-3">
+          {/* 모바일 검색바 */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="스터디룸 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2.5 bg-gray-100 border-0 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* 카테고리 필터 */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             {CATEGORIES.map((category) => {
               const Icon = category.icon;
