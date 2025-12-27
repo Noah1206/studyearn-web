@@ -50,18 +50,22 @@ interface Participant {
   is_mic_on?: boolean;
 }
 
-// 로컬 카메라 프리뷰 컴포넌트 (Agora 트랙 사용)
+// 로컬 카메라 프리뷰 컴포넌트 (Agora 트랙 또는 네이티브 스트림 사용)
 function LocalCameraPreview({
   videoTrack,
+  nativeStream,
   isMirrored = true,
   className,
 }: {
   videoTrack: ICameraVideoTrack | null;
+  nativeStream?: MediaStream | null;
   isMirrored?: boolean;
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const nativeVideoRef = useRef<HTMLVideoElement>(null);
 
+  // Agora 트랙 재생
   useEffect(() => {
     if (containerRef.current && videoTrack) {
       videoTrack.play(containerRef.current);
@@ -71,23 +75,50 @@ function LocalCameraPreview({
     };
   }, [videoTrack]);
 
-  if (!videoTrack) {
+  // 네이티브 스트림 재생 (Agora 트랙이 없을 때)
+  useEffect(() => {
+    if (!videoTrack && nativeVideoRef.current && nativeStream) {
+      nativeVideoRef.current.srcObject = nativeStream;
+      nativeVideoRef.current.play().catch(console.error);
+    }
+  }, [videoTrack, nativeStream]);
+
+  // Agora 트랙이 있으면 Agora 프리뷰 사용
+  if (videoTrack) {
     return (
-      <div className={cn("bg-gray-900 flex items-center justify-center", className)}>
-        <VideoOff className="w-12 h-12 text-gray-600" />
-      </div>
+      <div
+        ref={containerRef}
+        className={cn(
+          "w-full h-full",
+          isMirrored && "scale-x-[-1]",
+          className
+        )}
+      />
     );
   }
 
+  // 네이티브 스트림이 있으면 네이티브 비디오 사용
+  if (nativeStream) {
+    return (
+      <video
+        ref={nativeVideoRef}
+        autoPlay
+        playsInline
+        muted
+        className={cn(
+          "w-full h-full object-cover",
+          isMirrored && "scale-x-[-1]",
+          className
+        )}
+      />
+    );
+  }
+
+  // 둘 다 없으면 카메라 OFF 아이콘 표시
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "w-full h-full",
-        isMirrored && "scale-x-[-1]",
-        className
-      )}
-    />
+    <div className={cn("bg-gray-900 flex items-center justify-center", className)}>
+      <VideoOff className="w-12 h-12 text-gray-600" />
+    </div>
   );
 }
 
@@ -609,6 +640,7 @@ function MyStudyScreen({
   isCameraOn,
   isMicOn,
   localVideoTrack,
+  nativeStream,
   onToggleCamera,
   onToggleMic,
   onBack,
@@ -621,6 +653,7 @@ function MyStudyScreen({
   isCameraOn: boolean;
   isMicOn: boolean;
   localVideoTrack: ICameraVideoTrack | null;
+  nativeStream: MediaStream | null;
   onToggleCamera: () => void;
   onToggleMic: () => void;
   onBack: () => void;
@@ -854,7 +887,11 @@ function MyStudyScreen({
               {/* 카메라 프리뷰 */}
               {isCameraOn && (
                 <div className="rounded-xl overflow-hidden bg-gray-900 aspect-[4/3]">
-                  <LocalCameraPreview videoTrack={localVideoTrack} className="w-full h-full" />
+                  <LocalCameraPreview
+                    videoTrack={localVideoTrack}
+                    nativeStream={nativeStream}
+                    className="w-full h-full"
+                  />
                 </div>
               )}
 
@@ -985,8 +1022,8 @@ export default function StudyRoomPage() {
   const [cameraStates, setCameraStates] = useState<Record<string, boolean>>({});
   const [remoteUsers, setRemoteUsers] = useState<RemoteUser[]>([]);
   const [isAgoraJoined, setIsAgoraJoined] = useState(false);
+  const [nativeCameraStream, setNativeCameraStream] = useState<MediaStream | null>(null);
   const thumbnailIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const nativeCameraStreamRef = useRef<MediaStream | null>(null);
   const nativeVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // 비디오 뷰어 상태
@@ -1245,14 +1282,104 @@ export default function StudyRoomPage() {
     }
   }, [roomId]);
 
-  // 비디오 트랙에서 썸네일 캡처
-  const captureAndUploadThumbnail = useCallback(async (videoTrack: ICameraVideoTrack) => {
-    if (!roomId || !videoTrack) {
-      console.log('[StudyRoom] Cannot capture: no roomId or videoTrack');
+  // 네이티브 카메라 시작 (Agora와 별개로 썸네일용 + 프리뷰용)
+  const startNativeCamera = useCallback(async (): Promise<MediaStream | null> => {
+    console.log('[StudyRoom] Starting native camera for thumbnails...');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480, facingMode: 'user' },
+        audio: false,
+      });
+      setNativeCameraStream(stream);
+      console.log('[StudyRoom] Native camera started successfully');
+
+      // 숨겨진 video 요소 생성 (썸네일 캡처용)
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      video.style.position = 'absolute';
+      video.style.left = '-9999px';
+      video.style.top = '-9999px';
+      document.body.appendChild(video);
+      nativeVideoRef.current = video;
+
+      await video.play();
+      console.log('[StudyRoom] Native video element playing');
+      return stream;
+    } catch (err) {
+      console.error('[StudyRoom] Failed to start native camera:', err);
+      return null;
+    }
+  }, []);
+
+  // 네이티브 카메라 중지
+  const stopNativeCamera = useCallback(() => {
+    console.log('[StudyRoom] Stopping native camera...');
+    if (nativeCameraStream) {
+      nativeCameraStream.getTracks().forEach(track => track.stop());
+      setNativeCameraStream(null);
+    }
+    if (nativeVideoRef.current) {
+      nativeVideoRef.current.remove();
+      nativeVideoRef.current = null;
+    }
+  }, [nativeCameraStream]);
+
+  // 네이티브 비디오에서 썸네일 캡처
+  const captureNativeThumbnail = useCallback(async () => {
+    if (!roomId) {
+      console.log('[StudyRoom] Cannot capture: no roomId');
       return;
     }
 
-    console.log('[StudyRoom] Starting thumbnail capture...');
+    const video = nativeVideoRef.current;
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+      console.log('[StudyRoom] Native video not ready:', {
+        hasVideo: !!video,
+        videoWidth: video?.videoWidth,
+        videoHeight: video?.videoHeight,
+      });
+      return;
+    }
+
+    console.log('[StudyRoom] Capturing from native video:', video.videoWidth, 'x', video.videoHeight);
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.log('[StudyRoom] Cannot get canvas context');
+        return;
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      console.log('[StudyRoom] Canvas drawn from native video');
+      await uploadCanvasAsThumbnail(canvas);
+    } catch (err) {
+      console.error('[StudyRoom] Failed to capture native thumbnail:', err);
+    }
+  }, [roomId]);
+
+  // 비디오 트랙에서 썸네일 캡처 (Agora용 - 폴백)
+  const captureAndUploadThumbnail = useCallback(async (videoTrack: ICameraVideoTrack | null) => {
+    // 먼저 네이티브 비디오로 시도
+    if (nativeVideoRef.current && nativeVideoRef.current.videoWidth > 0) {
+      console.log('[StudyRoom] Using native camera for thumbnail capture');
+      await captureNativeThumbnail();
+      return;
+    }
+
+    // Agora 비디오 트랙이 없으면 리턴
+    if (!roomId || !videoTrack) {
+      console.log('[StudyRoom] Cannot capture: no roomId or videoTrack, and no native camera');
+      return;
+    }
+
+    console.log('[StudyRoom] Trying Agora video track for thumbnail...');
 
     try {
       // 방법 1: Agora가 생성한 video 요소 찾기 (모든 video 요소 검사)
@@ -1335,7 +1462,7 @@ export default function StudyRoomPage() {
     } catch (err) {
       console.error('[StudyRoom] Failed to capture thumbnail:', err);
     }
-  }, [roomId]);
+  }, [roomId, captureNativeThumbnail]);
 
   // 캔버스를 썸네일로 업로드
   const uploadCanvasAsThumbnail = useCallback(async (canvas: HTMLCanvasElement) => {
@@ -1411,34 +1538,40 @@ export default function StudyRoomPage() {
     }
   }, [roomId]);
 
-  // 썸네일 캡처 시작
-  const startThumbnailCapture = useCallback((videoTrack: ICameraVideoTrack) => {
+  // 썸네일 캡처 시작 (네이티브 카메라 우선 사용)
+  const startThumbnailCapture = useCallback(async (videoTrack: ICameraVideoTrack | null) => {
     // 기존 인터벌 정리
     if (thumbnailIntervalRef.current) {
       clearInterval(thumbnailIntervalRef.current);
     }
 
-    console.log('[StudyRoom] Starting thumbnail capture with delay...');
+    console.log('[StudyRoom] Starting thumbnail capture...');
 
-    // 2초 후에 첫 캡처 (비디오가 렌더링될 시간 확보)
+    // 네이티브 카메라 시작 (Agora와 별개로)
+    await startNativeCamera();
+
+    // 3초 후에 첫 캡처 (비디오가 렌더링될 시간 확보)
     setTimeout(() => {
       console.log('[StudyRoom] First thumbnail capture after delay');
       captureAndUploadThumbnail(videoTrack);
-    }, 2000);
+    }, 3000);
 
     // 30초마다 캡처
     thumbnailIntervalRef.current = setInterval(() => {
       captureAndUploadThumbnail(videoTrack);
     }, 30000);
-  }, [captureAndUploadThumbnail]);
+  }, [captureAndUploadThumbnail, startNativeCamera]);
 
   // 썸네일 캡처 중지
   const stopThumbnailCapture = useCallback(() => {
+    console.log('[StudyRoom] Stopping thumbnail capture...');
     if (thumbnailIntervalRef.current) {
       clearInterval(thumbnailIntervalRef.current);
       thumbnailIntervalRef.current = null;
     }
-  }, []);
+    // 네이티브 카메라도 중지
+    stopNativeCamera();
+  }, [stopNativeCamera]);
 
   // 카메라 토글
   const handleToggleCamera = async () => {
@@ -1481,10 +1614,9 @@ export default function StudyRoomPage() {
         // session_status를 live로 업데이트
         await updateSessionStatus('live');
 
-        // 썸네일 캡처 시작
-        if (videoTrack) {
-          startThumbnailCapture(videoTrack);
-        }
+        // 썸네일 캡처 시작 (네이티브 카메라 사용, Agora 없어도 작동)
+        console.log('[StudyRoom] Starting thumbnail capture, videoTrack:', videoTrack ? 'available' : 'null (Mock mode)');
+        startThumbnailCapture(videoTrack);
       }
     } catch (err) {
       console.error('Failed to toggle camera:', err);
@@ -1622,6 +1754,7 @@ export default function StudyRoomPage() {
       isCameraOn={isCameraOn}
       isMicOn={isMicOn}
       localVideoTrack={localVideoTrack}
+      nativeStream={nativeCameraStream}
       onToggleCamera={handleToggleCamera}
       onToggleMic={handleToggleMic}
       onBack={handleBackToSeats}
