@@ -615,16 +615,33 @@ function SeatSelectionView({
 
       {/* 하단 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto space-y-2">
           {isAlreadyJoined && mySeatNumber ? (
-            // 기존 참여자: 공부 시작하기 버튼
-            <Button
-              onClick={onMyProfilePress}
-              className="w-full h-14 text-base bg-green-500 hover:bg-green-600"
-            >
-              <Check className="w-5 h-5 mr-2" />
-              {mySeatNumber}번 좌석에서 공부 시작하기
-            </Button>
+            // 기존 참여자
+            <>
+              {selectedSeat && selectedSeat !== mySeatNumber ? (
+                // 새 좌석을 선택한 경우
+                <Button
+                  onClick={handleConfirm}
+                  className="w-full h-14 text-base bg-blue-500 hover:bg-blue-600"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  {selectedSeat}번 좌석으로 변경하기
+                </Button>
+              ) : (
+                // 기존 좌석 유지
+                <Button
+                  onClick={onMyProfilePress}
+                  className="w-full h-14 text-base bg-green-500 hover:bg-green-600"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  {mySeatNumber}번 좌석에서 공부 시작하기
+                </Button>
+              )}
+              <p className="text-center text-sm text-gray-500">
+                다른 빈 좌석을 클릭하면 좌석을 변경할 수 있어요
+              </p>
+            </>
           ) : (
             // 신규 참여자: 좌석 선택 버튼
             <Button
@@ -1188,9 +1205,30 @@ export default function StudyRoomPage() {
   };
 
   // 좌석 선택 (먼저 좌석 선택 후 시간 설정으로)
-  const handleSeatSelect = (seatNumber: number) => {
-    setMySeatNumber(seatNumber);
-    setPhase('time-select');
+  const handleSeatSelect = async (seatNumber: number) => {
+    // 기존 참여자가 새 좌석을 선택한 경우
+    if (isAlreadyJoined) {
+      try {
+        const supabase = createClient();
+        // 좌석 번호 업데이트
+        await supabase
+          .from('study_with_me_participants')
+          .update({ seat_number: seatNumber })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUserId);
+
+        setMySeatNumber(seatNumber);
+        setIsStopwatchMode(true);
+        setPhase('studying');
+      } catch (err) {
+        console.error('Failed to update seat:', err);
+        alert('좌석 변경에 실패했습니다.');
+      }
+    } else {
+      // 신규 참여자
+      setMySeatNumber(seatNumber);
+      setPhase('time-select');
+    }
   };
 
   // 기존 참여자가 내 좌석 클릭 시 바로 공부 화면으로
