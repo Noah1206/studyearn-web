@@ -461,21 +461,6 @@ export default function StudyWithMeClient({
             </section>
           )}
 
-          {/* 인기 스터디메이트 */}
-          {popularCreators.length > 0 && (
-            <section className="mt-10 bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-2xl">
-              <SectionHeader
-                icon={<Users className="w-5 h-5 text-orange-500" />}
-                title="인기 스터디메이트"
-                href="/ranking?tab=creators"
-              />
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                {popularCreators.map((creator: any) => (
-                  <CreatorCard key={creator.user_id} creator={creator} />
-                ))}
-              </div>
-            </section>
-          )}
         </>
       )}
         </div>
