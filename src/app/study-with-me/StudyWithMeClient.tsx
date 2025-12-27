@@ -18,6 +18,10 @@ import {
   FlaskConical,
   Code2,
   Lightbulb,
+  Home,
+  History,
+  Heart,
+  TrendingUp,
 } from 'lucide-react';
 import { Button, Avatar } from '@/components/ui';
 
@@ -227,55 +231,94 @@ export default function StudyWithMeClient({
 
   return (
     <div className="flex gap-6 w-full">
-      {/* 왼쪽 사이드바 - 검색 + 카테고리 필터 (세로 직사각형) */}
-      <aside className="hidden lg:block w-52 flex-shrink-0">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm sticky top-6">
-          {/* 검색 바 */}
-          <div className="relative mb-5">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="스터디 검색..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-9 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent focus:bg-white transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-2.5 flex items-center text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+      {/* 왼쪽 사이드바 - 유튜브 스타일 */}
+      <aside className="hidden lg:block w-60 flex-shrink-0">
+        <div className="sticky top-6 space-y-2 pr-3">
+          {/* 메인 네비게이션 */}
+          <div className="space-y-1">
+            <Link href="/study-with-me" className="flex items-center gap-5 px-3 py-2.5 rounded-xl bg-gray-100 text-gray-900 font-medium">
+              <Home className="w-5 h-5" />
+              <span className="text-sm">홈</span>
+            </Link>
+            <Link href="/shorts" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors">
+              <Play className="w-5 h-5" />
+              <span className="text-sm">Shorts</span>
+            </Link>
           </div>
 
           {/* 구분선 */}
-          <div className="h-px bg-gray-100 mb-4" />
+          <div className="h-px bg-gray-200 my-3" />
 
-          {/* 카테고리 목록 (세로) */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">카테고리</p>
-            {CATEGORIES.map((category) => {
-              const Icon = category.icon;
-              const isSelected = selectedCategory === category.id;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isSelected
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-gray-400'}`} />
-                  {category.label}
-                </button>
-              );
-            })}
+          {/* 카테고리 섹션 */}
+          <div>
+            <button className="flex items-center gap-2 px-3 py-2 text-gray-900 font-medium text-sm w-full">
+              <span>카테고리</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <div className="space-y-0.5 mt-1">
+              {CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                const isSelected = selectedCategory === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`w-full flex items-center gap-5 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                      isSelected
+                        ? 'bg-gray-100 text-gray-900 font-medium'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="flex-1 text-left truncate">{category.label}</span>
+                    {isSelected && <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <div className="h-px bg-gray-200 my-3" />
+
+          {/* 내 페이지 섹션 */}
+          <div>
+            <button className="flex items-center gap-2 px-3 py-2 text-gray-900 font-medium text-sm w-full">
+              <span>내 페이지</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <div className="space-y-0.5 mt-1">
+              <Link href="/history" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                <History className="w-5 h-5" />
+                <span>기록</span>
+              </Link>
+              <Link href="/my-rooms" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                <BookOpen className="w-5 h-5" />
+                <span>내 스터디룸</span>
+              </Link>
+              <Link href="/favorites" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                <Heart className="w-5 h-5" />
+                <span>좋아요 표시</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <div className="h-px bg-gray-200 my-3" />
+
+          {/* 탐색 섹션 */}
+          <div>
+            <p className="px-3 py-2 text-gray-900 font-medium text-sm">탐색</p>
+            <div className="space-y-0.5 mt-1">
+              <Link href="/trending" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                <TrendingUp className="w-5 h-5" />
+                <span>인기</span>
+              </Link>
+              <Link href="/ranking" className="flex items-center gap-5 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                <Users className="w-5 h-5" />
+                <span>랭킹</span>
+              </Link>
+            </div>
           </div>
         </div>
       </aside>
