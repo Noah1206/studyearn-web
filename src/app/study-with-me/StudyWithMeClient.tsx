@@ -356,12 +356,6 @@ export default function StudyWithMeClient({
                   스터디룸 만들기
                 </Button>
               </Link>
-              <Link href="/explore">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2 px-6">
-                  <Play className="w-5 h-5" />
-                  둘러보기
-                </Button>
-              </Link>
             </div>
           </div>
         </section>
