@@ -215,7 +215,7 @@ export default function HelpPage() {
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <a
-                href="mailto:support@studyearn.kr"
+                href="mailto:support@stuple.kr"
                 className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
@@ -223,7 +223,7 @@ export default function HelpPage() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">이메일 문의</p>
-                  <p className="text-sm text-gray-500">support@studyearn.kr</p>
+                  <p className="text-sm text-gray-500">support@stuple.kr</p>
                 </div>
               </a>
               <a
@@ -235,7 +235,7 @@ export default function HelpPage() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">카카오톡 문의</p>
-                  <p className="text-sm text-gray-500">@studyearn</p>
+                  <p className="text-sm text-gray-500">@stuple</p>
                 </div>
               </a>
             </div>

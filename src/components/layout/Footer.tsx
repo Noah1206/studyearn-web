@@ -75,7 +75,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:support@studyearn.kr"
+                  href="mailto:support@stuple.kr"
                   className="text-gray-400 hover:text-white transition-colors text-sm"
                 >
                   문의하기

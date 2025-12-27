@@ -142,7 +142,7 @@ const config: Config = {
         },
 
         // ============================================
-        // 🎓 StudyEarn Brand Colors
+        // 🎓 StuPle Brand Colors
         // ============================================
         brand: {
           green: "#22C55E",    // Study With Me

@@ -126,7 +126,7 @@ export default function PayoutPage() {
       }
 
       // Load bank accounts from local storage (or could be a separate table)
-      const savedAccounts = localStorage.getItem('studyearn_bank_accounts');
+      const savedAccounts = localStorage.getItem('stuple_bank_accounts');
       if (savedAccounts) {
         const accounts = JSON.parse(savedAccounts);
         setBankAccounts(accounts);
@@ -186,7 +186,7 @@ export default function PayoutPage() {
     }
 
     setBankAccounts(updatedAccounts);
-    localStorage.setItem('studyearn_bank_accounts', JSON.stringify(updatedAccounts));
+    localStorage.setItem('stuple_bank_accounts', JSON.stringify(updatedAccounts));
 
     // Set selected account if it's default
     const defaultAcc = updatedAccounts.find((a) => a.is_default);
@@ -203,7 +203,7 @@ export default function PayoutPage() {
   const handleDeleteAccount = (accountId: string) => {
     const updatedAccounts = bankAccounts.filter((acc) => acc.id !== accountId);
     setBankAccounts(updatedAccounts);
-    localStorage.setItem('studyearn_bank_accounts', JSON.stringify(updatedAccounts));
+    localStorage.setItem('stuple_bank_accounts', JSON.stringify(updatedAccounts));
 
     if (selectedAccountId === accountId) {
       const defaultAcc = updatedAccounts.find((a) => a.is_default);

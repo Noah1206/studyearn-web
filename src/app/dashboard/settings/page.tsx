@@ -118,12 +118,12 @@ export default function SettingsPage() {
       }
 
       // Load links from localStorage (or could be separate table)
-      const savedLinks = localStorage.getItem('studyearn_creator_links');
+      const savedLinks = localStorage.getItem('stuple_creator_links');
       if (savedLinks) {
         setLinksForm(JSON.parse(savedLinks));
       }
 
-      const savedPrivacy = localStorage.getItem('studyearn_privacy_settings');
+      const savedPrivacy = localStorage.getItem('stuple_privacy_settings');
       if (savedPrivacy) {
         setPrivacyForm(JSON.parse(savedPrivacy));
       }
@@ -185,7 +185,7 @@ export default function SettingsPage() {
   const handleSaveLinks = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('studyearn_creator_links', JSON.stringify(linksForm));
+      localStorage.setItem('stuple_creator_links', JSON.stringify(linksForm));
       await new Promise((resolve) => setTimeout(resolve, 300));
       alert('링크가 저장되었습니다.');
     } catch (error) {
@@ -224,7 +224,7 @@ export default function SettingsPage() {
   const handleSavePrivacy = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('studyearn_privacy_settings', JSON.stringify(privacyForm));
+      localStorage.setItem('stuple_privacy_settings', JSON.stringify(privacyForm));
       await new Promise((resolve) => setTimeout(resolve, 300));
       alert('개인정보 설정이 저장되었습니다.');
     } catch (error) {

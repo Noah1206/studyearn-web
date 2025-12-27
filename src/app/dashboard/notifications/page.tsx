@@ -134,7 +134,7 @@ export default function NotificationsPage() {
     });
 
     // Try to load saved settings from localStorage
-    const saved = localStorage.getItem('studyearn_notification_settings');
+    const saved = localStorage.getItem('stuple_notification_settings');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -184,7 +184,7 @@ export default function NotificationsPage() {
 
     try {
       localStorage.setItem(
-        'studyearn_notification_settings',
+        'stuple_notification_settings',
         JSON.stringify({ settings, globalSettings })
       );
 

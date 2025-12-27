@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc list-inside space-y-2 text-gray-600 mb-4">
               <li>개인정보 조회/수정: 프로필 &gt; 설정 &gt; 개인정보</li>
               <li>회원탈퇴: 프로필 &gt; 설정 &gt; 계정 &gt; 계정 삭제</li>
-              <li>기타 문의: support@studyearn.kr</li>
+              <li>기타 문의: support@stuple.kr</li>
             </ul>
 
             <h2 className="text-lg font-semibold text-gray-900 mt-8 mb-4">7. 개인정보의 파기</h2>
@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-600 mb-4">
               <li>개인정보 보호책임자: 홍길동</li>
-              <li>연락처: privacy@studyearn.kr</li>
+              <li>연락처: privacy@stuple.kr</li>
             </ul>
 
             <h2 className="text-lg font-semibold text-gray-900 mt-8 mb-4">11. 개인정보 처리방침의 변경</h2>
