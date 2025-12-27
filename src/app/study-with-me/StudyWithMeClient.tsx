@@ -198,9 +198,15 @@ export default function StudyWithMeClient({
   const filteredRooms = useMemo(() => {
     let result = allRooms;
 
-    // 카테고리 필터 (theme 기반)
+    // 카테고리 필터 (방 제목/목표에 카테고리 이름이 포함되어 있는지 확인)
     if (selectedCategory !== 'all') {
-      result = result.filter(r => r.theme === selectedCategory);
+      const categoryLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label;
+      if (categoryLabel) {
+        result = result.filter(r => {
+          const searchText = `${r.name || ''} ${r.goal || ''}`.toLowerCase();
+          return searchText.includes(categoryLabel.toLowerCase());
+        });
+      }
     }
 
     // 검색어 필터
@@ -256,12 +262,7 @@ export default function StudyWithMeClient({
           <div className="h-px bg-gray-200 my-3" />
 
           {/* 카테고리 섹션 */}
-          <div>
-            <button className="flex items-center gap-2 px-3 py-2 text-gray-900 font-medium text-sm w-full">
-              <span>카테고리</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <div className="space-y-0.5 mt-1">
+          <div className="space-y-0.5">
               {CATEGORIES.map((category) => {
                 const Icon = category.icon;
                 const isSelected = selectedCategory === category.id;
@@ -281,7 +282,6 @@ export default function StudyWithMeClient({
                   </button>
                 );
               })}
-            </div>
           </div>
 
           {/* 구분선 */}
