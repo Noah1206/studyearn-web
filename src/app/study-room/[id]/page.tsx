@@ -639,6 +639,7 @@ function MyStudyScreen({
   isStopwatchMode,
   isCameraOn,
   isMicOn,
+  audioLevel,
   localVideoTrack,
   nativeStream,
   onToggleCamera,
@@ -652,6 +653,7 @@ function MyStudyScreen({
   isStopwatchMode: boolean;
   isCameraOn: boolean;
   isMicOn: boolean;
+  audioLevel: number;
   localVideoTrack: ICameraVideoTrack | null;
   nativeStream: MediaStream | null;
   onToggleCamera: () => void;
@@ -935,13 +937,20 @@ function MyStudyScreen({
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    "w-11 h-11 rounded-xl flex items-center justify-center",
+                    "w-11 h-11 rounded-xl flex items-center justify-center relative",
                     isMicOn ? "bg-green-100" : "bg-gray-100"
                   )}>
                     {isMicOn ? (
                       <Mic className="w-5 h-5 text-green-600" />
                     ) : (
                       <MicOff className="w-5 h-5 text-gray-400" />
+                    )}
+                    {/* 오디오 레벨 링 표시 */}
+                    {isMicOn && audioLevel > 5 && (
+                      <div
+                        className="absolute inset-0 rounded-xl border-2 border-green-500 animate-ping"
+                        style={{ opacity: Math.min(0.6, audioLevel / 100) }}
+                      />
                     )}
                   </div>
                   <div>
@@ -964,6 +973,24 @@ function MyStudyScreen({
                   )} />
                 </button>
               </div>
+
+              {/* 오디오 레벨 바 (마이크 켜져있을 때만 표시) */}
+              {isMicOn && (
+                <div className="flex items-center gap-2 py-2">
+                  <span className="text-xs text-gray-500 w-12">레벨</span>
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-100",
+                        audioLevel > 70 ? "bg-red-500" :
+                        audioLevel > 40 ? "bg-yellow-500" : "bg-green-500"
+                      )}
+                      style={{ width: `${audioLevel}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 w-8 text-right">{audioLevel}%</span>
+                </div>
+              )}
 
               {/* 안내 */}
               <div className="flex items-start gap-2 bg-gray-50 rounded-xl p-3">
@@ -1023,8 +1050,13 @@ export default function StudyRoomPage() {
   const [remoteUsers, setRemoteUsers] = useState<RemoteUser[]>([]);
   const [isAgoraJoined, setIsAgoraJoined] = useState(false);
   const [nativeCameraStream, setNativeCameraStream] = useState<MediaStream | null>(null);
+  const [nativeMicStream, setNativeMicStream] = useState<MediaStream | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
   const thumbnailIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const nativeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioLevelIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 비디오 뷰어 상태
   const [videoViewerState, setVideoViewerState] = useState<{
@@ -1327,6 +1359,75 @@ export default function StudyRoomPage() {
     }
   }, [nativeCameraStream]);
 
+  // 네이티브 마이크 시작 (Agora와 별개로)
+  const startNativeMic = useCallback(async (): Promise<MediaStream | null> => {
+    console.log('[StudyRoom] Starting native microphone...');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+      setNativeMicStream(stream);
+      console.log('[StudyRoom] Native microphone started successfully');
+
+      // AudioContext로 오디오 레벨 분석
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      // 오디오 레벨 모니터링 시작
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      audioLevelIntervalRef.current = setInterval(() => {
+        if (analyserRef.current) {
+          analyserRef.current.getByteFrequencyData(dataArray);
+          // 평균 볼륨 계산 (0-100 범위)
+          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const normalizedLevel = Math.min(100, Math.round((average / 128) * 100));
+          setAudioLevel(normalizedLevel);
+        }
+      }, 100);
+
+      console.log('[StudyRoom] Audio level monitoring started');
+      return stream;
+    } catch (err) {
+      console.error('[StudyRoom] Failed to start native microphone:', err);
+      return null;
+    }
+  }, []);
+
+  // 네이티브 마이크 중지
+  const stopNativeMic = useCallback(() => {
+    console.log('[StudyRoom] Stopping native microphone...');
+
+    // 오디오 레벨 모니터링 중지
+    if (audioLevelIntervalRef.current) {
+      clearInterval(audioLevelIntervalRef.current);
+      audioLevelIntervalRef.current = null;
+    }
+
+    // AudioContext 정리
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+
+    // 스트림 정리
+    if (nativeMicStream) {
+      nativeMicStream.getTracks().forEach(track => track.stop());
+      setNativeMicStream(null);
+    }
+
+    setAudioLevel(0);
+  }, [nativeMicStream]);
+
   // 네이티브 비디오에서 썸네일 캡처
   const captureNativeThumbnail = useCallback(async () => {
     if (!roomId) {
@@ -1624,17 +1725,21 @@ export default function StudyRoomPage() {
     }
   };
 
-  // 마이크 토글
+  // 마이크 토글 (네이티브 마이크 우선 사용)
   const handleToggleMic = async () => {
     try {
       if (isMicOn) {
         // 마이크 끄기
         await agoraService.setMicrophoneEnabled(false);
+        stopNativeMic();
         setIsMicOn(false);
+        console.log('[StudyRoom] Microphone turned off');
       } else {
-        // 마이크 켜기
+        // 마이크 켜기 (Agora + 네이티브)
         await agoraService.setMicrophoneEnabled(true);
+        await startNativeMic();
         setIsMicOn(true);
+        console.log('[StudyRoom] Microphone turned on');
       }
     } catch (err) {
       console.error('Failed to toggle mic:', err);
@@ -1753,6 +1858,7 @@ export default function StudyRoomPage() {
       isStopwatchMode={isStopwatchMode}
       isCameraOn={isCameraOn}
       isMicOn={isMicOn}
+      audioLevel={audioLevel}
       localVideoTrack={localVideoTrack}
       nativeStream={nativeCameraStream}
       onToggleCamera={handleToggleCamera}
