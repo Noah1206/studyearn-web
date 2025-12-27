@@ -446,7 +446,6 @@ export default function StudyWithMeClient({
               <SectionHeader
                 icon={<Flame className="w-5 h-5 text-red-500" />}
                 title="지금 인기있는 스터디룸"
-                href="/ranking"
               />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
                 {popularRooms.slice(0, 10).map((room) => (
@@ -462,7 +461,6 @@ export default function StudyWithMeClient({
               <SectionHeader
                 icon={<Clock className="w-5 h-5 text-orange-500" />}
                 title="새로 만들어진 스터디룸"
-                href="/explore"
               />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
                 {latestRooms.slice(0, 10).map((room) => (
