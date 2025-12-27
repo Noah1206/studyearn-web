@@ -434,10 +434,6 @@ export default function StudyWithMeClient({
         </section>
       ) : (
         <section className="mt-4">
-          <SectionHeader
-            icon={<BookOpen className="w-5 h-5 text-orange-500" />}
-            title="스터디룸"
-          />
           {allRooms.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {allRooms.map((room) => (
