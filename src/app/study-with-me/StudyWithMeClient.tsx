@@ -261,7 +261,7 @@ export default function StudyWithMeClient({
   return (
     <div className="flex gap-5">
       {/* 왼쪽 사이드바 - 검색 + 카테고리 필터 (세로 직사각형) */}
-      <aside className="hidden md:block w-48 flex-shrink-0">
+      <aside className="hidden md:block w-52 flex-shrink-0">
         <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm sticky top-6">
           {/* 검색 바 */}
           <div className="relative mb-5">
