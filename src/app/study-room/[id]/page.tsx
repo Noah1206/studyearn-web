@@ -986,6 +986,8 @@ export default function StudyRoomPage() {
   const [remoteUsers, setRemoteUsers] = useState<RemoteUser[]>([]);
   const [isAgoraJoined, setIsAgoraJoined] = useState(false);
   const thumbnailIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const nativeCameraStreamRef = useRef<MediaStream | null>(null);
+  const nativeVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // 비디오 뷰어 상태
   const [videoViewerState, setVideoViewerState] = useState<{
