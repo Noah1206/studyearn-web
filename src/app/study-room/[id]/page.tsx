@@ -264,10 +264,12 @@ const THEME_STYLES: Record<string, { bg: string; accent: string; icon: React.Ele
 // 시간 선택 모달
 function TimeSelectModal({
   roomName,
+  seatNumber,
   onConfirm,
   onSkip,
 }: {
   roomName?: string;
+  seatNumber?: number;
   onConfirm: (workMinutes: number, breakMinutes: number) => void;
   onSkip: () => void;
 }) {
@@ -285,9 +287,15 @@ function TimeSelectModal({
             <Timer className="w-8 h-8 text-green-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">공부 시간 설정</h2>
-          {roomName && (
-            <p className="text-gray-500 text-sm">{roomName}</p>
-          )}
+          <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+            {roomName && <span>{roomName}</span>}
+            {roomName && seatNumber && <span>·</span>}
+            {seatNumber && (
+              <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                {seatNumber}번 좌석
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 공부 시간 선택 */}
@@ -1150,10 +1158,10 @@ export default function StudyRoomPage() {
           setMySeatNumber(myParticipation.seat_number);
           setPhase('studying');
         } else {
-          setPhase('time-select');
+          setPhase('seat-select');
         }
       } else {
-        setPhase('time-select');
+        setPhase('seat-select');
       }
 
       setIsLoading(false);
@@ -1164,21 +1172,29 @@ export default function StudyRoomPage() {
     }
   };
 
-  // 시간 설정 확인
-  const handleTimeConfirm = (workMinutes: number, breakMinutes: number) => {
+  // 좌석 선택 (먼저 좌석 선택 후 시간 설정으로)
+  const handleSeatSelect = (seatNumber: number) => {
+    setMySeatNumber(seatNumber);
+    setPhase('time-select');
+  };
+
+  // 시간 설정 확인 후 참여 등록
+  const handleTimeConfirm = async (workMinutes: number, breakMinutes: number) => {
     setTimerConfig({ workMinutes, breakMinutes });
     setIsStopwatchMode(false);
-    setPhase('seat-select');
+    await joinRoomWithSeat();
   };
 
-  // 스톱워치 모드
-  const handleTimeSkip = () => {
+  // 스톱워치 모드로 참여 등록
+  const handleTimeSkip = async () => {
     setIsStopwatchMode(true);
-    setPhase('seat-select');
+    await joinRoomWithSeat();
   };
 
-  // 좌석 선택
-  const handleSeatSelect = async (seatNumber: number) => {
+  // 실제 방 참여 처리 (DB 등록)
+  const joinRoomWithSeat = async () => {
+    if (!mySeatNumber) return;
+
     try {
       const supabase = createClient();
 
@@ -1188,7 +1204,7 @@ export default function StudyRoomPage() {
         .insert({
           room_id: roomId,
           user_id: currentUserId,
-          seat_number: seatNumber,
+          seat_number: mySeatNumber,
           status: 'studying',
         });
 
@@ -1200,11 +1216,10 @@ export default function StudyRoomPage() {
         })
         .eq('id', roomId);
 
-      setMySeatNumber(seatNumber);
       setPhase('studying');
     } catch (err) {
       console.error('Failed to join room:', err);
-      alert('좌석 선택에 실패했습니다. 다시 시도해주세요.');
+      alert('방 참여에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -1817,6 +1832,7 @@ export default function StudyRoomPage() {
       <div className="min-h-screen bg-gray-50">
         <TimeSelectModal
           roomName={room.name}
+          seatNumber={mySeatNumber || undefined}
           onConfirm={handleTimeConfirm}
           onSkip={handleTimeSkip}
         />
