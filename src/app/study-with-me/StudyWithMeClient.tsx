@@ -226,9 +226,9 @@ export default function StudyWithMeClient({
   const isFiltering = searchQuery.trim() || selectedCategory !== 'all';
 
   return (
-    <div className="flex gap-5">
+    <div className="flex gap-6 w-full">
       {/* 왼쪽 사이드바 - 검색 + 카테고리 필터 (세로 직사각형) */}
-      <aside className="hidden lg:block w-48 flex-shrink-0">
+      <aside className="hidden lg:block w-52 flex-shrink-0">
         <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm sticky top-6">
           {/* 검색 바 */}
           <div className="relative mb-5">
@@ -280,8 +280,8 @@ export default function StudyWithMeClient({
         </div>
       </aside>
 
-      {/* 오른쪽 메인 콘텐츠 영역 */}
-      <div className="flex-1 min-w-0 space-y-8">
+      {/* 오른쪽 메인 콘텐츠 영역 - 사이드바 제외 전체 너비 */}
+      <div className="flex-1 min-w-0 space-y-8 w-full">
         {/* 히어로 섹션 */}
         <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-gray-900 rounded-3xl">
           <div className="absolute inset-0 overflow-hidden">
