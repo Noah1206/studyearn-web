@@ -36,6 +36,7 @@ async function getStudyRooms() {
         max_participants,
         session_status,
         theme,
+        thumbnail_url,
         created_at,
         creator_id,
         profiles:creator_id (
@@ -59,6 +60,7 @@ async function getStudyRooms() {
         max_participants,
         session_status,
         theme,
+        thumbnail_url,
         created_at,
         creator_id,
         profiles:creator_id (
@@ -82,6 +84,7 @@ async function getStudyRooms() {
     max_participants: room.max_participants,
     session_status: room.session_status,
     theme: room.theme,
+    thumbnail_url: room.thumbnail_url,
     created_at: room.created_at,
     creator: {
       id: (room.profiles as any)?.id || room.creator_id,

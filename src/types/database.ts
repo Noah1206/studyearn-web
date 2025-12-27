@@ -461,6 +461,50 @@ export interface Database {
           created_at?: string;
         };
       };
+      study_with_me_rooms: {
+        Row: {
+          id: string;
+          creator_id: string;
+          name: string;
+          goal: string | null;
+          is_public: boolean;
+          current_participants: number;
+          max_participants: number;
+          session_status: 'waiting' | 'live' | 'ended';
+          theme: string | null;
+          thumbnail_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          creator_id: string;
+          name: string;
+          goal?: string | null;
+          is_public?: boolean;
+          current_participants?: number;
+          max_participants?: number;
+          session_status?: 'waiting' | 'live' | 'ended';
+          theme?: string | null;
+          thumbnail_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          creator_id?: string;
+          name?: string;
+          goal?: string | null;
+          is_public?: boolean;
+          current_participants?: number;
+          max_participants?: number;
+          session_status?: 'waiting' | 'live' | 'ended';
+          theme?: string | null;
+          thumbnail_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -506,6 +550,7 @@ export type ContentPurchase = Tables<'content_purchases'>;
 export type Payment = Tables<'payments'>;
 export type CreatorRevenueStats = Tables<'creator_revenue_stats'>;
 export type CreatorPayout = Tables<'creator_payouts'>;
+export type StudyWithMeRoom = Tables<'study_with_me_rooms'>;
 
 // Extended types with relations
 export interface CreatorWithTiers extends CreatorSettings {

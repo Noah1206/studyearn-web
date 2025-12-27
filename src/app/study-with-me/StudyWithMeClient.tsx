@@ -35,6 +35,7 @@ interface StudyRoom {
   max_participants: number;
   session_status: string;
   theme: string | null;
+  thumbnail_url: string | null;
   created_at: string;
   creator: {
     id: string;
@@ -88,7 +89,7 @@ function RoomCard({ room }: { room: StudyRoom }) {
     return `${Math.floor(diffInSeconds / 31536000)}년 전`;
   };
 
-  const isLive = room.session_status === 'active' || room.session_status === 'streaming';
+  const isLive = room.session_status === 'live';
 
   // 테마별 그라데이션 색상
   const getThemeGradient = (theme: string | null) => {
@@ -105,54 +106,49 @@ function RoomCard({ room }: { room: StudyRoom }) {
 
   return (
     <Link href={`/study-room/${room.id}`} className="group block">
-      <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden mb-4 shadow-md group-hover:shadow-xl transition-shadow">
-        {/* 썸네일 대신 테마 기반 그라데이션 배경 */}
-        <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getThemeGradient(room.theme)}`}>
-          <div className="text-center">
-            <BookOpen className="w-16 h-16 text-orange-300 mx-auto mb-3" />
-            <span className="text-orange-400 text-lg font-medium">Study With Me</span>
+      <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-shadow">
+        {/* 썸네일 영역 */}
+        {isLive && room.thumbnail_url ? (
+          // 라이브 중이고 썸네일이 있으면 표시
+          <img
+            src={room.thumbnail_url}
+            alt={room.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          // 대기중이거나 썸네일 없으면 방 제목 표시
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-6">
+            <h4 className="text-white text-lg font-medium text-center line-clamp-3 leading-relaxed">
+              {room.name}
+            </h4>
+          </div>
+        )}
+
+        {/* 호버 시 재생 버튼 */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20">
+          <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
+            <Play className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" />
           </div>
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
-            <Play className="w-7 h-7 text-gray-900 ml-1" fill="currentColor" />
-          </div>
-        </div>
-
-        {/* 라이브 여부 및 참여자 수 */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
+        {/* 상태 뱃지 */}
+        <div className="absolute top-3 left-3">
           {isLive ? (
-            <>
-              <div className="bg-red-500 px-2.5 py-1 rounded text-xs font-bold text-white flex items-center gap-1.5 shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                LIVE
-              </div>
-              <div className="bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded text-xs text-white flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" />
-                {room.current_participants}
-              </div>
-            </>
+            <div className="bg-red-500 px-2.5 py-1 rounded text-xs font-bold text-white flex items-center gap-1.5 shadow-lg">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              LIVE
+            </div>
           ) : (
-            <div className="bg-gray-500 px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg">
+            <div className="bg-gray-600 px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg">
               대기중
             </div>
           )}
         </div>
 
-        {/* 참여자 현황 */}
+        {/* 참여자 수 */}
         <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded text-sm text-white flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-orange-400" />
-          {room.current_participants}/{room.max_participants}
-        </div>
-
-        {/* 카테고리 */}
-        <div className="absolute bottom-3 left-3">
-          <span className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded text-xs font-medium text-gray-700">
-            {CATEGORIES.find(c => c.id === room.theme)?.label || '공부'}
-          </span>
+          <Users className="w-3.5 h-3.5" />
+          {room.current_participants}
         </div>
       </div>
 
@@ -162,21 +158,16 @@ function RoomCard({ room }: { room: StudyRoom }) {
             src={room.creator?.avatar_url}
             alt={room.creator?.nickname}
             size="md"
-            className="w-10 h-10 ring-2 ring-orange-100"
+            className="w-9 h-9"
           />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+          <h3 className="font-medium text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
             {room.name}
           </h3>
-          <p className="text-gray-500 text-sm mt-0.5 truncate">
-            {room.creator?.nickname}
-          </p>
-          <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
-            <span>{room.current_participants}명 참여중</span>
-            <span>•</span>
-            <span>{getRelativeTime(room.created_at)}</span>
+          <p className="text-gray-500 text-xs mt-1">
+            {room.creator?.nickname} · {getRelativeTime(room.created_at)}
           </p>
         </div>
       </div>

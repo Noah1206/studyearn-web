@@ -985,6 +985,7 @@ export default function StudyRoomPage() {
   const [cameraStates, setCameraStates] = useState<Record<string, boolean>>({});
   const [remoteUsers, setRemoteUsers] = useState<RemoteUser[]>([]);
   const [isAgoraJoined, setIsAgoraJoined] = useState(false);
+  const thumbnailIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 비디오 뷰어 상태
   const [videoViewerState, setVideoViewerState] = useState<{
@@ -1227,6 +1228,108 @@ export default function StudyRoomPage() {
     }
   }, [phase, mySeatNumber, isAgoraJoined, joinAgoraChannel]);
 
+  // 세션 상태 업데이트 함수
+  const updateSessionStatus = useCallback(async (status: 'waiting' | 'live' | 'ended') => {
+    if (!roomId) return;
+    try {
+      const supabase = createClient();
+      await supabase
+        .from('study_with_me_rooms')
+        .update({ session_status: status })
+        .eq('id', roomId);
+      console.log('[StudyRoom] session_status updated to:', status);
+    } catch (err) {
+      console.error('[StudyRoom] Failed to update session status:', err);
+    }
+  }, [roomId]);
+
+  // 비디오 트랙에서 썸네일 캡처
+  const captureAndUploadThumbnail = useCallback(async (videoTrack: ICameraVideoTrack) => {
+    if (!roomId || !videoTrack) return;
+
+    try {
+      // 비디오 트랙에서 MediaStreamTrack 가져오기
+      const mediaStreamTrack = videoTrack.getMediaStreamTrack();
+      if (!mediaStreamTrack) return;
+
+      // ImageCapture API 사용 (지원되는 경우)
+      if ('ImageCapture' in window) {
+        const imageCapture = new (window as any).ImageCapture(mediaStreamTrack);
+        const bitmap = await imageCapture.grabFrame();
+
+        // Canvas로 변환
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(bitmap, 0, 0);
+
+        // Blob으로 변환
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.7);
+        });
+
+        if (!blob) return;
+
+        // Supabase Storage에 업로드
+        const supabase = createClient();
+        const fileName = `thumbnails/${roomId}/${Date.now()}.jpg`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('study-rooms')
+          .upload(fileName, blob, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error('[StudyRoom] Thumbnail upload failed:', uploadError);
+          return;
+        }
+
+        // Public URL 가져오기
+        const { data: { publicUrl } } = supabase.storage
+          .from('study-rooms')
+          .getPublicUrl(fileName);
+
+        // 방 정보 업데이트
+        await supabase
+          .from('study_with_me_rooms')
+          .update({ thumbnail_url: publicUrl })
+          .eq('id', roomId);
+
+        console.log('[StudyRoom] Thumbnail updated:', publicUrl);
+      }
+    } catch (err) {
+      console.error('[StudyRoom] Failed to capture thumbnail:', err);
+    }
+  }, [roomId]);
+
+  // 썸네일 캡처 시작
+  const startThumbnailCapture = useCallback((videoTrack: ICameraVideoTrack) => {
+    // 기존 인터벌 정리
+    if (thumbnailIntervalRef.current) {
+      clearInterval(thumbnailIntervalRef.current);
+    }
+
+    // 즉시 첫 캡처
+    captureAndUploadThumbnail(videoTrack);
+
+    // 30초마다 캡처
+    thumbnailIntervalRef.current = setInterval(() => {
+      captureAndUploadThumbnail(videoTrack);
+    }, 30000);
+  }, [captureAndUploadThumbnail]);
+
+  // 썸네일 캡처 중지
+  const stopThumbnailCapture = useCallback(() => {
+    if (thumbnailIntervalRef.current) {
+      clearInterval(thumbnailIntervalRef.current);
+      thumbnailIntervalRef.current = null;
+    }
+  }, []);
+
   // 카메라 토글
   const handleToggleCamera = async () => {
     try {
@@ -1235,18 +1338,42 @@ export default function StudyRoomPage() {
         await agoraService.setCameraEnabled(false);
         setLocalVideoTrack(null);
         setIsCameraOn(false);
+        stopThumbnailCapture();
+
         // 내 카메라 상태 업데이트
         if (currentUserId) {
           setCameraStates(prev => ({ ...prev, [currentUserId]: false }));
         }
+
+        // 다른 사람도 카메라가 꺼져있으면 session_status를 waiting으로
+        const anyOtherCameraOn = remoteUsers.some(u => u.hasVideo);
+        if (!anyOtherCameraOn) {
+          await updateSessionStatus('waiting');
+          // 썸네일도 초기화
+          const supabase = createClient();
+          await supabase
+            .from('study_with_me_rooms')
+            .update({ thumbnail_url: null })
+            .eq('id', roomId);
+        }
       } else {
         // 카메라 켜기
         await agoraService.setCameraEnabled(true);
-        setLocalVideoTrack(agoraService.getLocalVideoTrack());
+        const videoTrack = agoraService.getLocalVideoTrack();
+        setLocalVideoTrack(videoTrack);
         setIsCameraOn(true);
+
         // 내 카메라 상태 업데이트
         if (currentUserId) {
           setCameraStates(prev => ({ ...prev, [currentUserId]: true }));
+        }
+
+        // session_status를 live로 업데이트
+        await updateSessionStatus('live');
+
+        // 썸네일 캡처 시작
+        if (videoTrack) {
+          startThumbnailCapture(videoTrack);
         }
       }
     } catch (err) {
@@ -1283,12 +1410,13 @@ export default function StudyRoomPage() {
     setVideoViewerState({ visible: false, participant: null });
   };
 
-  // 컴포넌트 언마운트 시 Agora 정리
+  // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
+      stopThumbnailCapture();
       agoraService.destroy();
     };
-  }, []);
+  }, [stopThumbnailCapture]);
 
   // user_id로부터 Agora UID 생성 (동일한 해시 함수)
   const getUserAgoraUid = (userId: string): number => {
