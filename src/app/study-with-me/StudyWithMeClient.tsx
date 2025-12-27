@@ -269,10 +269,10 @@ export default function StudyWithMeClient({
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full flex items-center gap-5 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                    className={`w-full flex items-center gap-5 px-3 py-2.5 rounded-xl text-sm transition-colors hover:bg-gray-100 ${
                       isSelected
-                        ? 'bg-gray-100 text-gray-900 font-medium'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'text-gray-900 font-medium'
+                        : 'text-gray-700'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
