@@ -408,7 +408,7 @@ export default function StudyWithMeClient({
           </div>
 
           {filteredContents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8">
               {filteredContents.map((content: any) => (
                 <ContentCard key={content.id} content={content} />
               ))}
@@ -437,8 +437,8 @@ export default function StudyWithMeClient({
                 title="지금 인기있는 스터디"
                 href="/ranking"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-                {popularContents.slice(0, 8).map((content: any) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8">
+                {popularContents.slice(0, 10).map((content: any) => (
                   <ContentCard key={content.id} content={content} />
                 ))}
               </div>
@@ -453,8 +453,8 @@ export default function StudyWithMeClient({
                 title="새로 올라온 스터디"
                 href="/explore"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-                {latestContents.slice(0, 8).map((content: any) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8">
+                {latestContents.slice(0, 10).map((content: any) => (
                   <ContentCard key={content.id} content={content} />
                 ))}
               </div>
