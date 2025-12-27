@@ -29,13 +29,13 @@ async function getStudyContents() {
       .select('id, title, description, thumbnail_url, content_type, view_count, like_count, price, access_level, category, created_at, creator_id')
       .eq('is_published', true)
       .order('view_count', { ascending: false })
-      .limit(8),
+      .limit(10),
     supabase
       .from('contents')
       .select('id, title, description, thumbnail_url, content_type, view_count, like_count, price, access_level, category, created_at, creator_id')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(8),
+      .limit(10),
     supabase
       .from('creator_settings')
       .select('id, user_id, display_name, profile_image_url, bio, total_subscribers')
@@ -360,7 +360,7 @@ async function StudyWithMeContent() {
 export default function StudyWithMePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Suspense fallback={<LoadingSection />}>
           <StudyWithMeContent />
         </Suspense>
