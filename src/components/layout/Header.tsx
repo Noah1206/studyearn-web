@@ -85,18 +85,17 @@ export function Header() {
     <header
       className="bg-white border-b border-gray-100"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo - Minimal Black Style */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight">StuPle</span>
-          </Link>
+      <div className="relative flex items-center justify-between h-16 px-4 sm:px-6">
+        {/* Logo - 왼쪽 끝에 고정 */}
+        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-lg">S</span>
+          </div>
+          <span className="text-xl font-bold text-gray-900 tracking-tight">StuPle</span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+        {/* Desktop Navigation - 중앙 */}
+        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link
               href="/content"
               className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
@@ -224,7 +223,6 @@ export function Header() {
               <Menu className="w-6 h-6 text-gray-900" />
             )}
           </button>
-        </div>
       </div>
 
       {/* Mobile Menu */}
