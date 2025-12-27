@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -53,6 +53,26 @@ const CAPACITY_OPTIONS = [
 
 export default function CreateStudyRoomPage() {
   const router = useRouter();
+
+  // 인증 상태
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  // 페이지 접근 시 로그인 체크
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login?redirect=/study-with-me/create');
+        return;
+      }
+
+      setIsAuthChecking(false);
+    };
+
+    checkAuth();
+  }, [router]);
 
   // 폼 상태
   const [roomName, setRoomName] = useState('');
@@ -183,6 +203,15 @@ export default function CreateStudyRoomPage() {
   const capacityDisplayText = isCustomSelected
     ? `${capacity}명`
     : (selectedCapacityOption?.label || '선택');
+
+  // 인증 체크 중 로딩 표시
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
