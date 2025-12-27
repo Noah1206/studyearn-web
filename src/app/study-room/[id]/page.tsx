@@ -490,6 +490,8 @@ function SeatSelectionView({
   participants,
   currentUserId,
   cameraStates,
+  isAlreadyJoined,
+  mySeatNumber,
   onSelectSeat,
   onMyProfilePress,
   onViewParticipant,
@@ -499,6 +501,8 @@ function SeatSelectionView({
   participants: Participant[];
   currentUserId?: string;
   cameraStates: Record<string, boolean>;
+  isAlreadyJoined?: boolean;
+  mySeatNumber?: number | null;
   onSelectSeat: (seatNumber: number) => void;
   onMyProfilePress?: () => void;
   onViewParticipant?: (participant: Participant) => void;
@@ -610,9 +614,19 @@ function SeatSelectionView({
       </main>
 
       {/* 하단 버튼 */}
-      {!myParticipation && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
-          <div className="max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
+        <div className="max-w-md mx-auto">
+          {isAlreadyJoined && mySeatNumber ? (
+            // 기존 참여자: 공부 시작하기 버튼
+            <Button
+              onClick={onMyProfilePress}
+              className="w-full h-14 text-base bg-green-500 hover:bg-green-600"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              {mySeatNumber}번 좌석에서 공부 시작하기
+            </Button>
+          ) : (
+            // 신규 참여자: 좌석 선택 버튼
             <Button
               onClick={handleConfirm}
               disabled={!selectedSeat}
@@ -632,9 +646,9 @@ function SeatSelectionView({
                 '좌석을 선택해주세요'
               )}
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -1042,6 +1056,7 @@ export default function StudyRoomPage() {
   const [timerConfig, setTimerConfig] = useState<{ workMinutes: number; breakMinutes: number } | null>(null);
   const [isStopwatchMode, setIsStopwatchMode] = useState(false);
   const [mySeatNumber, setMySeatNumber] = useState<number | null>(null);
+  const [isAlreadyJoined, setIsAlreadyJoined] = useState(false);
 
   // 데이터
   const [room, setRoom] = useState<StudyRoom | null>(null);
@@ -1155,14 +1170,14 @@ export default function StudyRoomPage() {
         // 이미 참여 중인지 확인
         const myParticipation = participantsData.find((p: any) => p.user_id === user.id);
         if (myParticipation) {
+          // 기존 참여자: 좌석 번호 설정하고 좌석 화면부터 시작 (이미 참여 중 표시)
           setMySeatNumber(myParticipation.seat_number);
-          setPhase('studying');
-        } else {
-          setPhase('seat-select');
+          setIsAlreadyJoined(true);
         }
-      } else {
-        setPhase('seat-select');
       }
+
+      // 항상 좌석 선택부터 시작
+      setPhase('seat-select');
 
       setIsLoading(false);
     } catch (err) {
@@ -1176,6 +1191,14 @@ export default function StudyRoomPage() {
   const handleSeatSelect = (seatNumber: number) => {
     setMySeatNumber(seatNumber);
     setPhase('time-select');
+  };
+
+  // 기존 참여자가 내 좌석 클릭 시 바로 공부 화면으로
+  const handleMySeatClick = () => {
+    if (isAlreadyJoined && mySeatNumber) {
+      setIsStopwatchMode(true); // 기존 참여자는 스톱워치 모드로
+      setPhase('studying');
+    }
   };
 
   // 시간 설정 확인 후 참여 등록
@@ -1849,8 +1872,10 @@ export default function StudyRoomPage() {
           participants={participants}
           currentUserId={currentUserId || undefined}
           cameraStates={cameraStates}
+          isAlreadyJoined={isAlreadyJoined}
+          mySeatNumber={mySeatNumber}
           onSelectSeat={handleSeatSelect}
-          onMyProfilePress={() => setPhase('studying')}
+          onMyProfilePress={handleMySeatClick}
           onViewParticipant={handleViewParticipant}
           onLeave={handleLeave}
         />
