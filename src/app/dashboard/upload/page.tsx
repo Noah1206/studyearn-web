@@ -50,6 +50,7 @@ const SUBJECT_TAGS = [
   { id: 'science', label: '과학', color: 'bg-green-100 text-green-700 hover:bg-green-200' },
   { id: 'social', label: '사회', color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
   { id: 'history', label: '한국사', color: 'bg-orange-100 text-orange-700 hover:bg-orange-200' },
+  { id: 'custom', label: '직접 입력', color: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
 ];
 
 // 학년 태그
@@ -60,6 +61,7 @@ const GRADE_TAGS = [
   { id: 'high3', label: '고3' },
   { id: 'univ', label: '대학' },
   { id: 'cert', label: '자격증' },
+  { id: 'custom', label: '직접 입력' },
 ];
 
 // 가격 옵션
@@ -129,7 +131,11 @@ export default function UploadPage() {
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [customSubject, setCustomSubject] = useState('');
+  const [showCustomSubject, setShowCustomSubject] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [customGrade, setCustomGrade] = useState('');
+  const [showCustomGrade, setShowCustomGrade] = useState(false);
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [price, setPrice] = useState<number>(0);
   const [customPrice, setCustomPrice] = useState('');
@@ -178,11 +184,33 @@ export default function UploadPage() {
 
   // 과목 태그 토글
   const toggleSubject = (subjectId: string) => {
-    setSelectedSubjects(prev =>
-      prev.includes(subjectId)
-        ? prev.filter(s => s !== subjectId)
-        : [...prev, subjectId]
-    );
+    if (subjectId === 'custom') {
+      setShowCustomSubject(!showCustomSubject);
+      if (showCustomSubject) {
+        setCustomSubject('');
+      }
+    } else {
+      setSelectedSubjects(prev =>
+        prev.includes(subjectId)
+          ? prev.filter(s => s !== subjectId)
+          : [...prev, subjectId]
+      );
+    }
+  };
+
+  // 학년 태그 선택
+  const selectGrade = (gradeId: string) => {
+    if (gradeId === 'custom') {
+      setShowCustomGrade(!showCustomGrade);
+      setSelectedGrade(null);
+      if (showCustomGrade) {
+        setCustomGrade('');
+      }
+    } else {
+      setShowCustomGrade(false);
+      setCustomGrade('');
+      setSelectedGrade(selectedGrade === gradeId ? null : gradeId);
+    }
   };
 
   // 가격 선택
@@ -267,13 +295,23 @@ export default function UploadPage() {
     // 과목 태그
     selectedSubjects.forEach(id => {
       const subject = SUBJECT_TAGS.find(s => s.id === id);
-      if (subject) tags.push(subject.label);
+      if (subject && subject.id !== 'custom') tags.push(subject.label);
     });
+
+    // 직접 입력한 과목
+    if (customSubject.trim()) {
+      tags.push(customSubject.trim());
+    }
 
     // 학년 태그
     if (selectedGrade) {
       const grade = GRADE_TAGS.find(g => g.id === selectedGrade);
-      if (grade) tags.push(grade.label);
+      if (grade && grade.id !== 'custom') tags.push(grade.label);
+    }
+
+    // 직접 입력한 학년
+    if (customGrade.trim()) {
+      tags.push(customGrade.trim());
     }
 
     // 커스텀 태그 (해시태그에서 추출)
@@ -880,9 +918,11 @@ export default function UploadPage() {
         {/* 빠른 태그 선택 */}
         <div className="mb-6">
           <p className="text-sm font-medium text-gray-700 mb-3">과목</p>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
             {SUBJECT_TAGS.map((subject) => {
-              const isSelected = selectedSubjects.includes(subject.id);
+              const isSelected = subject.id === 'custom'
+                ? showCustomSubject
+                : selectedSubjects.includes(subject.id);
               return (
                 <button
                   key={subject.id}
@@ -890,29 +930,50 @@ export default function UploadPage() {
                   className={cn(
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
-                      ? subject.color + ' ring-2 ring-offset-1 ring-gray-400'
+                      ? subject.id === 'custom'
+                        ? 'bg-orange-500 text-white'
+                        : subject.color + ' ring-2 ring-offset-1 ring-gray-400'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
-                  {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                  {isSelected && subject.id !== 'custom' && <Check className="w-3 h-3 inline mr-1" />}
                   {subject.label}
                 </button>
               );
             })}
           </div>
 
+          {/* 과목 직접 입력 */}
+          {showCustomSubject && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={customSubject}
+                onChange={(e) => setCustomSubject(e.target.value)}
+                placeholder="과목명 입력"
+                className="flex-1 max-w-[200px] px-4 py-2 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mb-6">
           <p className="text-sm font-medium text-gray-700 mb-3">학년</p>
           <div className="flex flex-wrap gap-2">
             {GRADE_TAGS.map((grade) => {
-              const isSelected = selectedGrade === grade.id;
+              const isSelected = grade.id === 'custom'
+                ? showCustomGrade
+                : selectedGrade === grade.id;
               return (
                 <button
                   key={grade.id}
-                  onClick={() => setSelectedGrade(isSelected ? null : grade.id)}
+                  onClick={() => selectGrade(grade.id)}
                   className={cn(
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
-                      ? 'bg-gray-900 text-white'
+                      ? grade.id === 'custom'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
@@ -921,6 +982,19 @@ export default function UploadPage() {
               );
             })}
           </div>
+
+          {/* 학년 직접 입력 */}
+          {showCustomGrade && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={customGrade}
+                onChange={(e) => setCustomGrade(e.target.value)}
+                placeholder="학년 입력 (예: 초6, 재수생)"
+                className="flex-1 max-w-[200px] px-4 py-2 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+              />
+            </div>
+          )}
         </div>
 
         {/* 가격 선택 */}
@@ -971,7 +1045,7 @@ export default function UploadPage() {
         </div>
 
         {/* 선택된 태그 미리보기 */}
-        {(selectedSubjects.length > 0 || selectedGrade || customTags.length > 0) && (
+        {(selectedSubjects.length > 0 || selectedGrade || customTags.length > 0 || customSubject.trim() || customGrade.trim()) && (
           <div className="p-4 bg-gray-50 rounded-xl">
             <p className="text-xs text-gray-500 mb-2">태그 미리보기</p>
             <div className="flex flex-wrap gap-1.5">
