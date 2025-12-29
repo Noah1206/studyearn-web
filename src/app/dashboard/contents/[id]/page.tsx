@@ -487,7 +487,7 @@ export default async function ContentDetailPage({ params }: ContentDetailPagePro
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Suspense fallback={<LoadingSection />}>
+        <Suspense fallback={<LoadingSection fullHeight />}>
           <ContentDetailContent contentId={id} />
         </Suspense>
       </main>

@@ -421,7 +421,7 @@ export default function ContentsPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   return (
-    <Suspense fallback={<LoadingSection />}>
+    <Suspense fallback={<LoadingSection fullHeight />}>
       <ContentsContent searchParams={searchParams} />
     </Suspense>
   );

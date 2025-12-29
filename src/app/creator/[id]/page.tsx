@@ -187,7 +187,7 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
   const { id } = await params;
 
   return (
-    <Suspense fallback={<LoadingSection />}>
+    <Suspense fallback={<LoadingSection fullHeight />}>
       <CreatorContent id={id} />
     </Suspense>
   );

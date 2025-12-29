@@ -47,9 +47,12 @@ const LoadingPage = ({ message }: { message?: string }) => (
 /**
  * 섹션 로딩 상태
  * 컴포넌트나 섹션 로딩 시 사용
+ * fullHeight: true로 설정하면 콘텐츠 영역 전체 높이를 채우고 정중앙에 스피너 위치
  */
-const LoadingSection = ({ message }: { message?: string }) => (
-  <div className="py-12 flex flex-col items-center justify-center gap-3">
+const LoadingSection = ({ message, fullHeight = false }: { message?: string; fullHeight?: boolean }) => (
+  <div className={`flex flex-col items-center justify-center gap-3 ${
+    fullHeight ? 'min-h-[calc(100vh-8rem)]' : 'py-12'
+  }`}>
     <Spinner size="md" />
     {message && (
       <p className="text-sm text-gray-500">{message}</p>

@@ -115,7 +115,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<LoadingSection />}>
+    <Suspense fallback={<LoadingSection fullHeight />}>
       <LoginForm />
     </Suspense>
   );

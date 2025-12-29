@@ -310,7 +310,7 @@ export default function ExplorePage() {
 
       {/* 메인 */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Suspense fallback={<LoadingSection />}>
+        <Suspense fallback={<LoadingSection fullHeight />}>
           <ExploreContent />
         </Suspense>
       </main>

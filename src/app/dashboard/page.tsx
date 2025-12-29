@@ -642,7 +642,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 py-6">
         {/* 섹션 1: Stats + Quick Actions - 최우선 로드 */}
-        <Suspense fallback={<LoadingSection />}>
+        <Suspense fallback={<LoadingSection fullHeight />}>
           <StatsSection creatorId={user.id} />
         </Suspense>
 
