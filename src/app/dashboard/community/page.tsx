@@ -143,13 +143,15 @@ export default function CommunityPage() {
       }
 
       // Get user info for each comment
-      const userIds = [...new Set((comments || []).map(c => c.user_id))];
+      type CommentRow = { id: string; content_id: string; user_id: string; comment_text: string; comment_type: string; like_count: number; reply_count: number; is_pinned: boolean; is_reported: boolean; is_replied: boolean; created_at: string };
+      const userIds = Array.from(new Set((comments || []).map((c: CommentRow) => c.user_id)));
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url')
         .in('id', userIds);
 
-      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      type ProfileRow = { id: string; display_name: string | null; avatar_url: string | null };
+      const profileMap = new Map<string, ProfileRow>((profiles || []).map((p: ProfileRow) => [p.id, p]));
 
       // Check subscriber status for each user
       const { data: subscriptions } = await supabase
@@ -159,7 +161,8 @@ export default function CommunityPage() {
         .in('subscriber_id', userIds)
         .eq('status', 'active');
 
-      const subscriptionMap = new Map(
+      type SubscriptionInfo = { is_subscriber: boolean; tier_name: string };
+      const subscriptionMap = new Map<string, SubscriptionInfo>(
         (subscriptions || []).map((s: any) => [
           s.subscriber_id,
           { is_subscriber: true, tier_name: s.subscription_tiers?.name || '구독자' }
@@ -167,7 +170,7 @@ export default function CommunityPage() {
       );
 
       // Transform to CommunityItem format
-      const communityItems: CommunityItem[] = (comments || []).map(comment => {
+      const communityItems: CommunityItem[] = (comments || []).map((comment: CommentRow) => {
         const profile = profileMap.get(comment.user_id);
         const subscription = subscriptionMap.get(comment.user_id);
 

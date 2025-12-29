@@ -156,7 +156,8 @@ export default function InsightsPage() {
         .select('id, title, view_count, like_count, created_at')
         .eq('creator_id', user.id);
 
-      const contentIds = allContents?.map((c) => c.id) || [];
+      type ContentItem = { id: string; title: string; view_count: number | null; like_count: number | null; created_at: string };
+      const contentIds = allContents?.map((c: ContentItem) => c.id) || [];
 
       // Calculate weekly views
       let weeklyViews = 0;
@@ -212,8 +213,9 @@ export default function InsightsPage() {
         .gte('created_at', twoWeeksAgo.toISOString())
         .lt('created_at', weekAgo.toISOString());
 
-      const weeklyRevenue = weeklyPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const prevWeekRevenue = prevWeekPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      type PurchaseItem = { amount: number | null };
+      const weeklyRevenue = weeklyPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
+      const prevWeekRevenue = prevWeekPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
       const revenueChange = prevWeekRevenue > 0
         ? ((weeklyRevenue - prevWeekRevenue) / prevWeekRevenue) * 100
         : weeklyRevenue > 0 ? 100 : 0;
@@ -251,8 +253,9 @@ export default function InsightsPage() {
         .order('view_count', { ascending: false })
         .limit(3);
 
+      type TopContentData = { id: string; title: string; view_count: number | null; like_count: number | null };
       setTopContents(
-        (topContentsData || []).map((c) => ({
+        (topContentsData || []).map((c: TopContentData) => ({
           id: c.id,
           title: c.title,
           views: c.view_count || 0,
@@ -286,7 +289,7 @@ export default function InsightsPage() {
 
       // Content upload insight
       const recentContent = allContents?.filter(
-        (c) => new Date(c.created_at) >= weekAgo
+        (c: ContentItem) => new Date(c.created_at) >= weekAgo
       );
       if (!recentContent || recentContent.length === 0) {
         generatedInsights.push({
@@ -333,7 +336,7 @@ export default function InsightsPage() {
       }
 
       // Conversion opportunity
-      const totalViews = allContents?.reduce((sum, c) => sum + (c.view_count || 0), 0) || 0;
+      const totalViews = allContents?.reduce((sum: number, c: ContentItem) => sum + (c.view_count || 0), 0) || 0;
       const { count: totalPurchases } = await supabase
         .from('purchases')
         .select('*', { count: 'exact', head: true })
@@ -376,10 +379,10 @@ export default function InsightsPage() {
         .eq('seller_id', user.id)
         .eq('status', 'completed')
         .gte('created_at', monthAgo.toISOString());
-      const monthlyRevenue = monthlyPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const monthlyRevenue = monthlyPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
 
       const avgViewsPerContent = allContents && allContents.length > 0
-        ? Math.round(allContents.reduce((sum, c) => sum + (c.view_count || 0), 0) / allContents.length)
+        ? Math.round(allContents.reduce((sum: number, c: ContentItem) => sum + (c.view_count || 0), 0) / allContents.length)
         : 0;
 
       // Set dynamic goals

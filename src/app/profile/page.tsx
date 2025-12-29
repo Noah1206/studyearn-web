@@ -285,33 +285,34 @@ export default function ProfilePage() {
           .select('room_id, current_session_minutes, joined_at')
           .eq('user_id', user.id);
 
+        type Participation = { room_id: string; current_session_minutes: number | null; joined_at: string };
         if (allParticipations && allParticipations.length > 0) {
           // 오늘 분
           const todayMinutes = allParticipations
-            .filter(p => p.joined_at >= todayStart)
-            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+            .filter((p: Participation) => p.joined_at >= todayStart)
+            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
 
           // 이번 주 분
           const weekMinutes = allParticipations
-            .filter(p => p.joined_at >= weekStart)
-            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+            .filter((p: Participation) => p.joined_at >= weekStart)
+            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
 
           // 이번 달 분
           const monthMinutes = allParticipations
-            .filter(p => p.joined_at >= monthStart)
-            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+            .filter((p: Participation) => p.joined_at >= monthStart)
+            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
 
           // 전체 분
           const totalMinutes = allParticipations
-            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
 
           // 고유 방 수
-          const uniqueRooms = new Set(allParticipations.map(p => p.room_id));
+          const uniqueRooms = new Set(allParticipations.map((p: Participation) => p.room_id));
 
           // 연속 출석 계산 (최근 날짜부터 확인)
-          const studyDates = [...new Set(allParticipations.map(p =>
+          const studyDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
             new Date(p.joined_at).toISOString().split('T')[0]
-          ))].sort((a, b) => b.localeCompare(a)); // 최신순 정렬
+          ))).sort((a, b) => b.localeCompare(a)); // 최신순 정렬
 
           let streak = 0;
           let checkDate = new Date();
@@ -334,9 +335,9 @@ export default function ProfilePage() {
           // 최고 연속 출석 (전체 기간에서 계산)
           let bestStreak = 0;
           let currentStreak = 0;
-          const sortedDates = [...new Set(allParticipations.map(p =>
+          const sortedDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
             new Date(p.joined_at).toISOString().split('T')[0]
-          ))].sort();
+          ))).sort();
 
           for (let i = 0; i < sortedDates.length; i++) {
             if (i === 0) {

@@ -142,8 +142,8 @@ export default function ConversationPage() {
           table: 'dm_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
-          const newMessage = payload.new as Message;
+        (payload: { new: Record<string, unknown> }) => {
+          const newMessage = payload.new as unknown as Message;
 
           // Only add if it's from the other user (our own messages are added optimistically)
           if (newMessage.sender_id !== currentUserId) {
@@ -171,8 +171,8 @@ export default function ConversationPage() {
           table: 'dm_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
-          const updatedMessage = payload.new as Message;
+        (payload: { new: Record<string, unknown> }) => {
+          const updatedMessage = payload.new as unknown as Message;
           setMessages(prev =>
             prev.map(m => m.id === updatedMessage.id ? updatedMessage : m)
           );
