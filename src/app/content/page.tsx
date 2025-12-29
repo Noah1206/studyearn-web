@@ -374,7 +374,7 @@ function EmptyState() {
       <button
         onClick={handleUploadClick}
         disabled={isChecking}
-        className="inline-flex px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+        className="inline-flex px-6 py-3 text-orange-500 font-semibold rounded-xl hover:text-orange-600 transition-colors disabled:opacity-50"
       >
         {isChecking ? '확인 중...' : '자료 올리기'}
       </button>
