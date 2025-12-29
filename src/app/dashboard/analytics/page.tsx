@@ -252,8 +252,8 @@ export default function AnalyticsPage() {
         .gte('created_at', prevPeriodStart.toISOString())
         .lt('created_at', periodStart.toISOString());
 
-      const currentRevenue = currentPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const prevRevenue = prevPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const currentRevenue = currentPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
+      const prevRevenue = prevPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
       const revenueChange = prevRevenue > 0
         ? ((currentRevenue - prevRevenue) / prevRevenue) * 100
         : currentRevenue > 0 ? 100 : 0;
@@ -264,18 +264,19 @@ export default function AnalyticsPage() {
         .select('amount, purchase_type')
         .eq('seller_id', user.id)
         .eq('status', 'completed');
-      const totalRevenue = allPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      type PurchaseItem = { amount: number | null; purchase_type: string | null };
+      const totalRevenue = allPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
 
       // Calculate revenue by source from purchases
       const subscriptionRevenue = allPurchases
-        ?.filter((p) => p.purchase_type === 'subscription')
-        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        ?.filter((p: PurchaseItem) => p.purchase_type === 'subscription')
+        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
       const contentSalesRevenue = allPurchases
-        ?.filter((p) => p.purchase_type === 'content')
-        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        ?.filter((p: PurchaseItem) => p.purchase_type === 'content')
+        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
       const tipsRevenue = allPurchases
-        ?.filter((p) => p.purchase_type === 'tip')
-        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        ?.filter((p: PurchaseItem) => p.purchase_type === 'tip')
+        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
 
       const revenueBySource = {
         subscriptions: subscriptionRevenue,
@@ -285,7 +286,7 @@ export default function AnalyticsPage() {
 
       // Content type distribution
       const contentTypeDistribution: Record<string, number> = {};
-      allContents?.forEach((c) => {
+      allContents?.forEach((c: { content_type: string }) => {
         contentTypeDistribution[c.content_type] = (contentTypeDistribution[c.content_type] || 0) + 1;
       });
 
@@ -298,15 +299,16 @@ export default function AnalyticsPage() {
         .order('view_count', { ascending: false })
         .limit(5);
 
+      type TopContentItem = { id: string; title: string; content_type: string; view_count: number | null; like_count: number | null };
       const topContents = await Promise.all(
-        (topContentsData || []).map(async (c) => {
+        (topContentsData || []).map(async (c: TopContentItem) => {
           // Get revenue for this content
           const { data: contentPurchases } = await supabase
             .from('purchases')
             .select('amount')
             .eq('content_id', c.id)
             .eq('status', 'completed');
-          const contentRevenue = contentPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+          const contentRevenue = contentPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
 
           return {
             id: c.id,
