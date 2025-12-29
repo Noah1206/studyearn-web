@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
         .select('id, title, content_type, view_count, like_count, comment_count')
         .eq('creator_id', user.id);
 
-      const contentIds = allContents?.map((c) => c.id) || [];
+      const contentIds = allContents?.map((c: { id: string }) => c.id) || [];
 
       // Calculate totals
       const totalViews = allContents?.reduce((sum: number, c: { view_count: number | null }) => sum + (c.view_count || 0), 0) || 0;
