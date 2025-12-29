@@ -20,6 +20,22 @@ function LoginForm() {
 
   const supabase = createClient();
 
+  const handleKakaoLogin = async () => {
+    setError('');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
+      },
+    });
+
+    if (error) {
+      console.error('Kakao login error:', error);
+      setError('카카오 로그인에 실패했습니다.');
+    }
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -67,13 +83,42 @@ function LoginForm() {
           <p className="text-gray-500 mt-3">스터플에 다시 오신 것을 환영합니다</p>
         </CardHeader>
         <CardContent className="pt-0">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 mb-6">
+              {error}
+            </div>
+          )}
+
+          {/* Kakao Login Button */}
+          <button
+            type="button"
+            onClick={handleKakaoLogin}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-medium rounded-lg transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10 2C5.02944 2 1 5.36419 1 9.5C1 12.0645 2.61438 14.3016 5.07563 15.5983L4.15625 18.8494C4.07773 19.1179 4.38266 19.3349 4.61797 19.1779L8.48438 16.6028C8.98125 16.6676 9.48656 16.7 10 16.7C14.9706 16.7 19 13.3358 19 9.2C19 5.06419 14.9706 2 10 2Z"
+                fill="#191919"
+              />
+            </svg>
+            카카오로 시작하기
+          </button>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">또는</span>
+            </div>
+          </div>
+
           {/* Email Login Form */}
           <form onSubmit={handleEmailLogin} className="space-y-5">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-                {error}
-              </div>
-            )}
 
             <Input
               label="이메일"
