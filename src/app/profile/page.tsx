@@ -28,7 +28,6 @@ import {
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Avatar, Spinner } from '@/components/ui';
-import { CreatorConversionModal } from '@/components/modals';
 import { useUserStore } from '@/store/userStore';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -158,7 +157,9 @@ export default function ProfilePage() {
     setUserType,
     revertToRunner,
     switchToCreator,
+    completeCreatorOnboarding,
     clearUser,
+    profile: storeProfile,
   } = useUserStore();
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -171,7 +172,7 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showCreatorModal, setShowCreatorModal] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
   // 스터디 세션 상태
   const [currentStudySession, setCurrentStudySession] = useState<StudySession | null>(null);
@@ -444,12 +445,66 @@ export default function ProfilePage() {
     router.push('/profile');
   };
 
-  const handleSwitchToCreator = () => {
+  const handleSwitchToCreator = async () => {
+    // 이미 크리에이터인 경우 바로 대시보드로 이동
     if (hasBeenCreator && isCreatorOnboarded) {
       switchToCreator();
       router.push('/dashboard');
-    } else {
-      setShowCreatorModal(true);
+      return;
+    }
+
+    // 새로운 크리에이터: 직접 전환 (로딩 애니메이션 표시)
+    if (!profile) return;
+
+    setIsConverting(true);
+    setError('');
+
+    try {
+      // Update profiles table to set is_creator = true
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ is_creator: true, updated_at: new Date().toISOString() })
+        .eq('id', profile.id);
+
+      if (profileError) {
+        setError('크리에이터 전환에 실패했습니다.');
+        setIsConverting(false);
+        return;
+      }
+
+      // Create creator_settings record
+      const { error: settingsError } = await supabase
+        .from('creator_settings')
+        .upsert({
+          user_id: profile.id,
+          display_name: profile.nickname || storeProfile?.email || '',
+          bio: profile.bio || '',
+          profile_image_url: profile.avatar_url || null,
+          is_verified: false,
+          total_subscribers: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (settingsError) {
+        console.error('Creator settings error:', settingsError);
+        // Not critical, continue anyway
+      }
+
+      // Update local state
+      completeCreatorOnboarding({
+        display_name: profile.nickname || storeProfile?.email || '',
+        bio: profile.bio,
+        school: profile.school,
+        profile_image_url: profile.avatar_url,
+        is_verified: false,
+        total_subscribers: 0,
+      });
+
+      router.push('/dashboard');
+    } catch {
+      setError('오류가 발생했습니다. 다시 시도해주세요.');
+      setIsConverting(false);
     }
   };
 
@@ -489,6 +544,50 @@ export default function ProfilePage() {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-neutral-light">
         <Spinner size="lg" />
       </div>
+    );
+  }
+
+  // 크리에이터 전환 중 로딩 화면
+  if (isConverting) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center mb-6"
+        >
+          <Sparkles className="w-10 h-10 text-white animate-pulse" />
+        </motion.div>
+        <motion.h2
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-xl font-bold text-gray-900 mb-2"
+        >
+          크리에이터로 전환 중...
+        </motion.h2>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-gray-500"
+        >
+          잠시만 기다려주세요
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-8"
+        >
+          <Spinner size="md" />
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -937,12 +1036,6 @@ export default function ProfilePage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* 크리에이터 전환 모달 */}
-      <CreatorConversionModal
-        isOpen={showCreatorModal}
-        onClose={() => setShowCreatorModal(false)}
-      />
     </motion.div>
   );
 }
