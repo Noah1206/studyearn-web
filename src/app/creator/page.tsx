@@ -34,16 +34,6 @@ interface Creator {
   is_verified: boolean;
 }
 
-const CATEGORIES = [
-  { id: 'all', label: '전체', emoji: '✨' },
-  { id: 'korean', label: '국어', emoji: '📚' },
-  { id: 'english', label: '영어', emoji: '🌍' },
-  { id: 'math', label: '수학', emoji: '🔢' },
-  { id: 'science', label: '과학', emoji: '🔬' },
-  { id: 'social', label: '사회', emoji: '🗺️' },
-  { id: 'coding', label: '코딩', emoji: '💻' },
-];
-
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -168,31 +158,21 @@ export default function CreatorsPage() {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     loadCreators();
-  }, [selectedCategory]);
+  }, []);
 
   const loadCreators = async () => {
     setIsLoading(true);
     try {
       const supabase = createClient();
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('creator_settings')
         .select('*')
         .order('total_subscribers', { ascending: false })
         .limit(20);
-
-      if (selectedCategory !== 'all') {
-        const categoryLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label;
-        if (categoryLabel) {
-          query = query.eq('subject', categoryLabel);
-        }
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       setCreators(data || []);
@@ -259,23 +239,6 @@ export default function CreatorsPage() {
             />
           </div>
 
-          {/* Category Filter */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {CATEGORIES.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 ${
-                  selectedCategory === category.id
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <span>{category.emoji}</span>
-                <span className="text-sm font-medium">{category.label}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -300,10 +263,10 @@ export default function CreatorsPage() {
               크리에이터를 찾을 수 없습니다
             </h3>
             <p className="text-gray-500 mb-6">
-              다른 검색어나 카테고리를 선택해보세요
+              다른 검색어를 입력해보세요
             </p>
-            <Button variant="outline" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}>
-              필터 초기화
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              검색 초기화
             </Button>
           </motion.div>
         ) : (
