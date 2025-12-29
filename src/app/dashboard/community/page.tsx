@@ -113,8 +113,9 @@ export default function CommunityPage() {
         return;
       }
 
-      const contentIds = creatorContents.map(c => c.id);
-      const contentMap = new Map(creatorContents.map(c => [c.id, c.title]));
+      type ContentItem = { id: string; title: string };
+      const contentIds = creatorContents.map((c: ContentItem) => c.id);
+      const contentMap = new Map(creatorContents.map((c: ContentItem) => [c.id, c.title]));
 
       // Fetch comments on creator's contents
       const { data: comments, error } = await supabase
