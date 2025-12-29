@@ -1928,26 +1928,25 @@ export default function HomePage() {
             <div>
               <h4 className="text-gray-900 font-bold mb-4">서비스</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">노트 마켓</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">공부법 가이드</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">Study With Me</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">크리에이터 신청</a></li>
+                <li><Link href="/content" className="text-gray-500 hover:text-gray-900 transition-colors">노트 마켓</Link></li>
+                <li><Link href="/explore" className="text-gray-500 hover:text-gray-900 transition-colors">탐색</Link></li>
+                <li><Link href="/study-with-me" className="text-gray-500 hover:text-gray-900 transition-colors">Study With Me</Link></li>
+                <li><Link href="/become-creator" className="text-gray-500 hover:text-gray-900 transition-colors">크리에이터 신청</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-gray-900 font-bold mb-4">고객지원</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">자주 묻는 질문</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">1:1 문의</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">이용가이드</a></li>
+                <li><Link href="/faq" className="text-gray-500 hover:text-gray-900 transition-colors">자주 묻는 질문</Link></li>
+                <li><Link href="/contact" className="text-gray-500 hover:text-gray-900 transition-colors">1:1 문의</Link></li>
+                <li><Link href="/help" className="text-gray-500 hover:text-gray-900 transition-colors">이용가이드</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-gray-900 font-bold mb-4">법적 고지</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">이용약관</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">개인정보처리방침</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-gray-900 transition-colors">저작권 정책</a></li>
+                <li><Link href="/terms" className="text-gray-500 hover:text-gray-900 transition-colors">이용약관</Link></li>
+                <li><Link href="/privacy" className="text-gray-500 hover:text-gray-900 transition-colors">개인정보처리방침</Link></li>
               </ul>
             </div>
           </div>

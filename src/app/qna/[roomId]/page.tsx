@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate, formatNumber } from '@/lib/utils';
-import { Button, Badge, Avatar, Card, CardContent, Spinner, LoadingInline } from '@/components/ui';
+import { Button, Badge, Avatar, Card, CardContent, Spinner, LoadingInline, useToastActions } from '@/components/ui';
 
 interface Question {
   id: string;
@@ -85,11 +85,21 @@ const itemVariants = {
 function QuestionCard({
   question,
   onAnswer,
+  isAnswering,
+  answerContent,
+  onAnswerContentChange,
+  onSubmitAnswer,
+  isSubmittingAnswer,
 }: {
   question: Question;
   onAnswer: (questionId: string) => void;
+  isAnswering: boolean;
+  answerContent: string;
+  onAnswerContentChange: (content: string) => void;
+  onSubmitAnswer: (questionId: string) => void;
+  isSubmittingAnswer: boolean;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(isAnswering);
 
   return (
     <motion.div variants={itemVariants}>
@@ -144,7 +154,7 @@ function QuestionCard({
 
           {/* Answers */}
           <AnimatePresence>
-            {isExpanded && question.answers.length > 0 && (
+            {(isExpanded || isAnswering) && (question.answers.length > 0 || isAnswering) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
@@ -185,6 +195,45 @@ function QuestionCard({
                     </div>
                   </div>
                 ))}
+
+                {/* Answer Input */}
+                {isAnswering && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="pt-3 border-t border-gray-100"
+                  >
+                    <textarea
+                      placeholder="답변을 입력하세요..."
+                      value={answerContent}
+                      onChange={(e) => onAnswerContentChange(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 text-sm text-gray-900 placeholder-gray-500 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onAnswer(question.id)}
+                      >
+                        취소
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => onSubmitAnswer(question.id)}
+                        disabled={!answerContent.trim() || isSubmittingAnswer}
+                        className="gap-2"
+                      >
+                        {isSubmittingAnswer ? (
+                          <LoadingInline />
+                        ) : (
+                          <Send className="w-3.5 h-3.5" />
+                        )}
+                        답변 등록
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -197,12 +246,18 @@ function QuestionCard({
 export default function QnARoomPage() {
   const params = useParams();
   const roomId = params.roomId as string;
+  const toast = useToastActions();
 
   const [room, setRoom] = useState<QnARoom | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newQuestion, setNewQuestion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>('나');
+  const [answeringQuestionId, setAnsweringQuestionId] = useState<string | null>(null);
+  const [answerContent, setAnswerContent] = useState('');
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
   useEffect(() => {
     loadRoom();
@@ -211,6 +266,21 @@ export default function QnARoomPage() {
   const loadRoom = async () => {
     try {
       const supabase = createClient();
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        // Get user profile for display name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single();
+        if (profile?.nickname) {
+          setCurrentUserName(profile.nickname);
+        }
+      }
 
       // Try to load room
       const { data: roomData, error: roomError } = await supabase
@@ -345,36 +415,155 @@ export default function QnARoomPage() {
     setIsSubmitting(true);
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!user) return;
+      if (!currentUserId) {
+        toast.warning('인증 필요', '로그인이 필요합니다.');
+        return;
+      }
 
-      // Add question (mock for now)
-      const newQ: Question = {
-        id: `temp-${Date.now()}`,
-        content: newQuestion.trim(),
-        author: {
-          id: user.id,
-          display_name: '나',
-        },
-        created_at: new Date().toISOString(),
-        is_answered: false,
-        upvotes: 0,
-        answers: [],
-      };
+      // Insert question to DB
+      const { data: insertedQuestion, error: insertError } = await supabase
+        .from('qna_questions')
+        .insert({
+          room_id: roomId,
+          author_id: currentUserId,
+          content: newQuestion.trim(),
+          is_answered: false,
+          upvotes: 0,
+        })
+        .select()
+        .single();
 
-      setQuestions(prev => [newQ, ...prev]);
+      if (insertError) {
+        console.error('DB insert error:', insertError);
+        // Fallback to local state for demo
+        const newQ: Question = {
+          id: `temp-${Date.now()}`,
+          content: newQuestion.trim(),
+          author: {
+            id: currentUserId,
+            display_name: currentUserName,
+          },
+          created_at: new Date().toISOString(),
+          is_answered: false,
+          upvotes: 0,
+          answers: [],
+        };
+        setQuestions(prev => [newQ, ...prev]);
+      } else {
+        // Add with real DB data
+        const newQ: Question = {
+          id: insertedQuestion.id,
+          content: insertedQuestion.content,
+          author: {
+            id: currentUserId,
+            display_name: currentUserName,
+          },
+          created_at: insertedQuestion.created_at,
+          is_answered: false,
+          upvotes: 0,
+          answers: [],
+        };
+        setQuestions(prev => [newQ, ...prev]);
+      }
       setNewQuestion('');
     } catch (error) {
       console.error('Failed to submit question:', error);
+      toast.error('오류', '질문 등록에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleAnswer = (questionId: string) => {
-    // Open answer modal or inline answer input
-    console.log('Answer to:', questionId);
+    if (answeringQuestionId === questionId) {
+      setAnsweringQuestionId(null);
+      setAnswerContent('');
+    } else {
+      setAnsweringQuestionId(questionId);
+      setAnswerContent('');
+    }
+  };
+
+  const handleSubmitAnswer = async (questionId: string) => {
+    if (!answerContent.trim() || isSubmittingAnswer) return;
+
+    setIsSubmittingAnswer(true);
+    try {
+      const supabase = createClient();
+
+      if (!currentUserId) {
+        toast.warning('인증 필요', '로그인이 필요합니다.');
+        return;
+      }
+
+      // Check if current user is the room creator
+      const isCreator = room?.creator.id === currentUserId;
+
+      // Insert answer to DB
+      const { data: insertedAnswer, error: insertError } = await supabase
+        .from('qna_answers')
+        .insert({
+          question_id: questionId,
+          author_id: currentUserId,
+          content: answerContent.trim(),
+          is_accepted: false,
+          upvotes: 0,
+        })
+        .select()
+        .single();
+
+      const newAnswer: Answer = {
+        id: insertedAnswer?.id || `temp-${Date.now()}`,
+        content: answerContent.trim(),
+        author: {
+          id: currentUserId,
+          display_name: currentUserName,
+          is_creator: isCreator,
+        },
+        created_at: insertedAnswer?.created_at || new Date().toISOString(),
+        is_accepted: false,
+        upvotes: 0,
+      };
+
+      // Update local state
+      setQuestions(prev => prev.map(q => {
+        if (q.id === questionId) {
+          return {
+            ...q,
+            answers: [...q.answers, newAnswer],
+          };
+        }
+        return q;
+      }));
+
+      // If creator answered, mark question as answered
+      if (isCreator) {
+        await supabase
+          .from('qna_questions')
+          .update({ is_answered: true })
+          .eq('id', questionId);
+
+        setQuestions(prev => prev.map(q => {
+          if (q.id === questionId) {
+            return { ...q, is_answered: true };
+          }
+          return q;
+        }));
+      }
+
+      setAnsweringQuestionId(null);
+      setAnswerContent('');
+
+      if (insertError) {
+        console.error('DB insert error:', insertError);
+      }
+    } catch (error) {
+      console.error('Failed to submit answer:', error);
+      toast.error('오류', '답변 등록에 실패했습니다.');
+    } finally {
+      setIsSubmittingAnswer(false);
+    }
   };
 
   if (isLoading) {
@@ -511,6 +700,11 @@ export default function QnARoomPage() {
               key={question.id}
               question={question}
               onAnswer={handleAnswer}
+              isAnswering={answeringQuestionId === question.id}
+              answerContent={answeringQuestionId === question.id ? answerContent : ''}
+              onAnswerContentChange={setAnswerContent}
+              onSubmitAnswer={handleSubmitAnswer}
+              isSubmittingAnswer={isSubmittingAnswer}
             />
           ))}
         </motion.div>

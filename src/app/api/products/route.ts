@@ -16,9 +16,17 @@ export async function GET() {
       );
     }
 
+    // Join products with creator_settings to get creator info
     const { data: products, error } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        creator_settings!products_creator_id_fkey (
+          id,
+          display_name,
+          profile_image_url
+        )
+      `)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
@@ -30,7 +38,20 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ products });
+    // Transform to include creator as a flat object
+    const productsWithCreator = (products || []).map((product: {
+      creator_settings?: { display_name?: string; profile_image_url?: string } | null;
+      [key: string]: unknown;
+    }) => ({
+      ...product,
+      creator: product.creator_settings ? {
+        name: product.creator_settings.display_name || '익명',
+        avatar_url: product.creator_settings.profile_image_url,
+      } : { name: '익명' },
+      creator_settings: undefined, // Remove the nested object
+    }));
+
+    return NextResponse.json({ products: productsWithCreator });
   } catch (error) {
     console.error('Products API error:', error);
     return NextResponse.json(

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { Button, Card, CardContent, Spinner } from '@/components/ui';
+import { Button, Card, CardContent, Spinner, useToastActions } from '@/components/ui';
 
 // Animation variants
 const containerVariants = {
@@ -58,6 +58,7 @@ const LANGUAGES = [
 
 export default function AccountSettingsPage() {
   const router = useRouter();
+  const toast = useToastActions();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -75,9 +76,23 @@ export default function AccountSettingsPage() {
 
   const loadSettings = async () => {
     try {
-      const saved = localStorage.getItem('account_settings');
-      if (saved) {
-        setSettings(JSON.parse(saved));
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // DB에서 설정 로드
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('account_settings')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data?.account_settings) {
+        setSettings({ ...settings, ...data.account_settings });
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -97,8 +112,18 @@ export default function AccountSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('account_settings', JSON.stringify(settings));
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: user.id,
+            account_settings: settings,
+            updated_at: new Date().toISOString(),
+          });
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
     } finally {
@@ -118,20 +143,28 @@ export default function AccountSettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== '계정 삭제') {
-      alert('"계정 삭제"를 정확히 입력해주세요.');
+      toast.warning('입력 오류', '"계정 삭제"를 정확히 입력해주세요.');
       return;
     }
 
     setIsDeleting(true);
     try {
-      // 실제로는 계정 삭제 API 호출
-      await new Promise(resolve => setTimeout(resolve, 1000));
       const supabase = createClient();
+
+      // 사용자 데이터 삭제 (RPC 함수 호출)
+      const { error: deleteError } = await supabase.rpc('delete_user_account');
+
+      if (deleteError) {
+        console.error('Failed to delete user data:', deleteError);
+        throw deleteError;
+      }
+
+      // 로그아웃 처리
       await supabase.auth.signOut();
       router.push('/');
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert('계정 삭제에 실패했습니다.');
+      toast.error('오류', '계정 삭제에 실패했습니다.');
     } finally {
       setIsDeleting(false);
     }

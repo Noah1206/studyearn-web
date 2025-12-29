@@ -111,7 +111,7 @@ export default function ContactPage() {
             </p>
             <div className="space-y-3">
               <Link href="/">
-                <Button fullWidth className="bg-blue-600 hover:bg-blue-700">
+                <Button fullWidth className="bg-orange-500 hover:bg-orange-600">
                   홈으로 돌아가기
                 </Button>
               </Link>
@@ -306,7 +306,7 @@ export default function ContactPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 py-3"
+                className="w-full bg-orange-500 hover:bg-orange-600 py-3"
               >
                 {isSubmitting ? (
                   <>

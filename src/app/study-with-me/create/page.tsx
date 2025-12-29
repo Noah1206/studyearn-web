@@ -23,7 +23,7 @@ import {
   CloudRain,
   VolumeX,
 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Card, CardContent, useToastActions } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +55,7 @@ const CAPACITY_OPTIONS = [
 
 export default function CreateStudyRoomPage() {
   const router = useRouter();
+  const toast = useToastActions();
 
   // 인증 상태
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -163,7 +164,7 @@ export default function CreateStudyRoomPage() {
 
       if (error) {
         console.error('Failed to create room:', error);
-        alert('방 생성에 실패했습니다. 다시 시도해주세요.');
+        toast.error('오류', '방 생성에 실패했습니다. 다시 시도해주세요.');
         return;
       }
 
@@ -180,7 +181,7 @@ export default function CreateStudyRoomPage() {
       router.push(`/study-room/${room.id}`);
     } catch (error) {
       console.error('Failed to create room:', error);
-      alert('방 생성에 실패했습니다. 다시 시도해주세요.');
+      toast.error('오류', '방 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsCreating(false);
     }
@@ -195,7 +196,7 @@ export default function CreateStudyRoomPage() {
       setShowCapacityDropdown(false);
       setCustomCapacity('');
     } else {
-      alert('2~100 사이의 숫자를 입력해주세요.');
+      toast.warning('입력 오류', '2~100 사이의 숫자를 입력해주세요.');
     }
   };
 
@@ -276,7 +277,7 @@ export default function CreateStudyRoomPage() {
             <Button
               onClick={handleQuickStart}
               disabled={!isValid || isCreating}
-              className="w-full h-14 text-base font-bold bg-green-500 hover:bg-green-600 gap-2"
+              className="w-full h-14 text-base font-bold bg-orange-500 hover:bg-orange-600 gap-2"
             >
               {isCreating ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -515,7 +516,7 @@ export default function CreateStudyRoomPage() {
               <Button
                 onClick={handleCreate}
                 disabled={!isValid || isCreating}
-                className="w-full h-14 text-base font-bold bg-green-500 hover:bg-green-600 gap-2 mt-4"
+                className="w-full h-14 text-base font-bold bg-orange-500 hover:bg-orange-600 gap-2 mt-4"
               >
                 {isCreating ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

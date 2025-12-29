@@ -201,7 +201,7 @@ function RankingContent() {
             className={cn(
               "flex-1 py-3 rounded-xl font-medium text-sm transition-all",
               activeTab === 'creators'
-                ? "bg-blue-600 text-white shadow-lg"
+                ? "bg-gray-900 text-white shadow-lg"
                 : "bg-white text-gray-700 border border-gray-200"
             )}
           >
@@ -213,7 +213,7 @@ function RankingContent() {
             className={cn(
               "flex-1 py-3 rounded-xl font-medium text-sm transition-all",
               activeTab === 'contents'
-                ? "bg-blue-600 text-white shadow-lg"
+                ? "bg-gray-900 text-white shadow-lg"
                 : "bg-white text-gray-700 border border-gray-200"
             )}
           >

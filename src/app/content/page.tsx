@@ -404,86 +404,20 @@ export default function ProductsPage() {
 
         const subjects = ['국어', '수학', '영어', '과학', '사회', '한국사'];
         const grades = ['고1', '고2', '고3', '대학교', '자격증'];
-        const creators = ['공부왕', '노트장인', '정리의신', '수능만점', '학습메이트'];
 
-        // 루틴 Mock 데이터
-        const routineMockProducts: DisplayProduct[] = [
-          {
-            id: 'routine-1',
-            title: '수능 D-100 공부 루틴표',
-            description: '하루 14시간 공부 스케줄, 과목별 시간 배분 포함',
-            price: 3000,
-            thumbnail_url: null,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            download_count: 892,
-            rating: 4.9,
-            review_count: 156,
-            creator: { name: '수능만점러' },
-            subject: '루틴',
-            grade: '고3',
-          },
-          {
-            id: 'routine-2',
-            title: '새벽 기상 습관 30일 챌린지',
-            description: '5시 기상 루틴 + 아침 공부법 + 체크리스트',
-            price: 2000,
-            thumbnail_url: null,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            download_count: 1243,
-            rating: 4.7,
-            review_count: 89,
-            creator: { name: '얼리버드' },
-            subject: '루틴',
-            grade: '고1',
-          },
-          {
-            id: 'routine-3',
-            title: '주간 학습 플래너 템플릿 (프린트용)',
-            description: '월~일 시간표 + 목표 설정 + 회고 섹션',
-            price: 1000,
-            thumbnail_url: null,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            download_count: 2156,
-            rating: 4.8,
-            review_count: 234,
-            creator: { name: '플래너장인' },
-            subject: '플래너',
-            grade: '고2',
-          },
-          {
-            id: 'routine-4',
-            title: '대학생 시간관리 루틴 (학점 4.3 비결)',
-            description: '수업, 과제, 동아리, 알바 병행 시간표',
-            price: 5000,
-            thumbnail_url: null,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            download_count: 567,
-            rating: 4.6,
-            review_count: 78,
-            creator: { name: '학점부자' },
-            subject: '루틴',
-            grade: '대학교',
-          },
-        ];
-
-        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: Product, i: number) => ({
+        // Use real creator data from API, fallback to '익명' if not available
+        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: Product & { creator?: { name: string } }, i: number) => ({
           ...p,
           download_count: Math.floor(Math.random() * 500) + 10,
           rating: 4.0 + Math.random() * 1.0,
           review_count: Math.floor(Math.random() * 100) + 5,
-          creator: {
-            name: creators[i % creators.length],
-          },
+          // Use creator from API if available
+          creator: p.creator || { name: '익명' },
           subject: subjects[i % subjects.length],
           grade: grades[i % grades.length],
         }));
 
-        // 루틴 데이터 + 기존 데이터 합치기
-        setProducts([...routineMockProducts, ...enhancedProducts]);
+        setProducts(enhancedProducts);
       } catch (error) {
         console.error('Failed to fetch products:', error);
         setProducts([]);

@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Avatar } from '@/components/ui';
+import { Button, Avatar, useToastActions } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { agoraService, RemoteUser } from '@/lib/agora/agoraService';
 import type { ICameraVideoTrack, IRemoteVideoTrack } from 'agora-rtc-sdk-ng';
@@ -401,6 +401,7 @@ function SeatSelectionView({
   onViewParticipant?: (participant: Participant) => void;
   onLeave: () => void;
 }) {
+  const toast = useToastActions();
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const totalSeats = room.max_participants || 20;
   const theme = THEME_STYLES[room.theme] || THEME_STYLES.focus;
@@ -447,7 +448,7 @@ function SeatSelectionView({
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(room.invite_code!);
-                    alert('초대 코드가 복사되었습니다');
+                    toast.success('복사 완료', '초대 코드가 복사되었습니다');
                   }}
                   className="p-2 text-gray-600 hover:text-gray-900"
                 >
@@ -921,6 +922,7 @@ function MyStudyScreen({
 export default function StudyRoomPage() {
   const params = useParams();
   const router = useRouter();
+  const toast = useToastActions();
   const roomId = params.id as string;
 
   // Phase 관리
@@ -1085,7 +1087,7 @@ export default function StudyRoomPage() {
         setPhase('studying');
       } catch (err) {
         console.error('Failed to update seat:', err);
-        alert('좌석 변경에 실패했습니다.');
+        toast.error('오류', '좌석 변경에 실패했습니다.');
       }
     } else {
       // 신규 참여자 - 목표 설정 화면으로
@@ -1137,7 +1139,7 @@ export default function StudyRoomPage() {
       setPhase('studying');
     } catch (err) {
       console.error('Failed to join room:', err);
-      alert('방 참여에 실패했습니다. 다시 시도해주세요.');
+      toast.error('오류', '방 참여에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -1692,7 +1694,7 @@ export default function StudyRoomPage() {
       }
     } catch (err) {
       console.error('Failed to toggle camera:', err);
-      alert('카메라 접근에 실패했습니다. 브라우저 권한을 확인해주세요.');
+      toast.error('카메라 오류', '카메라 접근에 실패했습니다. 브라우저 권한을 확인해주세요.');
     }
   };
 
@@ -1714,7 +1716,7 @@ export default function StudyRoomPage() {
       }
     } catch (err) {
       console.error('Failed to toggle mic:', err);
-      alert('마이크 접근에 실패했습니다. 브라우저 권한을 확인해주세요.');
+      toast.error('마이크 오류', '마이크 접근에 실패했습니다. 브라우저 권한을 확인해주세요.');
     }
   };
 

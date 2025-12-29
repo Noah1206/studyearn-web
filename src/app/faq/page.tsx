@@ -241,7 +241,7 @@ export default function FAQPage() {
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
                   activeCategory === category.id
-                    ? "bg-blue-600 text-white"
+                    ? "bg-gray-900 text-white"
                     : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                 )}
               >
@@ -278,9 +278,9 @@ export default function FAQPage() {
         </Card>
 
         {/* 추가 도움 */}
-        <Card variant="outlined" className="mt-6 bg-blue-50 border-blue-200">
+        <Card variant="outlined" className="mt-6 bg-orange-50 border-orange-200">
           <CardContent className="p-6 text-center">
-            <MessageCircle className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+            <MessageCircle className="w-10 h-10 text-orange-500 mx-auto mb-3" />
             <h3 className="font-semibold text-gray-900 mb-1">
               원하는 답변을 찾지 못하셨나요?
             </h3>
@@ -288,7 +288,7 @@ export default function FAQPage() {
               고객센터에 문의하시면 친절하게 안내해드리겠습니다.
             </p>
             <Link href="/contact">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-orange-500 hover:bg-orange-600">
                 <MessageCircle size={16} className="mr-2" />
                 고객센터 문의하기
               </Button>

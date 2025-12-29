@@ -85,7 +85,7 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState('ko');
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndSettings = async () => {
       if (!supabase) return;
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -96,10 +96,33 @@ export default function SettingsPage() {
       }
 
       setUser(user);
+
+      // Load user preferences from database
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('notification_settings, privacy_settings')
+        .eq('user_id', user.id)
+        .single();
+
+      if (preferences) {
+        if (preferences.notification_settings) {
+          setNotificationSettings(prev => ({
+            ...prev,
+            ...preferences.notification_settings,
+          }));
+        }
+        if (preferences.privacy_settings) {
+          setPrivacySettings(prev => ({
+            ...prev,
+            ...preferences.privacy_settings,
+          }));
+        }
+      }
+
       setIsLoading(false);
     };
 
-    fetchUser();
+    fetchUserAndSettings();
   }, [supabase, router]);
 
   const handleLogout = async () => {
@@ -129,17 +152,43 @@ export default function SettingsPage() {
   };
 
   const handleSaveNotifications = async () => {
+    if (!user || !supabase) return;
     setIsSaving(true);
-    // TODO: Save to database
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setIsSaving(false);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          notification_settings: notificationSettings,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to save notification settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSavePrivacy = async () => {
+    if (!user || !supabase) return;
     setIsSaving(true);
-    // TODO: Save to database
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setIsSaving(false);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          privacy_settings: privacySettings,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to save privacy settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {

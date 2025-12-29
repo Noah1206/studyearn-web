@@ -37,6 +37,11 @@ interface Product {
   thumbnail_url: string | null;
   is_active: boolean;
   created_at: string;
+  creator?: {
+    name: string;
+    avatar_url?: string | null;
+    bio?: string | null;
+  };
 }
 
 interface ProductPageProps {
@@ -263,6 +268,34 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 <h1 className="text-2xl font-bold text-gray-900 mb-3">
                   {product.title}
                 </h1>
+
+                {/* Creator Info */}
+                {product.creator && (
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {product.creator.avatar_url ? (
+                        <Image
+                          src={product.creator.avatar_url}
+                          alt={product.creator.name}
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-500 text-sm font-medium">
+                          {product.creator.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{product.creator.name}</p>
+                      {product.creator.bio && (
+                        <p className="text-sm text-gray-500 line-clamp-1">{product.creator.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {product.description && (
                   <p className="text-gray-600 whitespace-pre-line">
                     {product.description}

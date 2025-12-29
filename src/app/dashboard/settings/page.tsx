@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { Button, Card, CardContent, Input, Spinner } from '@/components/ui';
+import { Button, Card, CardContent, Input, Spinner, useToastActions } from '@/components/ui';
 import type { CreatorSettings } from '@/types/database';
 
 // Tab Configuration
@@ -46,6 +46,7 @@ const SOCIAL_PLATFORMS = [
 ];
 
 export default function SettingsPage() {
+  const toast = useToastActions();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
@@ -117,15 +118,20 @@ export default function SettingsPage() {
         });
       }
 
-      // Load links from localStorage (or could be separate table)
-      const savedLinks = localStorage.getItem('stuple_creator_links');
-      if (savedLinks) {
-        setLinksForm(JSON.parse(savedLinks));
-      }
+      // Load links and privacy from user_preferences table
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('social_links, privacy_settings')
+        .eq('user_id', user.id)
+        .single();
 
-      const savedPrivacy = localStorage.getItem('stuple_privacy_settings');
-      if (savedPrivacy) {
-        setPrivacyForm(JSON.parse(savedPrivacy));
+      if (preferences) {
+        if (preferences.social_links) {
+          setLinksForm(prev => ({ ...prev, ...preferences.social_links }));
+        }
+        if (preferences.privacy_settings) {
+          setPrivacyForm(prev => ({ ...prev, ...preferences.privacy_settings }));
+        }
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -173,10 +179,10 @@ export default function SettingsPage() {
       if (error) throw error;
 
       setErrors({});
-      alert('프로필이 저장되었습니다.');
+      toast.success('저장 완료', '프로필이 저장되었습니다.');
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('저장에 실패했습니다.');
+      toast.error('오류', '저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -185,11 +191,23 @@ export default function SettingsPage() {
   const handleSaveLinks = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('stuple_creator_links', JSON.stringify(linksForm));
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      alert('링크가 저장되었습니다.');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          social_links: linksForm,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      toast.success('저장 완료', '링크가 저장되었습니다.');
     } catch (error) {
-      alert('저장에 실패했습니다.');
+      console.error('Failed to save links:', error);
+      toast.error('오류', '저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -212,10 +230,10 @@ export default function SettingsPage() {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      alert('페이지 설정이 저장되었습니다.');
+      toast.success('저장 완료', '페이지 설정이 저장되었습니다.');
     } catch (error) {
       console.error('Failed to save page settings:', error);
-      alert('저장에 실패했습니다.');
+      toast.error('오류', '저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -224,11 +242,23 @@ export default function SettingsPage() {
   const handleSavePrivacy = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('stuple_privacy_settings', JSON.stringify(privacyForm));
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      alert('개인정보 설정이 저장되었습니다.');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          privacy_settings: privacyForm,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      toast.success('저장 완료', '개인정보 설정이 저장되었습니다.');
     } catch (error) {
-      alert('저장에 실패했습니다.');
+      console.error('Failed to save privacy settings:', error);
+      toast.error('오류', '저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }

@@ -383,14 +383,47 @@ export default function UploadPage() {
           fileContentType = 'image';
         }
 
+        // Supabase Storage에 파일 업로드
+        const fileName = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filePath = `contents/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('contents')
+          .upload(filePath, file!, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          // 버킷이 없는 경우 처리
+          if (uploadError.message?.includes('Bucket not found')) {
+            setError('파일 저장소가 설정되지 않았어요. 관리자에게 문의하세요.');
+          } else {
+            setError('파일 업로드에 실패했어요. 다시 시도해주세요.');
+          }
+          return;
+        }
+
+        // 공개 URL 가져오기
+        const { data: { publicUrl } } = supabase.storage
+          .from('contents')
+          .getPublicUrl(filePath);
+
+        // 썸네일 URL 설정 (이미지인 경우 원본 URL 사용)
+        let thumbnailUrl = null;
+        if (fileContentType === 'image') {
+          thumbnailUrl = publicUrl;
+        }
+
         // 콘텐츠 데이터
         const contentData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
           content_type: fileContentType,
-          url: `placeholder://${file!.name}`, // 실제로는 Storage 업로드 후 URL
-          thumbnail_url: null, // 썸네일 없음
+          url: publicUrl,
+          thumbnail_url: thumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
@@ -403,6 +436,8 @@ export default function UploadPage() {
 
         if (insertError) {
           console.error('Upload error:', insertError);
+          // 실패 시 업로드된 파일 삭제 시도
+          await supabase.storage.from('contents').remove([filePath]);
           setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
           return;
         }

@@ -59,120 +59,74 @@ export default function LikedContentsPage() {
 
       if (!user) return;
 
-      // 실제로는 content_likes 테이블에서 조회
-      // 현재는 Mock 데이터 사용
-      const mockLikedContents: LikedContent[] = [
-        {
-          id: '1',
-          product_id: null,
-          creator_id: 'creator1',
-          title: '영어 단어 암기법 총정리',
-          description: '효과적인 영단어 암기 방법',
-          type: 'video',
-          content_type: 'video',
-          url: '',
-          thumbnail_url: null,
-          duration: null,
-          sort_order: 0,
-          is_active: true,
-          access_level: 'public',
-          price: null,
-          view_count: 3420,
-          like_count: 234,
-          is_published: true,
-          published_at: '2024-12-22T10:00:00Z',
-          created_at: '2024-12-22T09:00:00Z',
-          updated_at: '2024-12-22T10:00:00Z',
-          liked_at: '2024-12-23T14:30:00Z',
-          creator: {
-            display_name: '영어왕',
-            profile_image_url: null,
-          },
-        },
-        {
-          id: '2',
-          product_id: null,
-          creator_id: 'creator2',
-          title: '고등학교 과학 실험 모음',
-          description: '집에서 할 수 있는 과학 실험',
-          type: 'video',
-          content_type: 'video',
-          url: '',
-          thumbnail_url: null,
-          duration: null,
-          sort_order: 0,
-          is_active: true,
-          access_level: 'subscribers',
-          price: null,
-          view_count: 1890,
-          like_count: 312,
-          is_published: true,
-          published_at: '2024-12-19T16:00:00Z',
-          created_at: '2024-12-19T15:00:00Z',
-          updated_at: '2024-12-19T16:00:00Z',
-          liked_at: '2024-12-21T11:20:00Z',
-          creator: {
-            display_name: '과학쌤',
-            profile_image_url: null,
-          },
-        },
-        {
-          id: '3',
-          product_id: null,
-          creator_id: 'creator3',
-          title: '시험 전 마인드 컨트롤',
-          description: '긴장을 풀고 집중하는 방법',
-          type: 'video',
-          content_type: 'video',
-          url: '',
-          thumbnail_url: null,
-          duration: null,
-          sort_order: 0,
-          is_active: true,
-          access_level: 'public',
-          price: null,
-          view_count: 5670,
-          like_count: 892,
-          is_published: true,
-          published_at: '2024-12-17T09:00:00Z',
-          created_at: '2024-12-17T08:00:00Z',
-          updated_at: '2024-12-17T09:00:00Z',
-          liked_at: '2024-12-20T08:45:00Z',
-          creator: {
-            display_name: '멘탈코치',
-            profile_image_url: null,
-          },
-        },
-        {
-          id: '4',
-          product_id: null,
-          creator_id: 'creator4',
-          title: '필기 노트 정리 템플릿',
-          description: '깔끔한 노트 정리를 위한 템플릿',
-          type: 'pdf',
-          content_type: 'pdf',
-          url: '',
-          thumbnail_url: null,
-          duration: null,
-          sort_order: 0,
-          is_active: true,
-          access_level: 'public',
-          price: 1000,
-          view_count: 2340,
-          like_count: 456,
-          is_published: true,
-          published_at: '2024-12-15T14:00:00Z',
-          created_at: '2024-12-15T13:00:00Z',
-          updated_at: '2024-12-15T14:00:00Z',
-          liked_at: '2024-12-18T16:30:00Z',
-          creator: {
-            display_name: '노트마스터',
-            profile_image_url: null,
-          },
-        },
-      ];
+      // content_likes 테이블에서 좋아요한 콘텐츠 조회
+      const { data: likes, error } = await supabase
+        .from('content_likes')
+        .select(`
+          id,
+          created_at,
+          content_id,
+          contents (
+            id,
+            product_id,
+            creator_id,
+            title,
+            description,
+            type,
+            content_type,
+            url,
+            thumbnail_url,
+            duration,
+            sort_order,
+            is_active,
+            access_level,
+            price,
+            view_count,
+            like_count,
+            is_published,
+            published_at,
+            created_at,
+            updated_at
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      setLikedContents(mockLikedContents);
+      if (error) {
+        console.error('Failed to load liked contents:', error);
+        setLikedContents([]);
+        return;
+      }
+
+      // 크리에이터 정보 조회
+      const transformedContents: LikedContent[] = await Promise.all(
+        (likes || []).map(async (like: any) => {
+          const content = like.contents;
+          if (!content) return null;
+
+          // 크리에이터 정보 가져오기
+          let creator = null;
+          if (content.creator_id) {
+            const { data: creatorData } = await supabase
+              .from('creator_settings')
+              .select('display_name, profile_image_url')
+              .eq('user_id', content.creator_id)
+              .single();
+            creator = creatorData;
+          }
+
+          return {
+            ...content,
+            liked_at: like.created_at,
+            creator: creator ? {
+              display_name: creator.display_name,
+              profile_image_url: creator.profile_image_url,
+            } : null,
+          };
+        })
+      );
+
+      setLikedContents(transformedContents.filter(Boolean) as LikedContent[]);
     } catch (error) {
       console.error('Failed to load liked contents:', error);
     } finally {
@@ -183,8 +137,24 @@ export default function LikedContentsPage() {
   const handleUnlike = async (contentId: string) => {
     setUnlikingId(contentId);
     try {
-      // 실제로는 Supabase에서 좋아요 취소
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      // content_likes 테이블에서 좋아요 삭제
+      const { error } = await supabase
+        .from('content_likes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_id', contentId);
+
+      if (error) throw error;
+
+      // 콘텐츠 like_count 감소
+      await supabase.rpc('decrement_like_count', { p_content_id: contentId });
+
+      // UI에서 제거
       setLikedContents(prev => prev.filter(c => c.id !== contentId));
     } catch (error) {
       console.error('Failed to unlike content:', error);

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui';
+import { Button, Card, CardContent, Badge, Spinner, useToastActions } from '@/components/ui';
 
 // Notification Categories
 const NOTIFICATION_CATEGORIES = [
@@ -102,6 +102,7 @@ interface NotificationSettings {
 }
 
 export default function NotificationsPage() {
+  const toast = useToastActions();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>({});
@@ -133,17 +134,29 @@ export default function NotificationsPage() {
       });
     });
 
-    // Try to load saved settings from localStorage
-    const saved = localStorage.getItem('stuple_notification_settings');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSettings({ ...defaultSettings, ...parsed.settings });
-        setGlobalSettings({ ...globalSettings, ...parsed.globalSettings });
-      } catch {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // Load from user_preferences table
+        const { data: preferences } = await supabase
+          .from('user_preferences')
+          .select('creator_notification_settings')
+          .eq('user_id', user.id)
+          .single();
+
+        if (preferences?.creator_notification_settings) {
+          const saved = preferences.creator_notification_settings;
+          setSettings({ ...defaultSettings, ...saved.settings });
+          setGlobalSettings(prev => ({ ...prev, ...saved.globalSettings }));
+        } else {
+          setSettings(defaultSettings);
+        }
+      } else {
         setSettings(defaultSettings);
       }
-    } else {
+    } catch {
       setSettings(defaultSettings);
     }
 
@@ -183,18 +196,28 @@ export default function NotificationsPage() {
     setIsSaving(true);
 
     try {
-      localStorage.setItem(
-        'stuple_notification_settings',
-        JSON.stringify({ settings, globalSettings })
-      );
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      // Here you would also save to the server
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!user) {
+        toast.warning('인증 필요', '로그인이 필요합니다.');
+        return;
+      }
 
-      alert('설정이 저장되었습니다.');
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          creator_notification_settings: { settings, globalSettings },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      toast.success('저장 완료', '설정이 저장되었습니다.');
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('설정 저장에 실패했습니다.');
+      toast.error('오류', '설정 저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }

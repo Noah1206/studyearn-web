@@ -36,20 +36,70 @@ const TIME_PERIODS = [
   { value: 'all', label: '전체' },
 ];
 
-// Mock data for charts (실제 구현시 Supabase에서 조회)
-const generateMockChartData = (days: number) => {
+// Generate chart data from DB
+const generateChartData = async (
+  supabase: ReturnType<typeof createClient>,
+  creatorId: string,
+  days: number
+): Promise<Array<{ date: string; views: number; revenue: number; subscribers: number }>> => {
   const data = [];
   const today = new Date();
+
+  // Get content IDs for this creator
+  const { data: contents } = await supabase
+    .from('contents')
+    .select('id')
+    .eq('creator_id', creatorId);
+
+  const contentIds = contents?.map((c: { id: string }) => c.id) || [];
+
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + 1);
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+
+    // Get views for this date
+    let viewCount = 0;
+    if (contentIds.length > 0) {
+      const { count } = await supabase
+        .from('content_views')
+        .select('*', { count: 'exact', head: true })
+        .in('content_id', contentIds)
+        .gte('viewed_at', dateStr)
+        .lt('viewed_at', nextDateStr);
+      viewCount = count || 0;
+    }
+
+    // Get subscriber changes for this date
+    const { count: subCount } = await supabase
+      .from('creator_subscriptions')
+      .select('*', { count: 'exact', head: true })
+      .eq('creator_id', creatorId)
+      .gte('created_at', dateStr)
+      .lt('created_at', nextDateStr);
+
+    // Get revenue for this date (from purchases)
+    const { data: purchases } = await supabase
+      .from('purchases')
+      .select('amount')
+      .eq('seller_id', creatorId)
+      .eq('status', 'completed')
+      .gte('created_at', dateStr)
+      .lt('created_at', nextDateStr);
+
+    const dailyRevenue = purchases?.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0) || 0;
+
     data.push({
-      date: date.toISOString().split('T')[0],
-      views: Math.floor(Math.random() * 500) + 100,
-      revenue: Math.floor(Math.random() * 50000) + 10000,
-      subscribers: Math.floor(Math.random() * 10) + 1,
+      date: dateStr,
+      views: viewCount,
+      revenue: dailyRevenue,
+      subscribers: subCount || 0,
     });
   }
+
   return data;
 };
 
@@ -98,21 +148,25 @@ export default function AnalyticsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get revenue stats
-      const { data: revenueStats } = await supabase
-        .from('creator_revenue_stats')
-        .select('*')
-        .eq('creator_id', user.id)
-        .single();
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const today = new Date();
+      const periodStart = new Date(today);
+      periodStart.setDate(periodStart.getDate() - days);
+      const prevPeriodStart = new Date(periodStart);
+      prevPeriodStart.setDate(prevPeriodStart.getDate() - days);
 
-      // Get contents with stats
-      const { data: contents } = await supabase
+      // Get contents for this creator
+      const { data: allContents } = await supabase
         .from('contents')
         .select('id, title, content_type, view_count, like_count, comment_count')
-        .eq('creator_id', user.id)
-        .eq('is_published', true)
-        .order('view_count', { ascending: false })
-        .limit(5);
+        .eq('creator_id', user.id);
+
+      const contentIds = allContents?.map((c) => c.id) || [];
+
+      // Calculate totals
+      const totalViews = allContents?.reduce((sum: number, c: { view_count: number | null }) => sum + (c.view_count || 0), 0) || 0;
+      const totalLikes = allContents?.reduce((sum: number, c: { like_count: number | null }) => sum + (c.like_count || 0), 0) || 0;
+      const totalComments = allContents?.reduce((sum: number, c: { comment_count: number | null }) => sum + (c.comment_count || 0), 0) || 0;
 
       // Get subscriber count
       const { count: subscriberCount } = await supabase
@@ -121,45 +175,149 @@ export default function AnalyticsPage() {
         .eq('creator_id', user.id)
         .eq('status', 'active');
 
-      // Calculate totals
-      const { data: allContents } = await supabase
-        .from('contents')
-        .select('view_count, like_count, comment_count, content_type')
-        .eq('creator_id', user.id);
+      // Calculate views change (current vs previous period)
+      let currentPeriodViews = 0;
+      let prevPeriodViews = 0;
+      if (contentIds.length > 0) {
+        const { count: currentViews } = await supabase
+          .from('content_views')
+          .select('*', { count: 'exact', head: true })
+          .in('content_id', contentIds)
+          .gte('viewed_at', periodStart.toISOString());
+        currentPeriodViews = currentViews || 0;
 
-      const totalViews = allContents?.reduce((sum: number, c: { view_count: number | null }) => sum + (c.view_count || 0), 0) || 0;
-      const totalLikes = allContents?.reduce((sum: number, c: { like_count: number | null }) => sum + (c.like_count || 0), 0) || 0;
-      const totalComments = allContents?.reduce((sum: number, c: { comment_count: number | null }) => sum + (c.comment_count || 0), 0) || 0;
+        const { count: prevViews } = await supabase
+          .from('content_views')
+          .select('*', { count: 'exact', head: true })
+          .in('content_id', contentIds)
+          .gte('viewed_at', prevPeriodStart.toISOString())
+          .lt('viewed_at', periodStart.toISOString());
+        prevPeriodViews = prevViews || 0;
+      }
+      const viewsChange = prevPeriodViews > 0
+        ? ((currentPeriodViews - prevPeriodViews) / prevPeriodViews) * 100
+        : currentPeriodViews > 0 ? 100 : 0;
+
+      // Calculate likes change (current vs previous period)
+      let currentPeriodLikes = 0;
+      let prevPeriodLikes = 0;
+      if (contentIds.length > 0) {
+        const { count: currentLikes } = await supabase
+          .from('content_likes')
+          .select('*', { count: 'exact', head: true })
+          .in('content_id', contentIds)
+          .gte('created_at', periodStart.toISOString());
+        currentPeriodLikes = currentLikes || 0;
+
+        const { count: prevLikes } = await supabase
+          .from('content_likes')
+          .select('*', { count: 'exact', head: true })
+          .in('content_id', contentIds)
+          .gte('created_at', prevPeriodStart.toISOString())
+          .lt('created_at', periodStart.toISOString());
+        prevPeriodLikes = prevLikes || 0;
+      }
+      const likesChange = prevPeriodLikes > 0
+        ? ((currentPeriodLikes - prevPeriodLikes) / prevPeriodLikes) * 100
+        : currentPeriodLikes > 0 ? 100 : 0;
+
+      // Calculate subscribers change
+      const { count: currentSubs } = await supabase
+        .from('creator_subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('creator_id', user.id)
+        .gte('created_at', periodStart.toISOString());
+      const { count: prevSubs } = await supabase
+        .from('creator_subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('creator_id', user.id)
+        .gte('created_at', prevPeriodStart.toISOString())
+        .lt('created_at', periodStart.toISOString());
+      const subscribersChange = (prevSubs || 0) > 0
+        ? (((currentSubs || 0) - (prevSubs || 0)) / (prevSubs || 1)) * 100
+        : (currentSubs || 0) > 0 ? 100 : 0;
+
+      // Get revenue data
+      const { data: currentPurchases } = await supabase
+        .from('purchases')
+        .select('amount, purchase_type')
+        .eq('seller_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', periodStart.toISOString());
+      const { data: prevPurchases } = await supabase
+        .from('purchases')
+        .select('amount')
+        .eq('seller_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', prevPeriodStart.toISOString())
+        .lt('created_at', periodStart.toISOString());
+
+      const currentRevenue = currentPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const prevRevenue = prevPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const revenueChange = prevRevenue > 0
+        ? ((currentRevenue - prevRevenue) / prevRevenue) * 100
+        : currentRevenue > 0 ? 100 : 0;
+
+      // Get total revenue
+      const { data: allPurchases } = await supabase
+        .from('purchases')
+        .select('amount, purchase_type')
+        .eq('seller_id', user.id)
+        .eq('status', 'completed');
+      const totalRevenue = allPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+      // Calculate revenue by source from purchases
+      const subscriptionRevenue = allPurchases
+        ?.filter((p) => p.purchase_type === 'subscription')
+        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const contentSalesRevenue = allPurchases
+        ?.filter((p) => p.purchase_type === 'content')
+        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const tipsRevenue = allPurchases
+        ?.filter((p) => p.purchase_type === 'tip')
+        .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+      const revenueBySource = {
+        subscriptions: subscriptionRevenue,
+        contentSales: contentSalesRevenue,
+        tips: tipsRevenue,
+      };
 
       // Content type distribution
       const contentTypeDistribution: Record<string, number> = {};
-      allContents?.forEach((c: { content_type: string }) => {
+      allContents?.forEach((c) => {
         contentTypeDistribution[c.content_type] = (contentTypeDistribution[c.content_type] || 0) + 1;
       });
 
-      // Mock revenue by source (실제로는 payments 테이블에서 계산)
-      const totalRevenue = revenueStats?.total_revenue || 0;
-      const revenueBySource = {
-        subscriptions: Math.floor(totalRevenue * 0.6),
-        contentSales: Math.floor(totalRevenue * 0.35),
-        tips: Math.floor(totalRevenue * 0.05),
-      };
+      // Get top contents with their actual revenue
+      const { data: topContentsData } = await supabase
+        .from('contents')
+        .select('id, title, content_type, view_count, like_count')
+        .eq('creator_id', user.id)
+        .eq('is_published', true)
+        .order('view_count', { ascending: false })
+        .limit(5);
 
-      // Get top contents with revenue (simplified)
-      type ContentItem = {
-        id: string;
-        title: string;
-        content_type: string;
-        view_count: number | null;
-        like_count: number | null;
-        comment_count: number | null;
-      };
-      const topContents = (contents || []).map((c: ContentItem) => ({
-        ...c,
-        views: c.view_count,
-        likes: c.like_count,
-        revenue: Math.floor(Math.random() * 100000), // Mock data
-      }));
+      const topContents = await Promise.all(
+        (topContentsData || []).map(async (c) => {
+          // Get revenue for this content
+          const { data: contentPurchases } = await supabase
+            .from('purchases')
+            .select('amount')
+            .eq('content_id', c.id)
+            .eq('status', 'completed');
+          const contentRevenue = contentPurchases?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+          return {
+            id: c.id,
+            title: c.title,
+            content_type: c.content_type,
+            views: c.view_count || 0,
+            likes: c.like_count || 0,
+            revenue: contentRevenue,
+          };
+        })
+      );
 
       setAnalytics({
         totalViews,
@@ -167,18 +325,18 @@ export default function AnalyticsPage() {
         totalComments,
         totalSubscribers: subscriberCount || 0,
         totalRevenue,
-        viewsChange: Math.random() * 40 - 10, // Mock: -10% to +30%
-        likesChange: Math.random() * 40 - 10,
-        subscribersChange: Math.random() * 30,
-        revenueChange: Math.random() * 50 - 10,
+        viewsChange,
+        likesChange,
+        subscribersChange,
+        revenueChange,
         topContents,
         contentTypeDistribution,
         revenueBySource,
       });
 
-      // Generate chart data
-      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
-      setChartData(generateMockChartData(days));
+      // Generate chart data from real DB data
+      const chartDataFromDb = await generateChartData(supabase, user.id, days);
+      setChartData(chartDataFromDb);
     } catch (error) {
       console.error('Failed to load analytics:', error);
     } finally {

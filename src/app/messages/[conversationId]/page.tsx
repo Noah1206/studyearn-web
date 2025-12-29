@@ -125,6 +125,66 @@ export default function ConversationPage() {
     loadConversation();
   }, [conversationId]);
 
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!currentUserId || !conversationId) return;
+
+    const supabase = createClient();
+
+    // Subscribe to new messages in this conversation
+    const channel = supabase
+      .channel(`dm_messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dm_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+
+          // Only add if it's from the other user (our own messages are added optimistically)
+          if (newMessage.sender_id !== currentUserId) {
+            setMessages(prev => {
+              // Check if message already exists
+              if (prev.some(m => m.id === newMessage.id)) {
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
+
+            // Mark as read immediately since we're viewing this conversation
+            supabase
+              .from('dm_messages')
+              .update({ is_read: true })
+              .eq('id', newMessage.id);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'dm_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updatedMessage = payload.new as Message;
+          setMessages(prev =>
+            prev.map(m => m.id === updatedMessage.id ? updatedMessage : m)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, conversationId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);

@@ -247,74 +247,77 @@ export default function SavedContentsPage() {
 
       if (!user) return;
 
-      // Note: This assumes a 'content_bookmarks' or 'saved_contents' table exists
-      // If not, this will return empty array
-      // For now, using mock data to demonstrate the UI
-      const mockData: SavedContent[] = [
-        {
-          id: '1',
-          content_id: 'c1',
-          saved_at: new Date().toISOString(),
-          content: {
-            id: 'c1',
-            title: '수능 수학 킬러문항 완벽 분석',
-            description: '어려운 문제도 쉽게 풀 수 있는 비법',
-            thumbnail_url: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop',
-            content_type: 'video',
-            view_count: 12500,
-            like_count: 890,
-            creator_id: 'creator1',
-            access_level: 'public',
-          },
-          creator: {
-            display_name: '수학왕',
-            profile_image_url: undefined,
-          },
-        },
-        {
-          id: '2',
-          content_id: 'c2',
-          saved_at: new Date(Date.now() - 86400000).toISOString(),
-          content: {
-            id: 'c2',
-            title: '영어 문법 완벽 정리 노트',
-            description: '수능 영어 문법 핵심만 모았습니다',
-            thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop',
-            content_type: 'document',
-            view_count: 8900,
-            like_count: 567,
-            creator_id: 'creator2',
-            price: 3900,
-            access_level: 'paid',
-          },
-          creator: {
-            display_name: '영어천재',
-            profile_image_url: undefined,
-          },
-        },
-        {
-          id: '3',
-          content_id: 'c3',
-          saved_at: new Date(Date.now() - 172800000).toISOString(),
-          content: {
-            id: 'c3',
-            title: '집중력 향상 ASMR 공부 음악',
-            description: '백색소음과 함께하는 공부 시간',
-            thumbnail_url: undefined,
-            content_type: 'audio',
-            view_count: 45000,
-            like_count: 2300,
-            creator_id: 'creator3',
-            access_level: 'public',
-          },
-          creator: {
-            display_name: '스터디뮤직',
-            profile_image_url: undefined,
-          },
-        },
-      ];
+      // content_saves 테이블에서 저장한 콘텐츠 조회
+      const { data: saves, error } = await supabase
+        .from('content_saves')
+        .select(`
+          id,
+          content_id,
+          created_at,
+          contents (
+            id,
+            title,
+            description,
+            thumbnail_url,
+            content_type,
+            view_count,
+            like_count,
+            creator_id,
+            price,
+            access_level
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      setSavedItems(mockData);
+      if (error) {
+        console.error('Failed to load saved contents:', error);
+        setSavedItems([]);
+        return;
+      }
+
+      // 크리에이터 정보 조회
+      const transformedSaves: SavedContent[] = await Promise.all(
+        (saves || []).map(async (save: any) => {
+          const content = save.contents;
+          if (!content) return null;
+
+          // 크리에이터 정보 가져오기
+          let creator = null;
+          if (content.creator_id) {
+            const { data: creatorData } = await supabase
+              .from('creator_settings')
+              .select('display_name, profile_image_url')
+              .eq('user_id', content.creator_id)
+              .single();
+            creator = creatorData;
+          }
+
+          return {
+            id: save.id,
+            content_id: save.content_id,
+            saved_at: save.created_at,
+            content: {
+              id: content.id,
+              title: content.title,
+              description: content.description,
+              thumbnail_url: content.thumbnail_url,
+              content_type: content.content_type,
+              view_count: content.view_count || 0,
+              like_count: content.like_count || 0,
+              creator_id: content.creator_id,
+              price: content.price,
+              access_level: content.access_level,
+            },
+            creator: creator ? {
+              display_name: creator.display_name || '크리에이터',
+              profile_image_url: creator.profile_image_url,
+            } : undefined,
+          };
+        })
+      );
+
+      setSavedItems(transformedSaves.filter(Boolean) as SavedContent[]);
     } catch (error) {
       console.error('Failed to load saved contents:', error);
     } finally {
@@ -325,8 +328,17 @@ export default function SavedContentsPage() {
   const handleRemove = async (id: string) => {
     setRemovingId(id);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const supabase = createClient();
+
+      // content_saves 테이블에서 저장 삭제
+      const { error } = await supabase
+        .from('content_saves')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // UI에서 제거
       setSavedItems(prev => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error('Failed to remove saved content:', error);

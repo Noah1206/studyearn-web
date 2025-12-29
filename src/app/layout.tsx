@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { HeaderWrapper, FooterWrapper } from '@/components/layout';
+import { Providers } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -72,9 +73,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-gray-50 flex flex-col">
-        <HeaderWrapper />
-        <main className="flex-1">{children}</main>
-        <FooterWrapper />
+        <Providers>
+          <HeaderWrapper />
+          <main className="flex-1">{children}</main>
+          <FooterWrapper />
+        </Providers>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -22,7 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Modal, Spinner } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Modal, Spinner, useToastActions } from '@/components/ui';
 
 interface PrivacySettings {
   profile_visibility: 'public' | 'followers' | 'private';
@@ -122,6 +123,8 @@ function VisibilitySelector({
 }
 
 export default function PrivacySettingsPage() {
+  const router = useRouter();
+  const toast = useToastActions();
   const [settings, setSettings] = useState<PrivacySettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -136,6 +139,20 @@ export default function PrivacySettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Data export state
+  const [isExporting, setIsExporting] = useState(false);
+
+  // 2FA state
+  const [is2FALoading, setIs2FALoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [twoFAError, setTwoFAError] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [twoFASecret, setTwoFASecret] = useState('');
+
+  // Delete account state
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -228,8 +245,144 @@ export default function PrivacySettingsPage() {
   };
 
   const handleDownloadData = async () => {
-    // TODO: Implement data export
-    alert('데이터 내보내기 기능은 준비 중입니다');
+    setIsExporting(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.warning('인증 필요', '로그인이 필요합니다.');
+        return;
+      }
+
+      // 사용자 관련 모든 데이터 수집
+      const exportData: Record<string, any> = {
+        exportedAt: new Date().toISOString(),
+        userId: user.id,
+        email: user.email,
+      };
+
+      // 프로필 정보
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      exportData.profile = profile;
+
+      // 크리에이터 설정
+      const { data: creatorSettings } = await supabase
+        .from('creator_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      exportData.creatorSettings = creatorSettings;
+
+      // 사용자 환경설정
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      exportData.preferences = preferences;
+
+      // 내 콘텐츠
+      const { data: contents } = await supabase
+        .from('contents')
+        .select('*')
+        .eq('creator_id', user.id);
+      exportData.contents = contents || [];
+
+      // 좋아요 목록
+      const { data: likes } = await supabase
+        .from('content_likes')
+        .select('*')
+        .eq('user_id', user.id);
+      exportData.likes = likes || [];
+
+      // 저장 목록
+      const { data: saves } = await supabase
+        .from('content_saves')
+        .select('*')
+        .eq('user_id', user.id);
+      exportData.saves = saves || [];
+
+      // 구매 내역
+      const { data: purchases } = await supabase
+        .from('purchases')
+        .select('*')
+        .eq('user_id', user.id);
+      exportData.purchases = purchases || [];
+
+      // 구독 정보
+      const { data: subscriptions } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('subscriber_id', user.id);
+      exportData.subscriptions = subscriptions || [];
+
+      // 메시지
+      const { data: messages } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+      exportData.messages = messages || [];
+
+      // 조회 기록
+      const { data: views } = await supabase
+        .from('content_views')
+        .select('*')
+        .eq('user_id', user.id);
+      exportData.views = views || [];
+
+      // JSON 파일 다운로드
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `studyearn-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 2000);
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      toast.error('오류', '데이터 내보내기에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== '계정 삭제') {
+      toast.warning('입력 오류', '"계정 삭제"를 정확히 입력해주세요.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const supabase = createClient();
+
+      // 사용자 데이터 삭제 (RPC 함수 호출)
+      const { error: deleteError } = await supabase.rpc('delete_user_account');
+
+      if (deleteError) {
+        console.error('Failed to delete user data:', deleteError);
+        throw deleteError;
+      }
+
+      // 로그아웃 처리
+      await supabase.auth.signOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      toast.error('오류', '계정 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -421,14 +574,21 @@ export default function PrivacySettingsPage() {
             <CardContent className="space-y-1">
               <button
                 onClick={handleDownloadData}
-                className="w-full flex items-center justify-between py-4 border-b border-gray-100"
+                disabled={isExporting}
+                className="w-full flex items-center justify-between py-4 border-b border-gray-100 disabled:opacity-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <Download className="w-5 h-5 text-gray-600" />
+                    {isExporting ? (
+                      <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+                    ) : (
+                      <Download className="w-5 h-5 text-gray-600" />
+                    )}
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-gray-900">내 데이터 내보내기</p>
+                    <p className="font-medium text-gray-900">
+                      {isExporting ? '데이터 수집 중...' : '내 데이터 내보내기'}
+                    </p>
                     <p className="text-sm text-gray-500">모든 데이터를 다운로드합니다</p>
                   </div>
                 </div>
@@ -512,17 +672,70 @@ export default function PrivacySettingsPage() {
       {/* 2FA Modal */}
       <Modal
         isOpen={show2FAModal}
-        onClose={() => setShow2FAModal(false)}
+        onClose={() => {
+          setShow2FAModal(false);
+          setVerificationCode('');
+          setTwoFAError('');
+        }}
         title="2단계 인증 설정"
       >
-        <div className="text-center py-4">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Smartphone className="w-8 h-8 text-orange-500" />
+        <div className="py-4">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Smartphone className="w-8 h-8 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              추가 보안 설정
+            </h3>
+            <p className="text-gray-500 text-sm">
+              2단계 인증을 활성화하면 로그인 시 추가 인증이 필요합니다.
+            </p>
           </div>
-          <p className="text-gray-600 mb-6">
-            2단계 인증 기능은 곧 지원될 예정입니다.
-          </p>
-          <Button onClick={() => setShow2FAModal(false)} className="w-full">
+
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-orange-800 mb-1">보안 강화 기능</p>
+                <p className="text-sm text-orange-700">
+                  2단계 인증은 현재 개발 중입니다. 곧 Google Authenticator,
+                  SMS 인증 등 다양한 방식을 지원할 예정입니다.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                <Key className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 text-sm">인증 앱</p>
+                <p className="text-xs text-gray-500">Google Authenticator 등</p>
+              </div>
+              <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">준비 중</Badge>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                <Smartphone className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 text-sm">SMS 인증</p>
+                <p className="text-xs text-gray-500">휴대폰 문자 인증</p>
+              </div>
+              <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">준비 중</Badge>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => {
+              setShow2FAModal(false);
+              setVerificationCode('');
+              setTwoFAError('');
+            }}
+            className="w-full"
+          >
             확인
           </Button>
         </div>
@@ -531,31 +744,59 @@ export default function PrivacySettingsPage() {
       {/* Delete Account Modal */}
       <Modal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteConfirmText('');
+        }}
         title="계정 삭제"
       >
-        <div className="text-center py-4">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="w-8 h-8 text-red-500" />
+        <div className="py-4">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              정말 계정을 삭제하시겠습니까?
+            </h3>
+            <p className="text-gray-500 text-sm">
+              계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
+            </p>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            정말 계정을 삭제하시겠습니까?
-          </h3>
-          <p className="text-gray-500 mb-6">
-            계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
-          </p>
+
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-sm text-red-700 mb-3">
+              계정 삭제를 확인하려면 아래에 <strong>&quot;계정 삭제&quot;</strong>를 입력하세요.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="계정 삭제"
+              className="w-full px-4 py-3 border border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500"
+            />
+          </div>
+
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeleteConfirmText('');
+              }}
+              className="flex-1"
+            >
               취소
             </Button>
             <Button
-              onClick={() => {
-                // TODO: Implement account deletion
-                setShowDeleteModal(false);
-              }}
-              className="flex-1 bg-red-500 hover:bg-red-600"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting || deleteConfirmText !== '계정 삭제'}
+              className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300"
             >
-              삭제하기
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                '삭제하기'
+              )}
             </Button>
           </div>
         </div>

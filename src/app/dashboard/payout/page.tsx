@@ -138,10 +138,15 @@ export default function PayoutPage() {
         });
       }
 
-      // Load bank accounts from local storage (or could be a separate table)
-      const savedAccounts = localStorage.getItem('stuple_bank_accounts');
-      if (savedAccounts) {
-        const accounts = JSON.parse(savedAccounts);
+      // Load bank accounts from user_preferences table
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('bank_accounts')
+        .eq('user_id', user.id)
+        .single();
+
+      if (preferences?.bank_accounts) {
+        const accounts = preferences.bank_accounts as BankAccount[];
         setBankAccounts(accounts);
         const defaultAccount = accounts.find((a: BankAccount) => a.is_default);
         if (defaultAccount) {
@@ -155,7 +160,7 @@ export default function PayoutPage() {
     }
   };
 
-  const handleSaveAccount = () => {
+  const handleSaveAccount = async () => {
     const newErrors: Record<string, string> = {};
 
     if (!accountForm.bank_code) {
@@ -198,29 +203,66 @@ export default function PayoutPage() {
         : [...bankAccounts, newAccount];
     }
 
-    setBankAccounts(updatedAccounts);
-    localStorage.setItem('stuple_bank_accounts', JSON.stringify(updatedAccounts));
+    // Save to database
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Set selected account if it's default
-    const defaultAcc = updatedAccounts.find((a) => a.is_default);
-    if (defaultAcc) {
-      setSelectedAccountId(defaultAcc.id);
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          bank_accounts: updatedAccounts,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      setBankAccounts(updatedAccounts);
+
+      // Set selected account if it's default
+      const defaultAcc = updatedAccounts.find((a) => a.is_default);
+      if (defaultAcc) {
+        setSelectedAccountId(defaultAcc.id);
+      }
+
+      setShowAccountModal(false);
+      setEditingAccount(null);
+      setAccountForm({ bank_code: '', account_number: '', account_holder: '', is_default: false });
+      setErrors({});
+    } catch (error) {
+      console.error('Failed to save bank account:', error);
+      setErrors({ bank_code: '계좌 저장에 실패했습니다.' });
     }
-
-    setShowAccountModal(false);
-    setEditingAccount(null);
-    setAccountForm({ bank_code: '', account_number: '', account_holder: '', is_default: false });
-    setErrors({});
   };
 
-  const handleDeleteAccount = (accountId: string) => {
+  const handleDeleteAccount = async (accountId: string) => {
     const updatedAccounts = bankAccounts.filter((acc) => acc.id !== accountId);
-    setBankAccounts(updatedAccounts);
-    localStorage.setItem('stuple_bank_accounts', JSON.stringify(updatedAccounts));
 
-    if (selectedAccountId === accountId) {
-      const defaultAcc = updatedAccounts.find((a) => a.is_default);
-      setSelectedAccountId(defaultAcc?.id || '');
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          bank_accounts: updatedAccounts,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      setBankAccounts(updatedAccounts);
+
+      if (selectedAccountId === accountId) {
+        const defaultAcc = updatedAccounts.find((a) => a.is_default);
+        setSelectedAccountId(defaultAcc?.id || '');
+      }
+    } catch (error) {
+      console.error('Failed to delete bank account:', error);
     }
   };
 

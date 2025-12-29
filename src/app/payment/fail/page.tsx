@@ -121,14 +121,14 @@ function PaymentFailContent() {
             {/* 다시 시도 버튼 */}
             {type === 'content' && contentId ? (
               <Link href={`/purchase/${contentId}`}>
-                <Button fullWidth className="bg-blue-600 hover:bg-blue-700">
+                <Button fullWidth className="bg-orange-500 hover:bg-orange-600">
                   <RefreshCcw className="w-4 h-4 mr-2" />
                   다시 시도하기
                 </Button>
               </Link>
             ) : (
               <Link href="/content">
-                <Button fullWidth className="bg-blue-600 hover:bg-blue-700">
+                <Button fullWidth className="bg-orange-500 hover:bg-orange-600">
                   <RefreshCcw className="w-4 h-4 mr-2" />
                   콘텐츠 둘러보기
                 </Button>

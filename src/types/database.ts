@@ -433,6 +433,154 @@ export interface Database {
           updated_at?: string;
         };
       };
+      // DM/Messages
+      dm_conversations: {
+        Row: {
+          id: string;
+          participant1_id: string;
+          participant2_id: string;
+          last_message_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          participant1_id: string;
+          participant2_id: string;
+          last_message_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          participant1_id?: string;
+          participant2_id?: string;
+          last_message_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      dm_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          sender_id: string;
+          content: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          sender_id: string;
+          content: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          sender_id?: string;
+          content?: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+      };
+      // Content interactions
+      content_likes: {
+        Row: {
+          id: string;
+          user_id: string;
+          content_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          content_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          content_id?: string;
+          created_at?: string;
+        };
+      };
+      content_saves: {
+        Row: {
+          id: string;
+          user_id: string;
+          content_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          content_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          content_id?: string;
+          created_at?: string;
+        };
+      };
+      // User preferences (JSONB based for flexible settings)
+      user_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          notification_settings: Json;
+          privacy_settings: Json;
+          account_settings: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          notification_settings?: Json;
+          privacy_settings?: Json;
+          account_settings?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          notification_settings?: Json;
+          privacy_settings?: Json;
+          account_settings?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      // Creator analytics
+      content_views: {
+        Row: {
+          id: string;
+          content_id: string;
+          user_id: string | null;
+          viewed_at: string;
+          duration_seconds: number | null;
+        };
+        Insert: {
+          id?: string;
+          content_id: string;
+          user_id?: string | null;
+          viewed_at?: string;
+          duration_seconds?: number | null;
+        };
+        Update: {
+          id?: string;
+          content_id?: string;
+          user_id?: string | null;
+          viewed_at?: string;
+          duration_seconds?: number | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

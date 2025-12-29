@@ -43,7 +43,7 @@ const SORT_OPTIONS = [
   { value: 'popular', label: '인기순' },
 ];
 
-// Mock Data for comments/questions
+// Types for comments/questions
 interface CommunityItem {
   id: string;
   type: 'comment' | 'question';
@@ -64,81 +64,6 @@ interface CommunityItem {
   is_replied: boolean;
   created_at: string;
 }
-
-const mockCommunityData: CommunityItem[] = [
-  {
-    id: '1',
-    type: 'comment',
-    user: {
-      id: 'u1',
-      name: '열정팬',
-      is_subscriber: true,
-      tier_name: '프리미엄',
-    },
-    content: '이 영상 정말 도움이 많이 됐어요! 다음 영상도 기대됩니다 :)',
-    content_id: 'c1',
-    content_title: '효과적인 학습 방법 10가지',
-    likes: 15,
-    replies: 2,
-    is_pinned: false,
-    is_reported: false,
-    is_replied: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: '2',
-    type: 'question',
-    user: {
-      id: 'u2',
-      name: '학습자123',
-      is_subscriber: true,
-      tier_name: '베이직',
-    },
-    content: '혹시 다음 라이브 일정이 어떻게 되나요? 꼭 참석하고 싶어요!',
-    likes: 8,
-    replies: 0,
-    is_pinned: false,
-    is_reported: false,
-    is_replied: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: '3',
-    type: 'comment',
-    user: {
-      id: 'u3',
-      name: '신규유저',
-      is_subscriber: false,
-    },
-    content: '처음 왔는데 콘텐츠 퀄리티가 대박이네요. 구독할게요!',
-    content_id: 'c2',
-    content_title: '입문자를 위한 가이드',
-    likes: 5,
-    replies: 1,
-    is_pinned: false,
-    is_reported: false,
-    is_replied: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: '4',
-    type: 'comment',
-    user: {
-      id: 'u4',
-      name: '악성유저',
-      is_subscriber: false,
-    },
-    content: '부적절한 댓글 예시입니다.',
-    content_id: 'c1',
-    content_title: '효과적인 학습 방법 10가지',
-    likes: 0,
-    replies: 0,
-    is_pinned: false,
-    is_reported: true,
-    is_replied: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-  },
-];
 
 export default function CommunityPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -167,14 +92,111 @@ export default function CommunityPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // In production, fetch from Supabase
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setItems(mockCommunityData);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Get all content IDs for this creator
+      const { data: creatorContents } = await supabase
+        .from('contents')
+        .select('id, title')
+        .eq('creator_id', user.id);
+
+      if (!creatorContents || creatorContents.length === 0) {
+        setItems([]);
+        setStats({ totalComments: 0, pendingReplies: 0, reportedItems: 0 });
+        setIsLoading(false);
+        return;
+      }
+
+      const contentIds = creatorContents.map(c => c.id);
+      const contentMap = new Map(creatorContents.map(c => [c.id, c.title]));
+
+      // Fetch comments on creator's contents
+      const { data: comments, error } = await supabase
+        .from('content_comments')
+        .select(`
+          id,
+          content_id,
+          user_id,
+          comment_text,
+          comment_type,
+          like_count,
+          reply_count,
+          is_pinned,
+          is_reported,
+          is_replied,
+          created_at
+        `)
+        .in('content_id', contentIds)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch comments:', error);
+        setItems([]);
+        return;
+      }
+
+      // Get user info for each comment
+      const userIds = [...new Set((comments || []).map(c => c.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds);
+
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+
+      // Check subscriber status for each user
+      const { data: subscriptions } = await supabase
+        .from('creator_subscriptions')
+        .select('subscriber_id, tier_id, subscription_tiers(name)')
+        .eq('creator_id', user.id)
+        .in('subscriber_id', userIds)
+        .eq('status', 'active');
+
+      const subscriptionMap = new Map(
+        (subscriptions || []).map((s: any) => [
+          s.subscriber_id,
+          { is_subscriber: true, tier_name: s.subscription_tiers?.name || '구독자' }
+        ])
+      );
+
+      // Transform to CommunityItem format
+      const communityItems: CommunityItem[] = (comments || []).map(comment => {
+        const profile = profileMap.get(comment.user_id);
+        const subscription = subscriptionMap.get(comment.user_id);
+
+        return {
+          id: comment.id,
+          type: comment.comment_type as 'comment' | 'question',
+          user: {
+            id: comment.user_id,
+            name: profile?.display_name || '익명 사용자',
+            avatar_url: profile?.avatar_url,
+            is_subscriber: subscription?.is_subscriber || false,
+            tier_name: subscription?.tier_name,
+          },
+          content: comment.comment_text,
+          content_id: comment.content_id,
+          content_title: contentMap.get(comment.content_id),
+          likes: comment.like_count || 0,
+          replies: comment.reply_count || 0,
+          is_pinned: comment.is_pinned || false,
+          is_reported: comment.is_reported || false,
+          is_replied: comment.is_replied || false,
+          created_at: comment.created_at,
+        };
+      });
+
+      setItems(communityItems);
       setStats({
-        totalComments: mockCommunityData.length,
-        pendingReplies: mockCommunityData.filter((i) => !i.is_replied && i.type === 'question').length,
-        reportedItems: mockCommunityData.filter((i) => i.is_reported).length,
+        totalComments: communityItems.length,
+        pendingReplies: communityItems.filter(i => !i.is_replied && i.type === 'question').length,
+        reportedItems: communityItems.filter(i => i.is_reported).length,
       });
     } catch (error) {
       console.error('Failed to load community data:', error);
@@ -223,38 +245,128 @@ export default function CommunityPage() {
   const handleReply = async (itemId: string) => {
     if (!replyText.trim()) return;
 
-    // In production, save reply to database
-    console.log('Replying to:', itemId, 'with:', replyText);
+    try {
+      const supabase = createClient();
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, is_replied: true, replies: item.replies + 1 } : item
-      )
-    );
-    setReplyingTo(null);
-    setReplyText('');
-  };
+      // Use the RPC function to add reply
+      const { error } = await supabase.rpc('add_comment_reply', {
+        p_comment_id: itemId,
+        p_reply_text: replyText,
+        p_is_creator: true,
+      });
 
-  const handlePin = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, is_pinned: !item.is_pinned } : item
-      )
-    );
-  };
+      if (error) {
+        console.error('Failed to add reply:', error);
+        // Fallback: direct insert
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('comment_replies').insert({
+            comment_id: itemId,
+            user_id: user.id,
+            reply_text: replyText,
+            is_creator_reply: true,
+          });
 
-  const handleDelete = (itemId: string) => {
-    if (confirm('이 항목을 삭제하시겠습니까?')) {
-      setItems((prev) => prev.filter((item) => item.id !== itemId));
+          await supabase
+            .from('content_comments')
+            .update({ is_replied: true, reply_count: items.find(i => i.id === itemId)?.replies || 0 + 1 })
+            .eq('id', itemId);
+        }
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, is_replied: true, replies: item.replies + 1 } : item
+        )
+      );
+      setReplyingTo(null);
+      setReplyText('');
+    } catch (error) {
+      console.error('Failed to reply:', error);
     }
   };
 
-  const handleDismissReport = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, is_reported: false } : item
-      )
-    );
+  const handlePin = async (itemId: string) => {
+    try {
+      const supabase = createClient();
+      const item = items.find(i => i.id === itemId);
+      const newPinState = !item?.is_pinned;
+
+      const { error } = await supabase
+        .from('content_comments')
+        .update({ is_pinned: newPinState })
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Failed to update pin state:', error);
+        return;
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, is_pinned: newPinState } : item
+        )
+      );
+    } catch (error) {
+      console.error('Failed to pin comment:', error);
+    }
+  };
+
+  const handleDelete = async (itemId: string) => {
+    if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from('content_comments')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Failed to delete comment:', error);
+        return;
+      }
+
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+      setStats(prev => ({
+        ...prev,
+        totalComments: prev.totalComments - 1,
+        reportedItems: items.find(i => i.id === itemId)?.is_reported
+          ? prev.reportedItems - 1
+          : prev.reportedItems,
+      }));
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    }
+  };
+
+  const handleDismissReport = async (itemId: string) => {
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from('content_comments')
+        .update({ is_reported: false })
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Failed to dismiss report:', error);
+        return;
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, is_reported: false } : item
+        )
+      );
+      setStats(prev => ({
+        ...prev,
+        reportedItems: Math.max(0, prev.reportedItems - 1),
+      }));
+    } catch (error) {
+      console.error('Failed to dismiss report:', error);
+    }
   };
 
   if (isLoading) {

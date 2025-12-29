@@ -272,16 +272,114 @@ export default function ProfilePage() {
         });
       }
 
-      // 공부 통계 (임시 Mock 데이터)
-      setStudyStats({
-        todayMinutes: Math.floor(Math.random() * 180) + 30,
-        weekMinutes: Math.floor(Math.random() * 1200) + 300,
-        monthMinutes: Math.floor(Math.random() * 5000) + 1000,
-        totalMinutes: Math.floor(Math.random() * 30000) + 5000,
-        streak: Math.floor(Math.random() * 30) + 1,
-        bestStreak: Math.floor(Math.random() * 60) + 10,
-        joinedRooms: Math.floor(Math.random() * 20) + 1,
-      });
+      // 공부 통계 - 실제 데이터 가져오기
+      try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+        // 전체 스터디 참여 기록 가져오기
+        const { data: allParticipations } = await supabase
+          .from('study_with_me_participants')
+          .select('room_id, current_session_minutes, joined_at')
+          .eq('user_id', user.id);
+
+        if (allParticipations && allParticipations.length > 0) {
+          // 오늘 분
+          const todayMinutes = allParticipations
+            .filter(p => p.joined_at >= todayStart)
+            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+
+          // 이번 주 분
+          const weekMinutes = allParticipations
+            .filter(p => p.joined_at >= weekStart)
+            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+
+          // 이번 달 분
+          const monthMinutes = allParticipations
+            .filter(p => p.joined_at >= monthStart)
+            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+
+          // 전체 분
+          const totalMinutes = allParticipations
+            .reduce((sum, p) => sum + (p.current_session_minutes || 0), 0);
+
+          // 고유 방 수
+          const uniqueRooms = new Set(allParticipations.map(p => p.room_id));
+
+          // 연속 출석 계산 (최근 날짜부터 확인)
+          const studyDates = [...new Set(allParticipations.map(p =>
+            new Date(p.joined_at).toISOString().split('T')[0]
+          ))].sort((a, b) => b.localeCompare(a)); // 최신순 정렬
+
+          let streak = 0;
+          let checkDate = new Date();
+          checkDate.setHours(0, 0, 0, 0);
+
+          for (const dateStr of studyDates) {
+            const studyDate = new Date(dateStr);
+            studyDate.setHours(0, 0, 0, 0);
+
+            const diffDays = Math.floor((checkDate.getTime() - studyDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0 || diffDays === 1) {
+              streak++;
+              checkDate = studyDate;
+            } else {
+              break;
+            }
+          }
+
+          // 최고 연속 출석 (전체 기간에서 계산)
+          let bestStreak = 0;
+          let currentStreak = 0;
+          const sortedDates = [...new Set(allParticipations.map(p =>
+            new Date(p.joined_at).toISOString().split('T')[0]
+          ))].sort();
+
+          for (let i = 0; i < sortedDates.length; i++) {
+            if (i === 0) {
+              currentStreak = 1;
+            } else {
+              const prevDate = new Date(sortedDates[i - 1]);
+              const currDate = new Date(sortedDates[i]);
+              const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+              if (diffDays === 1) {
+                currentStreak++;
+              } else {
+                currentStreak = 1;
+              }
+            }
+            bestStreak = Math.max(bestStreak, currentStreak);
+          }
+
+          setStudyStats({
+            todayMinutes,
+            weekMinutes,
+            monthMinutes,
+            totalMinutes,
+            streak,
+            bestStreak,
+            joinedRooms: uniqueRooms.size,
+          });
+        } else {
+          // 참여 기록이 없으면 0으로 설정
+          setStudyStats({
+            todayMinutes: 0,
+            weekMinutes: 0,
+            monthMinutes: 0,
+            totalMinutes: 0,
+            streak: 0,
+            bestStreak: 0,
+            joinedRooms: 0,
+          });
+        }
+      } catch (statsError) {
+        console.error('Failed to fetch study stats:', statsError);
+        // 에러 시 기본값 유지
+      }
 
       // 구매한 콘텐츠 가져오기 (실제 API 호출)
       try {

@@ -20,10 +20,18 @@ export async function GET(
       );
     }
 
-    // Get product
+    // Get product with creator info
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        creator_settings!products_creator_id_fkey (
+          id,
+          display_name,
+          profile_image_url,
+          bio
+        )
+      `)
       .eq('id', id)
       .eq('is_active', true)
       .single();
@@ -34,6 +42,17 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // Transform product to include creator as flat object
+    const productWithCreator = {
+      ...product,
+      creator: product.creator_settings ? {
+        name: product.creator_settings.display_name || '익명',
+        avatar_url: product.creator_settings.profile_image_url,
+        bio: product.creator_settings.bio,
+      } : { name: '익명' },
+      creator_settings: undefined,
+    };
 
     // Get contents (without URLs - URLs are only returned if purchased)
     const { data: contents, error: contentsError } = await supabase
@@ -64,7 +83,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      product,
+      product: productWithCreator,
       contents: contents || [],
       hasPurchased,
     });
