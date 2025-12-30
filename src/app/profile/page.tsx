@@ -1424,7 +1424,7 @@ export default function ProfilePage() {
         {/* 2단 레이아웃 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 왼쪽: 프로필 카드 */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
               {/* 프로필 정보 */}
               <div className="text-center mb-6">
@@ -1648,7 +1648,7 @@ export default function ProfilePage() {
           </div>
 
           {/* 오른쪽: 메뉴 섹션들 */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-1 space-y-6">
             {/* 현재 스터디 세션 */}
             {currentStudySession && (
               <motion.div variants={itemVariants}>
