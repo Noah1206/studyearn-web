@@ -137,36 +137,25 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
     >
       <Link href={`/studyan/${user.id}`}>
         <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 border-gray-100 hover:border-blue-300 cursor-pointer group">
-          {/* Gradient Header */}
-          <div className={`h-16 bg-gradient-to-r ${characterAvatar.gradient} relative`}>
-            {/* View Profile Hint */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs text-gray-600">
-                <ExternalLink className="w-3 h-3" />
-                프로필 보기
-              </div>
-            </div>
-          </div>
-
-          <CardContent className="pt-0 pb-4 px-4 relative">
-            {/* Avatar - overlapping the gradient */}
-            <div className="absolute -top-8 left-4">
+          <CardContent className="pt-4 pb-4 px-4 relative">
+            {/* Avatar and Follow Button Row */}
+            <div className="flex items-start justify-between mb-4">
+              {/* Avatar */}
               {user.avatar_url ? (
                 <Avatar
                   src={user.avatar_url}
                   alt={user.display_name || '사용자'}
                   size="lg"
-                  className="w-16 h-16 ring-4 ring-white"
+                  className="w-14 h-14 ring-2 ring-gray-100"
                 />
               ) : (
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-2xl ring-4 ring-white shadow-lg`}>
-                  {characterAvatar.emoji}
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-400">
+                  {user.display_name?.charAt(0) || '?'}
                 </div>
               )}
-            </div>
 
-            {/* Follow Button - positioned top right */}
-            <div className="flex justify-end pt-2 mb-6">
+              {/* Follow Button */}
+              <div className="flex items-center gap-2">
               {currentUserId && !isOwnProfile && (
                 <button
                   onClick={(e) => {
@@ -201,6 +190,7 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
                   나
                 </Badge>
               )}
+              </div>
             </div>
 
             {/* User Info */}
