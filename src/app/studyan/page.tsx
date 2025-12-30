@@ -258,7 +258,15 @@ export default function StudyanPage() {
     try {
       const supabase = createClient();
 
-      // Get all public routines with user info
+      // Get all profiles first
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, nickname, avatar_url')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Get all public routines
       const { data: routinesData, error: routinesError } = await supabase
         .from('routines')
         .select(`
@@ -275,18 +283,7 @@ export default function StudyanPage() {
 
       if (routinesError) throw routinesError;
 
-      // Get unique user IDs
-      const userIds = Array.from(new Set((routinesData || []).map((r: { user_id: string }) => r.user_id)));
-
-      // Get profiles for these users
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, nickname, avatar_url')
-        .in('id', userIds);
-
-      if (profilesError) throw profilesError;
-
-      // Combine data
+      // Combine data - all profiles
       const usersMap = new Map<string, StudyanUser>();
 
       (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string }) => {
@@ -299,6 +296,7 @@ export default function StudyanPage() {
         });
       });
 
+      // Attach routines to users
       (routinesData || []).forEach((routine: { id: string; user_id: string; title: string; routine_type: 'day' | 'week' | 'month' | 'custom'; routine_days?: number; routine_items: RoutineItem[]; created_at: string }) => {
         const user = usersMap.get(routine.user_id);
         if (user) {
@@ -313,7 +311,8 @@ export default function StudyanPage() {
         }
       });
 
-      setUsers(Array.from(usersMap.values()).filter(u => u.routines.length > 0));
+      // Show all users (including those without routines)
+      setUsers(Array.from(usersMap.values()));
     } catch (error) {
       console.error('Failed to load users with routines:', error);
     } finally {
@@ -431,10 +430,10 @@ export default function StudyanPage() {
               <Users className="w-10 h-10 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchQuery ? '검색 결과가 없습니다' : '아직 공개된 루틴이 없습니다'}
+              {searchQuery ? '검색 결과가 없습니다' : '아직 가입한 유저가 없습니다'}
             </h3>
             <p className="text-gray-500 mb-6">
-              {searchQuery ? '다른 검색어를 입력해보세요' : '첫 번째로 루틴을 공유해보세요!'}
+              {searchQuery ? '다른 검색어를 입력해보세요' : '첫 번째 스터디언이 되어보세요!'}
             </p>
             {searchQuery && (
               <Button variant="outline" onClick={() => setSearchQuery('')}>
