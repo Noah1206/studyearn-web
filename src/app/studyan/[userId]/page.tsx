@@ -12,8 +12,6 @@ import {
   Check,
   ChevronDown,
   Loader2,
-  UserPlus,
-  UserMinus,
   Target,
   BookOpen,
 } from 'lucide-react';
@@ -337,33 +335,8 @@ export default function StudyanUserPage() {
               )}
             </div>
 
-            {/* Follow Button */}
+            {/* Badge for own profile */}
             <div className="flex justify-end pt-2 mb-8">
-              {currentUserId && !isOwnProfile && (
-                <button
-                  onClick={handleToggleFollow}
-                  disabled={followLoading}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all ${
-                    isFollowing
-                      ? 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-500'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                >
-                  {followLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isFollowing ? (
-                    <>
-                      <UserMinus className="w-4 h-4" />
-                      팔로잉
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      팔로우
-                    </>
-                  )}
-                </button>
-              )}
               {isOwnProfile && (
                 <Badge className="bg-blue-50 text-blue-600 border-blue-200">
                   내 프로필
@@ -372,7 +345,7 @@ export default function StudyanUserPage() {
             </div>
 
             {/* User Info */}
-            <div className="mb-6">
+            <div className="mb-4">
               <h2 className="text-xl font-bold text-gray-900 mb-1">
                 {user.nickname || '익명 사용자'}
               </h2>
@@ -382,22 +355,37 @@ export default function StudyanUserPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-gray-900">{user.routines.length}</p>
+                <p className="text-xs text-gray-500">루틴</p>
+              </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-gray-900">{user.follower_count}</p>
                 <p className="text-xs text-gray-500">팔로워</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">{user.streak_days || 0}</p>
-                <p className="text-xs text-gray-500">연속일</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">
-                  {user.total_study_minutes ? Math.floor(user.total_study_minutes / 60) : 0}h
-                </p>
-                <p className="text-xs text-gray-500">총 공부</p>
-              </div>
             </div>
+
+            {/* Follow Button */}
+            {currentUserId && !isOwnProfile && (
+              <button
+                onClick={handleToggleFollow}
+                disabled={followLoading}
+                className={`w-full py-3 text-sm font-medium rounded-lg transition-all ${
+                  isFollowing
+                    ? 'bg-gray-200 text-gray-600'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                }`}
+              >
+                {followLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : isFollowing ? (
+                  '팔로잉 중'
+                ) : (
+                  '팔로우'
+                )}
+              </button>
+            )}
           </CardContent>
         </Card>
 
