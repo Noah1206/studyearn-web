@@ -8,15 +8,12 @@ import { pageVariants } from '@/components/ui/motion/variants';
 import {
   ArrowLeft,
   Calendar,
-  Clock,
-  Users,
   Copy,
   Check,
   ChevronDown,
   Loader2,
   UserPlus,
   UserMinus,
-  Flame,
   Target,
   BookOpen,
 } from 'lucide-react';
@@ -385,33 +382,17 @@ export default function StudyanUserPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl">
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
-                  <Users className="w-4 h-4" />
-                </div>
-                <p className="text-lg font-bold text-gray-900">{user.follower_count}</p>
+                <p className="text-2xl font-bold text-gray-900">{user.follower_count}</p>
                 <p className="text-xs text-gray-500">팔로워</p>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <p className="text-lg font-bold text-gray-900">{user.routines.length}</p>
-                <p className="text-xs text-gray-500">루틴</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-orange-400 mb-1">
-                  <Flame className="w-4 h-4" />
-                </div>
-                <p className="text-lg font-bold text-gray-900">{user.streak_days || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{user.streak_days || 0}</p>
                 <p className="text-xs text-gray-500">연속일</p>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900">
                   {user.total_study_minutes ? Math.floor(user.total_study_minutes / 60) : 0}h
                 </p>
                 <p className="text-xs text-gray-500">총 공부</p>
