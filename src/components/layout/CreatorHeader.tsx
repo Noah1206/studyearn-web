@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Menu,
   X,
@@ -20,6 +20,7 @@ import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/s
 
 export function CreatorHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -100,17 +101,25 @@ export function CreatorHeader() {
           >
             Study With Me
           </Link>
+          <Link
+            href="/creator"
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
+          >
+            크리에이터
+          </Link>
         </nav>
 
         {/* Right Side Actions */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Upload Button - YouTube Style (크리에이터 전용) */}
-          <Link href="/dashboard/upload">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors">
-              <Video className="w-4 h-4" />
-              <span className="text-sm font-medium">만들기</span>
-            </button>
-          </Link>
+          {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
+          {pathname?.startsWith('/study-with-me') && (
+            <Link href="/study-with-me/create">
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors">
+                <Video className="w-4 h-4" />
+                <span className="text-sm font-medium">만들기</span>
+              </button>
+            </Link>
+          )}
 
           {/* Profile Dropdown */}
           {user && (
@@ -212,12 +221,25 @@ export function CreatorHeader() {
               Study With Me
             </Link>
             <Link
-              href="/dashboard/upload"
+              href="/creator"
               className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
               onClick={() => setIsMenuOpen(false)}
             >
-              콘텐츠 만들기
+              크리에이터
             </Link>
+            {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
+            {pathname?.startsWith('/study-with-me') && (
+              <Link
+                href="/study-with-me/create"
+                className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  <span>방 만들기</span>
+                </div>
+              </Link>
+            )}
 
             <div className="pt-4 border-t border-gray-100 mt-4">
               {user && (
