@@ -133,10 +133,10 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      whileHover={{ y: -2, transition: { duration: 0.15, ease: "easeOut" } }}
     >
       <Link href={`/studyan/${user.id}`}>
-        <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 border-gray-100 hover:border-blue-300 cursor-pointer group">
+        <Card className="h-full overflow-hidden transition-all duration-200 border-gray-100 cursor-pointer group">
           <CardContent className="pt-4 pb-4 px-4 relative">
             {/* Avatar and Follow Button Row */}
             <div className="flex items-start justify-between mb-4">
