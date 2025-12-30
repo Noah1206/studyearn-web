@@ -386,41 +386,43 @@ function InterestsStep({ selectedInterests, toggleInterest }: {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="w-full max-w-lg"
+      className="w-full max-w-lg flex flex-col min-h-[60vh]"
     >
-      <h2 className="text-[28px] font-bold text-gray-900 mb-2 leading-[38px]">
-        어떤 분야에<br />관심이 있으세요?
-      </h2>
-      <p className="text-gray-500 mb-8">여러 개 선택할 수 있어요</p>
+      <div>
+        <h2 className="text-[28px] font-bold text-gray-900 mb-2 leading-[38px]">
+          어떤 분야에<br />관심이 있으세요?
+        </h2>
+        <p className="text-gray-500 mb-8">여러 개 선택할 수 있어요</p>
 
-      <div className="flex flex-wrap gap-[10px]">
-        {INTERESTS.map((interest) => {
-          const isSelected = selectedInterests.includes(interest.id);
-          const Icon = interest.icon;
-          return (
-            <motion.button
-              key={interest.id}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => toggleInterest(interest.id)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all ${
-                isSelected
-                  ? 'bg-[#FF5500] text-white shadow-lg shadow-[#FF5500]/30'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-semibold text-[15px]">{interest.label}</span>
-            </motion.button>
-          );
-        })}
+        <div className="flex flex-wrap gap-[10px]">
+          {INTERESTS.map((interest) => {
+            const isSelected = selectedInterests.includes(interest.id);
+            const Icon = interest.icon;
+            return (
+              <motion.button
+                key={interest.id}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => toggleInterest(interest.id)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all ${
+                  isSelected
+                    ? 'bg-[#FF5500] text-white shadow-lg shadow-[#FF5500]/30'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-semibold text-[15px]">{interest.label}</span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {selectedInterests.length > 0 && (
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-[#FF5500] font-medium mt-10"
+          className="text-center text-[#FF5500] font-medium mt-auto"
         >
           {selectedInterests.length}개 선택됨
         </motion.p>
