@@ -5,20 +5,37 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Input, Card, CardContent, CardHeader, CardTitle, LoadingSection } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, LoadingSection } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/content';
+  const redirectTo = searchParams.get('redirectTo') || '/';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const supabase = createClient();
+
+  // 전화번호 포맷팅 (010-1234-5678 형식)
+  const formatPhoneNumber = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    let formatted = cleaned;
+
+    if (cleaned.length > 3 && cleaned.length <= 7) {
+      formatted = `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+    } else if (cleaned.length > 7) {
+      formatted = `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7, 11)}`;
+    }
+
+    return formatted;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneNumber(formatPhoneNumber(e.target.value));
+  };
 
   const handleKakaoLogin = async () => {
     setError('');
@@ -36,38 +53,52 @@ function LoginForm() {
     }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // 이메일/비밀번호 검증 (앱과 동일)
-    if (!email || !password) {
-      setError('이메일과 비밀번호를 입력해주세요.');
+    const cleanedPhone = phoneNumber.replace(/[^0-9]/g, '');
+
+    if (!cleanedPhone) {
+      setError('전화번호를 입력해주세요.');
+      return;
+    }
+
+    if (cleanedPhone.length < 10) {
+      setError('올바른 전화번호를 입력해주세요.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // 한국 전화번호 포맷 (+82)
+      const formattedPhone = `+82${cleanedPhone.replace(/^0/, '')}`;
+
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
       });
 
-      if (error) {
-        setError('이메일 또는 비밀번호를 확인해주세요.');
+      if (otpError) {
+        if (otpError.message.includes('rate limit')) {
+          setError('잠시 후 다시 시도해주세요.');
+        } else {
+          setError(otpError.message || '인증번호 전송에 실패했습니다.');
+        }
         return;
       }
 
-      // 로그인 성공 - 메인 화면으로 이동 (앱과 동일)
-      router.push(redirectTo);
-      router.refresh();
+      // 인증번호 입력 화면으로 이동
+      router.push(`/login/verify?phone=${cleanedPhone}&redirectTo=${encodeURIComponent(redirectTo)}`);
     } catch {
-      setError('이메일 또는 비밀번호를 확인해주세요.');
+      setError('인증번호 전송에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const cleanedPhone = phoneNumber.replace(/[^0-9]/g, '');
+  const isValidPhone = cleanedPhone.length >= 10;
 
   return (
     <motion.div
@@ -77,7 +108,7 @@ function LoginForm() {
       exit="exit"
       variants={pageVariants}
     >
-      <Card variant="elevated" className="w-full max-w-lg px-12 py-20">
+      <Card variant="elevated" className="w-full max-w-lg px-8 py-16 md:px-12 md:py-20">
         <CardHeader className="text-center pb-8">
           <CardTitle className="text-2xl">로그인</CardTitle>
           <p className="text-gray-500 mt-3">스터플에 다시 오신 것을 환영합니다</p>
@@ -104,7 +135,7 @@ function LoginForm() {
                 fill="#191919"
               />
             </svg>
-            카카오로 시작하기
+            카카오로 로그인
           </button>
 
           {/* Divider */}
@@ -117,38 +148,39 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Email Login Form */}
-          <form onSubmit={handleEmailLogin} className="space-y-5">
+          {/* Phone Login Form */}
+          <form onSubmit={handlePhoneLogin} className="space-y-6">
+            <div className="flex items-center gap-3">
+              {/* Country Code */}
+              <div className="bg-gray-100 px-4 py-3.5 rounded-xl min-w-[70px] text-center">
+                <span className="font-semibold text-gray-900">+82</span>
+              </div>
+              {/* Phone Input */}
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={handlePhoneChange}
+                placeholder="010-1234-5678"
+                maxLength={13}
+                className="flex-1 px-4 py-3.5 text-lg text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors bg-transparent"
+              />
+            </div>
 
-            <Input
-              label="이메일"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@email.com"
-              required
-              autoComplete="email"
-            />
-
-            <Input
-              label="비밀번호"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호를 입력하세요"
-              required
-              autoComplete="current-password"
-            />
-
-            <Button type="submit" fullWidth isLoading={isLoading} className="mt-2">
-              로그인
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isLoading}
+              disabled={isLoading || !isValidPhone}
+              className="py-3"
+            >
+              인증번호 받기
             </Button>
           </form>
 
           {/* 회원가입 링크 */}
           <p className="mt-8 text-center text-sm text-gray-500">
             계정이 없으신가요?{' '}
-            <Link href="/signup" className="text-gray-900 hover:text-gray-700 font-semibold underline">
+            <Link href="/onboarding" className="text-gray-900 hover:text-gray-700 font-semibold underline">
               회원가입
             </Link>
           </p>
