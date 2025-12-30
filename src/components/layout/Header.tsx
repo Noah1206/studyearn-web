@@ -219,7 +219,7 @@ export function Header() {
                     로그인
                   </Button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/onboarding">
                   <Button className="bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg">
                     회원가입
                   </Button>
@@ -347,7 +347,7 @@ export function Header() {
                       로그인
                     </Button>
                   </Link>
-                  <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/onboarding" onClick={() => setIsMenuOpen(false)}>
                     <Button
                       fullWidth
                       className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
