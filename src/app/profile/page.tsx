@@ -1097,7 +1097,7 @@ export default function ProfilePage() {
     setNewRoutineType(routine.routine_type);
     setNewRoutineItems([...routine.routine_items]);
     setCustomDays(routine.routine_days || 30);
-    setCurrentRoutine(null); // 보기 모드 닫기
+    setSelectedRoutineIndex(-1); // 보기 모드 닫기
     setIsCreatingRoutine(true);
   };
 
