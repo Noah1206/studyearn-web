@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap,
@@ -148,7 +149,7 @@ export default function OnboardingPage() {
             </button>
             <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-red-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${getProgress()}%` }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -229,8 +230,14 @@ function WelcomeStep() {
       className="w-full max-w-lg text-center"
     >
       {/* Logo */}
-      <div className="w-[100px] h-[100px] bg-gradient-to-br from-blue-500 to-purple-600 rounded-[28px] flex items-center justify-center mx-auto mb-5 shadow-xl shadow-blue-500/20">
-        <GraduationCap className="w-12 h-12 text-white" />
+      <div className="w-[100px] h-[100px] bg-white rounded-[28px] flex items-center justify-center mx-auto mb-5 shadow-xl shadow-orange-500/20 border border-gray-100">
+        <Image
+          src="/logo.svg"
+          alt="StuPle"
+          width={64}
+          height={64}
+          className="w-16 h-16"
+        />
       </div>
 
       {/* Title */}
@@ -242,8 +249,8 @@ function WelcomeStep() {
       {/* Features */}
       <div className="space-y-4">
         <FeatureItem
-          icon={<BookOpen className="w-5 h-5 text-[#5CBFD9]" />}
-          bgColor="bg-[#E8F6F9]"
+          icon={<BookOpen className="w-5 h-5 text-[#FF5500]" />}
+          bgColor="bg-[#FFF5F0]"
           title="학습 자료 거래"
           description="나만의 노하우를 공유하고 수익을 얻어요"
         />
@@ -254,8 +261,8 @@ function WelcomeStep() {
           description="실제 성적 향상에 도움이 된 자료만"
         />
         <FeatureItem
-          icon={<Users className="w-5 h-5 text-[#5CBFD9]" />}
-          bgColor="bg-[#E8F6F9]"
+          icon={<Users className="w-5 h-5 text-[#FF5500]" />}
+          bgColor="bg-[#FFF5F0]"
           title="청소년 안전"
           description="13-29세 학생 전용, 부모님 동의 시스템"
         />
@@ -309,25 +316,25 @@ function RoleStep({ role, setRole }: {
           onClick={() => setRole('student')}
           className={`relative p-5 rounded-2xl border-2 transition-all text-center ${
             role === 'student'
-              ? 'border-[#5CBFD9] bg-[#E8F6F9]'
+              ? 'border-[#FF5500] bg-[#FFF5F0]'
               : 'border-transparent bg-gray-50 hover:bg-gray-100'
           }`}
         >
           <div className={`w-16 h-16 rounded-[20px] flex items-center justify-center mx-auto mb-4 ${
             role === 'student'
-              ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+              ? 'bg-gradient-to-br from-orange-500 to-orange-600'
               : 'bg-gray-200'
           }`}>
             <GraduationCap className={`w-8 h-8 ${role === 'student' ? 'text-white' : 'text-gray-400'}`} />
           </div>
-          <p className={`font-bold text-lg mb-2 ${role === 'student' ? 'text-[#5CBFD9]' : 'text-gray-900'}`}>
+          <p className={`font-bold text-lg mb-2 ${role === 'student' ? 'text-[#FF5500]' : 'text-gray-900'}`}>
             학습자
           </p>
-          <p className={`text-[13px] leading-[18px] ${role === 'student' ? 'text-[#3BA8C4]' : 'text-gray-500'}`}>
+          <p className={`text-[13px] leading-[18px] ${role === 'student' ? 'text-[#E64A00]' : 'text-gray-500'}`}>
             다른 학생들의 학습 자료를<br />구매하고 싶어요
           </p>
           {role === 'student' && (
-            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#5CBFD9] flex items-center justify-center">
+            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#FF5500] flex items-center justify-center">
               <Check className="w-4 h-4 text-white" />
             </div>
           )}
@@ -398,7 +405,7 @@ function InterestsStep({ selectedInterests, toggleInterest }: {
               onClick={() => toggleInterest(interest.id)}
               className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all ${
                 isSelected
-                  ? 'bg-[#5CBFD9] text-white shadow-lg shadow-[#5CBFD9]/30'
+                  ? 'bg-[#FF5500] text-white shadow-lg shadow-[#FF5500]/30'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -413,7 +420,7 @@ function InterestsStep({ selectedInterests, toggleInterest }: {
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-[#5CBFD9] font-medium mt-5"
+          className="text-center text-[#FF5500] font-medium mt-5"
         >
           {selectedInterests.length}개 선택됨
         </motion.p>
@@ -451,23 +458,23 @@ function GoalStep({ selectedGoal, setSelectedGoal }: {
               onClick={() => setSelectedGoal(goal.id)}
               className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                 isSelected
-                  ? 'border-[#5CBFD9] bg-[#E8F6F9]'
+                  ? 'border-[#FF5500] bg-[#FFF5F0]'
                   : 'border-transparent bg-gray-50 hover:bg-gray-100'
               }`}
             >
               <div className="text-left">
-                <p className={`font-semibold mb-0.5 ${isSelected ? 'text-[#5CBFD9]' : 'text-gray-900'}`}>
+                <p className={`font-semibold mb-0.5 ${isSelected ? 'text-[#FF5500]' : 'text-gray-900'}`}>
                   {goal.label}
                 </p>
-                <p className={`text-sm ${isSelected ? 'text-[#3BA8C4]' : 'text-gray-500'}`}>
+                <p className={`text-sm ${isSelected ? 'text-[#E64A00]' : 'text-gray-500'}`}>
                   {goal.description}
                 </p>
               </div>
               <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                isSelected ? 'border-[#5CBFD9]' : 'border-gray-300'
+                isSelected ? 'border-[#FF5500]' : 'border-gray-300'
               }`}>
                 {isSelected && (
-                  <div className="w-3 h-3 rounded-full bg-[#5CBFD9]" />
+                  <div className="w-3 h-3 rounded-full bg-[#FF5500]" />
                 )}
               </div>
             </motion.button>
@@ -492,7 +499,7 @@ function CompleteStep({ role, selectedInterests }: {
       className="w-full max-w-lg text-center"
     >
       {/* Check Badge */}
-      <div className="w-24 h-24 bg-gradient-to-br from-[#5CBFD9] to-[#3BA8C4] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#5CBFD9]/30">
+      <div className="w-24 h-24 bg-gradient-to-br from-[#FF5500] to-[#E64A00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#FF5500]/30">
         <Check className="w-12 h-12 text-white" strokeWidth={3} />
       </div>
 
