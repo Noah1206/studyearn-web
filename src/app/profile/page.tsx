@@ -28,6 +28,9 @@ import {
   ChevronLeft,
   ChevronDown,
   Clock,
+  Pencil,
+  Share2,
+  Copy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -256,6 +259,9 @@ export default function ProfilePage() {
   const [customDays, setCustomDays] = useState(30);
   const [newRoutineTitle, setNewRoutineTitle] = useState('');
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
+  const [isEditingRoutine, setIsEditingRoutine] = useState(false);
+  const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
+  const [showShareToast, setShowShareToast] = useState(false);
 
   // Check if user is in creator mode
   const isCreatorMode = userType === 'creator' && isCreatorOnboarded;
@@ -1066,10 +1072,132 @@ export default function ProfilePage() {
   // 루틴 생성 취소
   const cancelRoutineCreation = () => {
     setIsCreatingRoutine(false);
+    setIsEditingRoutine(false);
+    setEditingRoutineId(null);
     setNewRoutineTitle('');
     setNewRoutineItems([]);
     setNewRoutineType('week');
     setCustomDays(30);
+  };
+
+  // 루틴 편집 시작
+  const startEditRoutine = (routine: UserRoutine) => {
+    setIsEditingRoutine(true);
+    setEditingRoutineId(routine.id);
+    setNewRoutineTitle(routine.title);
+    setNewRoutineType(routine.routine_type);
+    setNewRoutineItems([...routine.routine_items]);
+    setCustomDays(routine.routine_days || 30);
+    setIsCreatingRoutine(true);
+  };
+
+  // 루틴 수정 저장
+  const updateRoutine = async () => {
+    if (!user || !newRoutineTitle.trim() || !editingRoutineId) return;
+
+    setIsSavingRoutine(true);
+    try {
+      const { error } = await supabase
+        .from('routines')
+        .update({
+          title: newRoutineTitle.trim(),
+          routine_type: newRoutineType,
+          routine_days: newRoutineType === 'custom' ? customDays : null,
+          routine_items: newRoutineItems,
+        })
+        .eq('id', editingRoutineId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // 목록에서 업데이트
+      setUserRoutines(prev => prev.map(r =>
+        r.id === editingRoutineId
+          ? {
+              ...r,
+              title: newRoutineTitle.trim(),
+              routine_type: newRoutineType,
+              routine_days: newRoutineType === 'custom' ? customDays : undefined,
+              routine_items: newRoutineItems,
+            }
+          : r
+      ));
+
+      // 상태 초기화
+      cancelRoutineCreation();
+
+      setSuccess('루틴이 수정되었습니다!');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Error updating routine:', err);
+      setError('루틴 수정에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsSavingRoutine(false);
+    }
+  };
+
+  // 루틴 삭제
+  const deleteRoutine = async (routineId: string) => {
+    if (!user || !confirm('정말 이 루틴을 삭제하시겠습니까?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('routines')
+        .delete()
+        .eq('id', routineId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setUserRoutines(prev => {
+        const updated = prev.filter(r => r.id !== routineId);
+        if (selectedRoutineIndex >= updated.length) {
+          setSelectedRoutineIndex(Math.max(0, updated.length - 1));
+        }
+        return updated;
+      });
+
+      setSuccess('루틴이 삭제되었습니다.');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Error deleting routine:', err);
+      setError('루틴 삭제에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  // 루틴 공유 (링크 복사)
+  const shareRoutine = async (routine: UserRoutine) => {
+    const shareText = `📚 ${routine.title}\n\n` +
+      routine.routine_items
+        .sort((a, b) => {
+          if (a.day !== b.day) return a.day - b.day;
+          return (a.startHour || 0) - (b.startHour || 0);
+        })
+        .map(item => {
+          const dayLabel = routine.routine_type === 'week'
+            ? WEEKDAYS[item.day]
+            : routine.routine_type === 'day'
+              ? ''
+              : `${item.day}일`;
+          const timeLabel = item.startHour !== undefined
+            ? `${item.startHour.toString().padStart(2, '0')}:00`
+            : '';
+          return `• ${dayLabel} ${timeLabel} - ${item.title}`;
+        })
+        .join('\n') +
+      '\n\n📱 StuPle에서 만든 루틴입니다';
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      setError('복사에 실패했습니다.');
+      setTimeout(() => setError(''), 2000);
+    }
   };
 
   // Day 타입 시간표 렌더링 (생성용 - 인터랙티브)
@@ -1632,6 +1760,31 @@ export default function ProfilePage() {
                       {currentRoutine.routine_type === 'month' && renderMonthCalendarView(currentRoutine.routine_items)}
                       {currentRoutine.routine_type === 'custom' && renderCustomPlannerView(currentRoutine.routine_items, currentRoutine.routine_days)}
                     </div>
+
+                    {/* 편집 및 공유 버튼 */}
+                    <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => shareRoutine(currentRoutine)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>복사</span>
+                      </button>
+                      <button
+                        onClick={() => startEditRoutine(currentRoutine)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        <span>편집</span>
+                      </button>
+                      <button
+                        onClick={() => deleteRoutine(currentRoutine.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>삭제</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -1710,7 +1863,7 @@ export default function ProfilePage() {
                         취소
                       </button>
                       <button
-                        onClick={saveRoutine}
+                        onClick={isEditingRoutine ? updateRoutine : saveRoutine}
                         disabled={!newRoutineTitle.trim() || newRoutineItems.length === 0 || isSavingRoutine}
                         className={cn(
                           'flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -1719,7 +1872,7 @@ export default function ProfilePage() {
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         )}
                       >
-                        {isSavingRoutine ? '저장 중...' : '저장하기'}
+                        {isSavingRoutine ? '저장 중...' : isEditingRoutine ? '수정하기' : '저장하기'}
                       </button>
                     </div>
                   </div>
@@ -2178,6 +2331,23 @@ export default function ProfilePage() {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 공유 성공 토스트 */}
+      <AnimatePresence>
+        {showShareToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-400" />
+              <span className="text-sm">루틴이 클립보드에 복사되었습니다</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
