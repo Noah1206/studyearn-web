@@ -75,7 +75,7 @@ interface BankAccount {
 
 // Minimum Payout Amount
 const MINIMUM_PAYOUT = 10000;
-const PAYOUT_FEE_RATE = 0.033; // 3.3% platform fee
+const PAYOUT_FEE_RATE = 0.20; // platform fee
 
 export default function PayoutPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -438,7 +438,7 @@ export default function PayoutPage() {
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">정산 수수료 안내</p>
                 <p className="text-blue-700">
-                  정산 요청 시 플랫폼 수수료 3.3%가 차감됩니다.
+                  정산 요청 시 플랫폼 수수료가 차감됩니다.
                   정산은 매주 금요일에 일괄 처리되며, 영업일 기준 2~3일 내 입금됩니다.
                 </p>
               </div>
@@ -696,7 +696,7 @@ export default function PayoutPage() {
                     <span className="text-gray-900">{formatCurrency(parseInt(payoutAmount))}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">수수료 (3.3%)</span>
+                    <span className="text-gray-500">수수료</span>
                     <span className="text-red-600">-{formatCurrency(estimatedFee)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 mt-2">
