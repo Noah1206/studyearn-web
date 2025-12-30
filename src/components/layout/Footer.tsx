@@ -37,8 +37,8 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-5 text-sm uppercase tracking-wider">서비스</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/creator" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  크리에이터
+                <Link href="/studyan" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  스터디언
                 </Link>
               </li>
               <li>

@@ -180,9 +180,9 @@ function EmptyState({ type }: { type: 'following' | 'followers' }) {
           : '콘텐츠를 공유하면 팔로워가 생길 거예요'}
       </p>
       {type === 'following' && (
-        <Link href="/creator">
+        <Link href="/studyan">
           <Button className="gap-2">
-            크리에이터 둘러보기
+            스터디언 둘러보기
             <ChevronRight className="w-4 h-4" />
           </Button>
         </Link>

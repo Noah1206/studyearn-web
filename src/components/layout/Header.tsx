@@ -110,10 +110,10 @@ export function Header() {
               Study With Me
             </Link>
             <Link
-              href="/creator"
+              href="/studyan"
               className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
             >
-              크리에이터
+              스터디언
             </Link>
           </nav>
 
@@ -260,11 +260,11 @@ export function Header() {
               Study With Me
             </Link>
             <Link
-              href="/creator"
+              href="/studyan"
               className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
               onClick={() => setIsMenuOpen(false)}
             >
-              크리에이터
+              스터디언
             </Link>
             {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
             {pathname?.startsWith('/study-with-me') && (
