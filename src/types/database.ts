@@ -563,22 +563,325 @@ export interface Database {
           id: string;
           content_id: string;
           user_id: string | null;
+          viewer_ip: string | null;
+          viewer_user_agent: string | null;
+          view_duration_seconds: number | null;
+          is_unique: boolean;
+          referrer_url: string | null;
+          device_type: string | null;
           viewed_at: string;
-          duration_seconds: number | null;
         };
         Insert: {
           id?: string;
           content_id: string;
           user_id?: string | null;
+          viewer_ip?: string | null;
+          viewer_user_agent?: string | null;
+          view_duration_seconds?: number | null;
+          is_unique?: boolean;
+          referrer_url?: string | null;
+          device_type?: string | null;
           viewed_at?: string;
-          duration_seconds?: number | null;
         };
         Update: {
           id?: string;
           content_id?: string;
           user_id?: string | null;
+          viewer_ip?: string | null;
+          viewer_user_agent?: string | null;
+          view_duration_seconds?: number | null;
+          is_unique?: boolean;
+          referrer_url?: string | null;
+          device_type?: string | null;
           viewed_at?: string;
-          duration_seconds?: number | null;
+        };
+      };
+      // Content comments
+      content_comments: {
+        Row: {
+          id: string;
+          content_id: string;
+          user_id: string;
+          comment_text: string;
+          comment_type: 'comment' | 'question' | 'review';
+          like_count: number;
+          reply_count: number;
+          is_pinned: boolean;
+          is_reported: boolean;
+          is_replied: boolean;
+          is_hidden: boolean;
+          parent_comment_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          content_id: string;
+          user_id: string;
+          comment_text: string;
+          comment_type?: 'comment' | 'question' | 'review';
+          like_count?: number;
+          reply_count?: number;
+          is_pinned?: boolean;
+          is_reported?: boolean;
+          is_replied?: boolean;
+          is_hidden?: boolean;
+          parent_comment_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          content_id?: string;
+          user_id?: string;
+          comment_text?: string;
+          comment_type?: 'comment' | 'question' | 'review';
+          like_count?: number;
+          reply_count?: number;
+          is_pinned?: boolean;
+          is_reported?: boolean;
+          is_replied?: boolean;
+          is_hidden?: boolean;
+          parent_comment_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      comment_replies: {
+        Row: {
+          id: string;
+          comment_id: string;
+          user_id: string;
+          reply_text: string;
+          like_count: number;
+          is_creator_reply: boolean;
+          is_hidden: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          comment_id: string;
+          user_id: string;
+          reply_text: string;
+          like_count?: number;
+          is_creator_reply?: boolean;
+          is_hidden?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          comment_id?: string;
+          user_id?: string;
+          reply_text?: string;
+          like_count?: number;
+          is_creator_reply?: boolean;
+          is_hidden?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      // QnA feature
+      qna_rooms: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          subject: string | null;
+          participant_count: number;
+          question_count: number;
+          answered_count: number;
+          is_active: boolean;
+          tags: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          creator_id: string;
+          title: string;
+          description?: string | null;
+          subject?: string | null;
+          participant_count?: number;
+          question_count?: number;
+          answered_count?: number;
+          is_active?: boolean;
+          tags?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          creator_id?: string;
+          title?: string;
+          description?: string | null;
+          subject?: string | null;
+          participant_count?: number;
+          question_count?: number;
+          answered_count?: number;
+          is_active?: boolean;
+          tags?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      qna_questions: {
+        Row: {
+          id: string;
+          room_id: string;
+          user_id: string;
+          question_text: string;
+          question_type: string;
+          image_urls: string[];
+          is_answered: boolean;
+          is_pinned: boolean;
+          is_anonymous: boolean;
+          upvote_count: number;
+          view_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          user_id: string;
+          question_text: string;
+          question_type?: string;
+          image_urls?: string[];
+          is_answered?: boolean;
+          is_pinned?: boolean;
+          is_anonymous?: boolean;
+          upvote_count?: number;
+          view_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          room_id?: string;
+          user_id?: string;
+          question_text?: string;
+          question_type?: string;
+          image_urls?: string[];
+          is_answered?: boolean;
+          is_pinned?: boolean;
+          is_anonymous?: boolean;
+          upvote_count?: number;
+          view_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      qna_answers: {
+        Row: {
+          id: string;
+          question_id: string;
+          user_id: string;
+          answer_text: string;
+          image_urls: string[];
+          is_accepted: boolean;
+          is_creator_answer: boolean;
+          upvote_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          user_id: string;
+          answer_text: string;
+          image_urls?: string[];
+          is_accepted?: boolean;
+          is_creator_answer?: boolean;
+          upvote_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          question_id?: string;
+          user_id?: string;
+          answer_text?: string;
+          image_urls?: string[];
+          is_accepted?: boolean;
+          is_creator_answer?: boolean;
+          upvote_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      // User subscriptions (following)
+      user_subscriptions: {
+        Row: {
+          id: string;
+          subscriber_id: string;
+          creator_id: string;
+          is_notified: boolean;
+          subscribed_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscriber_id: string;
+          creator_id: string;
+          is_notified?: boolean;
+          subscribed_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          subscriber_id?: string;
+          creator_id?: string;
+          is_notified?: boolean;
+          subscribed_at?: string;
+          updated_at?: string;
+        };
+      };
+      // User streaks
+      user_streaks: {
+        Row: {
+          id: string;
+          user_id: string;
+          current_streak: number;
+          longest_streak: number;
+          total_study_days: number;
+          weekly_activity: boolean[];
+          monthly_activity: Json;
+          last_study_date: string | null;
+          streak_frozen_until: string | null;
+          freeze_count_used: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          current_streak?: number;
+          longest_streak?: number;
+          total_study_days?: number;
+          weekly_activity?: boolean[];
+          monthly_activity?: Json;
+          last_study_date?: string | null;
+          streak_frozen_until?: string | null;
+          freeze_count_used?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          current_streak?: number;
+          longest_streak?: number;
+          total_study_days?: number;
+          weekly_activity?: boolean[];
+          monthly_activity?: Json;
+          last_study_date?: string | null;
+          streak_frozen_until?: string | null;
+          freeze_count_used?: number;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };
@@ -633,6 +936,22 @@ export type CreatorSubscription = Tables<'creator_subscriptions'>;
 export type CreatorRevenueStats = Tables<'creator_revenue_stats'>;
 export type CreatorPayout = Tables<'creator_payouts'>;
 export type ContentPurchase = Tables<'content_purchases'>;
+
+// Content interaction types
+export type ContentComment = Tables<'content_comments'>;
+export type CommentReply = Tables<'comment_replies'>;
+export type ContentView = Tables<'content_views'>;
+export type ContentSave = Tables<'content_saves'>;
+
+// QnA types
+export type QnaRoom = Tables<'qna_rooms'>;
+export type QnaQuestion = Tables<'qna_questions'>;
+export type QnaAnswer = Tables<'qna_answers'>;
+
+// User types
+export type UserSubscription = Tables<'user_subscriptions'>;
+export type UserStreak = Tables<'user_streaks'>;
+export type UserPreference = Tables<'user_preferences'>;
 
 // Extended types with relations
 export interface ProductWithContents extends Product {
