@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
 import { Button, Card, CardContent } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 function VerifyPhoneContent() {
   const router = useRouter();
@@ -17,8 +18,6 @@ function VerifyPhoneContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(180); // 3분 (180초)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const supabase = createClient();
 
   // 타이머 카운트다운
   useEffect(() => {
@@ -79,13 +78,18 @@ function VerifyPhoneContent() {
     }
 
     try {
-      const formattedPhone = `+82${phoneNumber.replace(/^0/, '')}`;
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: phoneNumber }),
       });
 
-      if (otpError) {
-        setError(otpError.message || '인증번호 재전송에 실패했습니다.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || '인증번호 재전송에 실패했습니다.');
         return;
       }
 
@@ -113,21 +117,35 @@ function VerifyPhoneContent() {
     setError('');
 
     try {
-      const formattedPhone = `+82${phoneNumber.replace(/^0/, '')}`;
-
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
-        token: verificationCode,
-        type: 'sms',
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: phoneNumber,
+          code: verificationCode,
+        }),
       });
 
-      if (verifyError) {
-        setError(verifyError.message || '인증번호가 올바르지 않습니다.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || '인증번호가 올바르지 않습니다.');
         return;
       }
 
-      // 인증 성공 - 프로필 설정 화면으로 이동
-      router.push(`/signup/profile?phone=${phoneNumber}`);
+      if (result.isExistingUser) {
+        // 이미 가입된 사용자 - 로그인 페이지로 이동
+        setError('이미 가입된 전화번호입니다. 로그인해주세요.');
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+        return;
+      }
+
+      // 인증 성공 - 프로필 설정 화면으로 이동 (인증 토큰 포함)
+      router.push(`/signup/profile?phone=${phoneNumber}&token=${result.verificationToken}`);
     } catch {
       setError('인증에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -148,6 +166,9 @@ function VerifyPhoneContent() {
     return null;
   }
 
+  // 전화번호 포맷팅 (010-1234-5678)
+  const formattedPhone = phoneNumber.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+
   return (
     <motion.div
       className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gray-50"
@@ -161,7 +182,8 @@ function VerifyPhoneContent() {
           {/* Title */}
           <div className="text-center mb-10">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">문자로 받은</h1>
-            <h1 className="text-2xl font-bold text-gray-900">인증번호를 입력해주세요</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">인증번호를 입력해주세요</h1>
+            <p className="text-gray-500">{formattedPhone}로 발송되었습니다</p>
           </div>
 
           {/* Error Message */}

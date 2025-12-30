@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Button, Card, CardContent } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 function VerifyLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,20 +75,25 @@ function VerifyLoginContent() {
     }
   };
 
-  // 인증번호 재전송
+  // 인증번호 재전송 (Solapi Edge Function 사용)
   const handleResendCode = async () => {
     if (timer > 0) {
       return;
     }
 
     try {
-      const formattedPhone = `+82${phoneNumber.replace(/^0/, '')}`;
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/login-send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: phoneNumber }),
       });
 
-      if (otpError) {
-        setError(otpError.message || '인증번호 재전송에 실패했습니다.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || '인증번호 재전송에 실패했습니다.');
         return;
       }
 
@@ -99,7 +106,7 @@ function VerifyLoginContent() {
     }
   };
 
-  // 인증 확인
+  // 인증 확인 (Solapi Edge Function + Supabase Session 설정)
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -114,17 +121,41 @@ function VerifyLoginContent() {
     setError('');
 
     try {
-      const formattedPhone = `+82${phoneNumber.replace(/^0/, '')}`;
-
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
-        token: verificationCode,
-        type: 'sms',
+      // Edge Function으로 OTP 검증
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/login-verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: phoneNumber,
+          code: verificationCode,
+        }),
       });
 
-      if (verifyError) {
-        setError(verifyError.message || '인증번호가 올바르지 않습니다.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.remainingAttempts !== undefined) {
+          setError(`${result.error} (남은 시도: ${result.remainingAttempts}회)`);
+        } else {
+          setError(result.error || '인증번호가 올바르지 않습니다.');
+        }
         return;
+      }
+
+      // Magic Link 토큰으로 세션 설정
+      if (result.access_token && result.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: result.access_token,
+          refresh_token: result.refresh_token,
+        });
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('로그인 세션 설정에 실패했습니다.');
+          return;
+        }
       }
 
       // 로그인 성공 - 리다이렉트

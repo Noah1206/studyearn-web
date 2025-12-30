@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Card, CardContent, CardHeader, CardTitle, LoadingSection } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 function LoginForm() {
   const router = useRouter();
@@ -16,6 +19,7 @@ function LoginForm() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
 
   const supabase = createClient();
 
@@ -72,18 +76,24 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      // 한국 전화번호 포맷 (+82)
-      const formattedPhone = `+82${cleanedPhone.replace(/^0/, '')}`;
-
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      // Solapi Edge Function으로 OTP 발송
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/login-send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: cleanedPhone }),
       });
 
-      if (otpError) {
-        if (otpError.message.includes('rate limit')) {
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.isNotRegistered) {
+          setError('가입되지 않은 전화번호입니다. 회원가입을 진행해주세요.');
+        } else if (response.status === 429) {
           setError('잠시 후 다시 시도해주세요.');
         } else {
-          setError(otpError.message || '인증번호 전송에 실패했습니다.');
+          setError(result.error || '인증번호 전송에 실패했습니다.');
         }
         return;
       }
@@ -121,13 +131,13 @@ function LoginForm() {
             </div>
           )}
 
-          {/* Kakao Login Button */}
+          {/* Kakao Login Button - 메인 강조 */}
           <button
             type="button"
             onClick={handleKakaoLogin}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl text-lg"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -135,47 +145,79 @@ function LoginForm() {
                 fill="#191919"
               />
             </svg>
-            카카오로 로그인
+            카카오로 빠른 로그인
           </button>
 
+          {/* 무료 배지 */}
+          <p className="text-center text-xs text-green-600 mt-2 font-medium">
+            SMS 인증 없이 바로 로그인
+          </p>
+
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">또는</span>
+              <span className="px-4 bg-white text-gray-400">또는</span>
             </div>
           </div>
 
-          {/* Phone Login Form */}
-          <form onSubmit={handlePhoneLogin} className="space-y-6">
-            <div className="flex items-center gap-3">
-              {/* Country Code */}
-              <div className="bg-gray-100 px-4 py-3.5 rounded-xl min-w-[70px] text-center">
-                <span className="font-semibold text-gray-900">+82</span>
-              </div>
-              {/* Phone Input */}
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                placeholder="010-1234-5678"
-                maxLength={13}
-                className="flex-1 px-4 py-3.5 text-lg text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors bg-transparent"
-              />
-            </div>
+          {/* Phone Login Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowPhoneLogin(!showPhoneLogin)}
+            className="w-full flex items-center justify-center gap-2 py-3 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <span className="text-sm">전화번호로 로그인</span>
+            {showPhoneLogin ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
 
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isLoading}
-              disabled={isLoading || !isValidPhone}
-              className="py-3"
+          {/* Phone Login Form - 접힌 상태 */}
+          {showPhoneLogin && (
+            <motion.form
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              onSubmit={handlePhoneLogin}
+              className="space-y-4 mt-4"
             >
-              인증번호 받기
-            </Button>
-          </form>
+              <div className="flex items-center gap-3">
+                {/* Country Code */}
+                <div className="bg-gray-100 px-4 py-3 rounded-xl min-w-[70px] text-center">
+                  <span className="font-semibold text-gray-900">+82</span>
+                </div>
+                {/* Phone Input */}
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  placeholder="010-1234-5678"
+                  maxLength={13}
+                  className="flex-1 px-4 py-3 text-lg text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors bg-transparent"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="secondary"
+                isLoading={isLoading}
+                disabled={isLoading || !isValidPhone}
+                className="py-3"
+              >
+                인증번호 받기
+              </Button>
+
+              <p className="text-center text-xs text-gray-400">
+                SMS 인증 비용이 발생할 수 있습니다
+              </p>
+            </motion.form>
+          )}
 
           {/* 회원가입 링크 */}
           <p className="mt-8 text-center text-sm text-gray-500">

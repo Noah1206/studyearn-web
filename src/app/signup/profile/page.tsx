@@ -6,7 +6,9 @@ import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Card, CardContent } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
-import { Video, GraduationCap, Check } from 'lucide-react';
+import { Video, GraduationCap, Check, Eye, EyeOff } from 'lucide-react';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 type AccountType = 'creator' | 'runner' | null;
 
@@ -14,21 +16,50 @@ function ProfileSetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phoneNumber = searchParams.get('phone') || '';
+  const verificationToken = searchParams.get('token') || '';
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [nickname, setNickname] = useState('');
   const [selectedType, setSelectedType] = useState<AccountType>(null);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const supabase = createClient();
 
-  // 전화번호가 없으면 회원가입 페이지로 리다이렉트
+  // 전화번호 또는 토큰이 없으면 회원가입 페이지로 리다이렉트
   useEffect(() => {
-    if (!phoneNumber) {
+    if (!phoneNumber || !verificationToken) {
       router.push('/signup');
     }
-  }, [phoneNumber, router]);
+  }, [phoneNumber, verificationToken, router]);
+
+  // 이메일 유효성 검사
+  const validateEmail = (value: string) => {
+    if (!value.trim()) {
+      return '이메일을 입력해주세요';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      return '올바른 이메일 형식을 입력해주세요';
+    }
+    return '';
+  };
+
+  // 비밀번호 유효성 검사
+  const validatePassword = (value: string) => {
+    if (!value) {
+      return '비밀번호를 입력해주세요';
+    }
+    if (value.length < 6) {
+      return '비밀번호는 6자 이상이어야 합니다';
+    }
+    return '';
+  };
 
   // 닉네임 유효성 검사
   const validateNickname = (value: string) => {
@@ -41,7 +72,6 @@ function ProfileSetupContent() {
     if (value.length > 20) {
       return '닉네임은 20자 이하여야 합니다';
     }
-    // 특수문자 제한 (한글, 영문, 숫자, 언더스코어만 허용)
     const nicknameRegex = /^[가-힣a-zA-Z0-9_]+$/;
     if (!nicknameRegex.test(value)) {
       return '닉네임은 한글, 영문, 숫자, _만 사용 가능합니다';
@@ -49,22 +79,46 @@ function ProfileSetupContent() {
     return '';
   };
 
+  // 이메일 변경 처리
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailError(validateEmail(value));
+  };
+
+  // 비밀번호 변경 처리
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError(validatePassword(value));
+  };
+
   // 닉네임 변경 처리
   const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNickname(value);
-    const validationError = validateNickname(value);
-    setNicknameError(validationError);
+    setNicknameError(validateNickname(value));
   };
 
   // 프로필 저장 및 완료
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 닉네임 유효성 검사
-    const validationError = validateNickname(nickname);
-    if (validationError) {
-      setNicknameError(validationError);
+    // 유효성 검사
+    const emailValidation = validateEmail(email);
+    const passwordValidation = validatePassword(password);
+    const nicknameValidation = validateNickname(nickname);
+
+    if (emailValidation) {
+      setEmailError(emailValidation);
+      return;
+    }
+    if (passwordValidation) {
+      setPasswordError(passwordValidation);
+      return;
+    }
+    if (nicknameValidation) {
+      setNicknameError(nicknameValidation);
       return;
     }
 
@@ -77,65 +131,58 @@ function ProfileSetupContent() {
     setError('');
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-        router.push('/signup');
-        return;
-      }
-
-      // profiles 테이블에 프로필 저장
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
+      // 회원가입 완료 API 호출
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/complete-signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          verificationToken,
           nickname: nickname.trim(),
-          phone_number: phoneNumber,
-          is_creator: selectedType === 'creator',
-          updated_at: new Date().toISOString(),
-        });
+          accountType: selectedType,
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      });
 
-      if (profileError) {
-        console.error('Profile save error:', profileError);
-        setError(profileError.message || '프로필 저장에 실패했습니다.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || '회원가입에 실패했습니다.');
         return;
       }
 
-      // 크리에이터인 경우 creator_settings 테이블에도 저장
-      if (selectedType === 'creator') {
-        const { error: creatorError } = await supabase
-          .from('creator_settings')
-          .upsert({
-            user_id: user.id,
-            display_name: nickname.trim(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+      // 회원가입 성공 - 자동 로그인
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-        if (creatorError) {
-          console.error('Creator settings error:', creatorError);
-          // 크리에이터 설정 저장 실패해도 계속 진행
-        }
+      if (signInError) {
+        // 로그인 실패해도 회원가입은 성공
+        router.push('/login?message=회원가입이 완료되었습니다. 로그인해주세요.');
+        return;
       }
 
-      // 온보딩에서 저장한 데이터 가져오기
+      // 온보딩에서 저장한 데이터 처리
       const onboardingData = localStorage.getItem('studyearn_onboarding');
       if (onboardingData) {
         try {
           const { role, interests, goal } = JSON.parse(onboardingData);
+          const { data: { user } } = await supabase.auth.getUser();
 
-          // 온보딩 데이터를 profiles 테이블에 저장
-          await supabase
-            .from('profiles')
-            .update({
-              onboarding_role: role,
-              onboarding_interests: interests,
-              onboarding_goal: goal,
-            })
-            .eq('id', user.id);
+          if (user) {
+            await supabase
+              .from('profiles')
+              .update({
+                onboarding_role: role,
+                onboarding_interests: interests,
+                onboarding_goal: goal,
+              })
+              .eq('id', user.id);
+          }
 
-          // 저장 후 localStorage 정리
           localStorage.removeItem('studyearn_onboarding');
         } catch {
           // 온보딩 데이터 저장 실패해도 계속 진행
@@ -145,15 +192,22 @@ function ProfileSetupContent() {
       // 메인 페이지로 이동
       router.push('/');
     } catch {
-      setError('프로필 저장에 실패했습니다. 다시 시도해주세요.');
+      setError('회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isFormValid = nickname.trim().length >= 2 && !nicknameError && selectedType;
+  const isFormValid =
+    email.trim() &&
+    !emailError &&
+    password &&
+    !passwordError &&
+    nickname.trim().length >= 2 &&
+    !nicknameError &&
+    selectedType;
 
-  if (!phoneNumber) {
+  if (!phoneNumber || !verificationToken) {
     return null;
   }
 
@@ -180,7 +234,58 @@ function ProfileSetupContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                이메일
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                placeholder="example@email.com"
+                className={`w-full px-4 py-3.5 text-lg text-gray-900 border-2 rounded-xl focus:outline-none transition-colors ${
+                  emailError
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-gray-200 focus:border-gray-900'
+                }`}
+              />
+              {emailError && (
+                <p className="mt-2 text-sm text-red-500">{emailError}</p>
+              )}
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="6자 이상 입력해주세요"
+                  className={`w-full px-4 py-3.5 text-lg text-gray-900 border-2 rounded-xl focus:outline-none transition-colors pr-12 ${
+                    passwordError
+                      ? 'border-red-400 focus:border-red-500'
+                      : 'border-gray-200 focus:border-gray-900'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              {passwordError && (
+                <p className="mt-2 text-sm text-red-500">{passwordError}</p>
+              )}
+            </div>
+
             {/* Nickname Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

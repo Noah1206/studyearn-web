@@ -4,24 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
 import { Button, Card, CardContent } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
 
-// 파스텔 블루 테마
-const THEME = {
-  primary: '#5CBFD9',
-  primaryDark: '#3BA8C4',
-  primaryLight: '#E8F6F9',
-};
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export default function SignupPage() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const supabase = createClient();
 
   // 전화번호 포맷팅 (010-1234-5678 형식)
   const formatPhoneNumber = (text: string) => {
@@ -60,19 +52,19 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      // 한국 전화번호 포맷 (+82)
-      const formattedPhone = `+82${cleanedPhone.replace(/^0/, '')}`;
-
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      // Solapi를 통한 OTP 발송 (Edge Function 호출)
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: cleanedPhone }),
       });
 
-      if (otpError) {
-        if (otpError.message.includes('rate limit')) {
-          setError('잠시 후 다시 시도해주세요.');
-        } else {
-          setError(otpError.message || '인증번호 전송에 실패했습니다.');
-        }
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || '인증번호 전송에 실패했습니다.');
         return;
       }
 
@@ -98,6 +90,12 @@ export default function SignupPage() {
     >
       <Card variant="elevated" className="w-full max-w-lg px-8 py-16 md:px-12 md:py-20">
         <CardContent className="p-0">
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">회원가입</h1>
+            <p className="text-gray-500">전화번호로 본인 인증을 진행해주세요</p>
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 mb-6">
