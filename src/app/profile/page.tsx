@@ -1690,8 +1690,92 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* 현재 루틴 */}
-                {currentRoutine && (
+                {/* 현재 루틴 또는 편집 폼 */}
+                {isCreatingRoutine ? (
+                  // 루틴 생성/편집 UI
+                  <div className="space-y-4">
+                    {/* 루틴 제목 입력 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">루틴 이름</label>
+                      <input
+                        type="text"
+                        value={newRoutineTitle}
+                        onChange={(e) => setNewRoutineTitle(e.target.value)}
+                        placeholder="예: 수능 대비 일정"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* 루틴 타입 선택 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">루틴 형식</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {ROUTINE_TYPES.map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setNewRoutineType(type.id as 'day' | 'week' | 'month' | 'custom')}
+                            className={cn(
+                              'p-2 rounded-lg border text-left transition-all',
+                              newRoutineType === type.id
+                                ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            )}
+                          >
+                            <div className="text-xs font-medium">{type.label}</div>
+                            <div className="text-[10px] text-gray-500">{type.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 커스텀 일수 설정 */}
+                    {newRoutineType === 'custom' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">기간 (일)</label>
+                        <input
+                          type="number"
+                          value={customDays}
+                          onChange={(e) => setCustomDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 30)))}
+                          min={1}
+                          max={365}
+                          className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                    )}
+
+                    {/* 스케줄 에디터 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">일정 추가</label>
+                      <p className="text-xs text-gray-500 mb-2">시간/날짜를 클릭하여 일정을 추가하세요</p>
+                      {newRoutineType === 'day' && renderDayScheduleCreate()}
+                      {newRoutineType === 'week' && renderWeekScheduleCreate()}
+                      {newRoutineType === 'month' && renderMonthCalendarCreate()}
+                      {newRoutineType === 'custom' && renderCustomPlannerCreate()}
+                    </div>
+
+                    {/* 저장/취소 버튼 */}
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={cancelRoutineCreation}
+                        className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={isEditingRoutine ? updateRoutine : saveRoutine}
+                        disabled={!newRoutineTitle.trim() || newRoutineItems.length === 0 || isSavingRoutine}
+                        className={cn(
+                          'flex-1 py-2 rounded-lg text-sm font-medium transition-colors',
+                          newRoutineTitle.trim() && newRoutineItems.length > 0 && !isSavingRoutine
+                            ? 'bg-orange-500 text-white hover:bg-orange-600'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        )}
+                      >
+                        {isSavingRoutine ? '저장 중...' : isEditingRoutine ? '수정하기' : '저장하기'}
+                      </button>
+                    </div>
+                  </div>
+                ) : currentRoutine && (
                   <div>
                     {/* 루틴 제목 및 정보 */}
                     <div className="mb-4">
