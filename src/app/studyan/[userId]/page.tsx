@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Loader2,
   Target,
-  BookOpen,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
@@ -315,54 +314,53 @@ export default function StudyanUserPage() {
       </div>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {/* Profile Card */}
-        <Card className="mb-6 overflow-hidden">
-          <div className={`h-24 bg-gradient-to-r ${characterAvatar.gradient}`} />
-          <CardContent className="relative pt-0 pb-6">
-            {/* Avatar */}
-            <div className="absolute -top-12 left-6">
+        {/* Profile Card - Minimal Style */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardContent className="p-6">
+            {/* Profile Header */}
+            <div className="flex items-center gap-4 mb-6">
+              {/* Avatar */}
               {user.avatar_url ? (
                 <Avatar
                   src={user.avatar_url}
                   alt={user.nickname || '사용자'}
-                  size="xl"
-                  className="w-24 h-24 ring-4 ring-white"
+                  size="lg"
+                  className="w-16 h-16"
                 />
               ) : (
-                <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-4xl ring-4 ring-white`}>
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-2xl flex-shrink-0`}>
                   {characterAvatar.emoji}
                 </div>
               )}
-            </div>
 
-            {/* Badge for own profile */}
-            <div className="flex justify-end pt-2 mb-8">
-              {isOwnProfile && (
-                <Badge className="bg-blue-50 text-blue-600 border-blue-200">
-                  내 프로필
-                </Badge>
-              )}
-            </div>
-
-            {/* User Info */}
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {user.nickname || '익명 사용자'}
-              </h2>
-              {user.bio && (
-                <p className="text-gray-500">{user.bio}</p>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">{user.routines.length}</p>
-                <p className="text-xs text-gray-500">루틴</p>
+              {/* Name & Bio */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 truncate">
+                    {user.nickname || '익명 사용자'}
+                  </h2>
+                  {isOwnProfile && (
+                    <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
+                      나
+                    </Badge>
+                  )}
+                </div>
+                {user.bio && (
+                  <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{user.bio}</p>
+                )}
               </div>
+            </div>
+
+            {/* Stats Row */}
+            <div className="flex items-center justify-around py-4 border-y border-gray-100">
               <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">{user.follower_count}</p>
-                <p className="text-xs text-gray-500">팔로워</p>
+                <p className="text-xl font-bold text-gray-900">{user.routines.length}</p>
+                <p className="text-xs text-gray-500 mt-0.5">루틴</p>
+              </div>
+              <div className="w-px h-8 bg-gray-100" />
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{user.follower_count}</p>
+                <p className="text-xs text-gray-500 mt-0.5">팔로워</p>
               </div>
             </div>
 
@@ -371,9 +369,9 @@ export default function StudyanUserPage() {
               <button
                 onClick={handleToggleFollow}
                 disabled={followLoading}
-                className={`w-full py-3 text-sm font-medium rounded-lg transition-all ${
+                className={`w-full mt-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
                   isFollowing
-                    ? 'bg-gray-200 text-gray-600'
+                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
               >
@@ -391,57 +389,56 @@ export default function StudyanUserPage() {
 
         {/* Routines Section */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-blue-500" />
-            <h3 className="font-semibold text-gray-900">공개 루틴</h3>
-            <Badge variant="outline" className="ml-auto">
-              {user.routines.length}개
-            </Badge>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-500">공개 루틴</h3>
+            <span className="text-sm text-gray-400">{user.routines.length}개</span>
           </div>
 
           {user.routines.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">아직 공개된 루틴이 없습니다</p>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="py-10 text-center">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Calendar className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500">아직 공개된 루틴이 없습니다</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {user.routines.map((routine) => (
-                <Card key={routine.id} className="overflow-hidden">
+                <Card key={routine.id} className="border border-gray-200 shadow-md overflow-hidden">
                   <CardContent className="p-0">
                     {/* Routine Header */}
                     <button
                       onClick={() => setExpandedRoutineId(
                         expandedRoutineId === routine.id ? null : routine.id
                       )}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                      className="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">
+                        <h4 className="text-lg font-bold text-gray-900 truncate mb-2">
                           {routine.title}
                         </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                             {ROUTINE_TYPE_LABELS[routine.routine_type]}
-                            {routine.routine_type === 'custom' && routine.routine_days && ` (${routine.routine_days}일)`}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
+                            {routine.routine_type === 'custom' && routine.routine_days && ` ${routine.routine_days}일`}
+                          </span>
+                          <span className="text-sm text-gray-500">
                             {routine.routine_items.length}개 일정
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCopyRoutine(routine);
                           }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
                             copiedRoutineId === routine.id
                               ? 'bg-green-100 text-green-600'
-                              : 'text-blue-600 hover:bg-blue-50'
+                              : 'bg-gray-900 text-white hover:bg-gray-800'
                           }`}
                         >
                           {copiedRoutineId === routine.id ? (
