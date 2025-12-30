@@ -242,6 +242,18 @@ export default function ProfilePage() {
   const [routineMonth, setRoutineMonth] = useState(new Date().getMonth());
   const [routineYear, setRoutineYear] = useState(new Date().getFullYear());
 
+  // 루틴 생성 상태
+  const [isCreatingRoutine, setIsCreatingRoutine] = useState(false);
+  const [newRoutineType, setNewRoutineType] = useState<'day' | 'week' | 'month' | 'custom'>('week');
+  const [newRoutineItems, setNewRoutineItems] = useState<RoutineItem[]>([]);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<{day: number; startHour?: number; endHour?: number;} | null>(null);
+  const [newItemTitle, setNewItemTitle] = useState('');
+  const [newItemColor, setNewItemColor] = useState(ROUTINE_COLORS[0]);
+  const [customDays, setCustomDays] = useState(30);
+  const [newRoutineTitle, setNewRoutineTitle] = useState('');
+  const [isSavingRoutine, setIsSavingRoutine] = useState(false);
+
   // Check if user is in creator mode
   const isCreatorMode = userType === 'creator' && isCreatorOnboarded;
 
@@ -949,6 +961,352 @@ export default function ProfilePage() {
     </div>
   );
 
+  // ===== 루틴 생성용 인터랙티브 함수들 =====
+
+  // 시간 슬롯 클릭 핸들러 (day, week 타입)
+  const handleTimeSlotClick = (day: number, hour: number) => {
+    setEditingItem({ day, startHour: hour, endHour: hour + 1 });
+    setNewItemTitle('');
+    setNewItemColor(ROUTINE_COLORS[newRoutineItems.length % ROUTINE_COLORS.length]);
+    setShowAddItemModal(true);
+  };
+
+  // 날짜 클릭 핸들러 (month, custom 타입)
+  const handleDateClick = (day: number) => {
+    setEditingItem({ day });
+    setNewItemTitle('');
+    setNewItemColor(ROUTINE_COLORS[newRoutineItems.length % ROUTINE_COLORS.length]);
+    setShowAddItemModal(true);
+  };
+
+  // 아이템 추가
+  const addRoutineItem = () => {
+    if (!newItemTitle.trim() || !editingItem) return;
+
+    const newItem: RoutineItem = {
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      day: editingItem.day,
+      startHour: editingItem.startHour,
+      endHour: editingItem.endHour,
+      title: newItemTitle.trim(),
+      color: newItemColor,
+    };
+
+    setNewRoutineItems(prev => [...prev, newItem]);
+    setShowAddItemModal(false);
+    setNewItemTitle('');
+    setEditingItem(null);
+  };
+
+  // 아이템 제거
+  const removeRoutineItem = (itemId: string) => {
+    setNewRoutineItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  // 루틴 저장
+  const saveRoutine = async () => {
+    if (!user || !newRoutineTitle.trim()) return;
+
+    setIsSavingRoutine(true);
+    try {
+      const { data, error } = await supabase
+        .from('routines')
+        .insert({
+          user_id: user.id,
+          title: newRoutineTitle.trim(),
+          routine_type: newRoutineType,
+          routine_days: newRoutineType === 'custom' ? customDays : null,
+          routine_items: newRoutineItems,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 목록에 추가
+      setUserRoutines(prev => [...prev, {
+        id: data.id,
+        title: data.title,
+        routine_type: data.routine_type,
+        routine_days: data.routine_days,
+        routine_items: data.routine_items || [],
+        created_at: data.created_at,
+      }]);
+
+      // 상태 초기화
+      setIsCreatingRoutine(false);
+      setNewRoutineTitle('');
+      setNewRoutineItems([]);
+      setNewRoutineType('week');
+      setCustomDays(30);
+
+      setSuccess('루틴이 저장되었습니다!');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Error saving routine:', err);
+      setError('루틴 저장에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsSavingRoutine(false);
+    }
+  };
+
+  // 루틴 생성 취소
+  const cancelRoutineCreation = () => {
+    setIsCreatingRoutine(false);
+    setNewRoutineTitle('');
+    setNewRoutineItems([]);
+    setNewRoutineType('week');
+    setCustomDays(30);
+  };
+
+  // Day 타입 시간표 렌더링 (생성용 - 인터랙티브)
+  const renderDayScheduleCreate = () => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="min-w-[280px]">
+          {TIME_SLOTS.map(hour => {
+            const item = newRoutineItems.find(i => i.day === 0 && i.startHour === hour);
+            return (
+              <div key={hour} className="flex border-b border-gray-100 last:border-b-0">
+                <div className="w-14 py-2 px-2 text-xs text-gray-500 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+                  {hour.toString().padStart(2, '0')}:00
+                </div>
+                <div
+                  className="flex-1 py-2 px-2 min-h-[36px] cursor-pointer hover:bg-orange-50 transition-colors"
+                  onClick={() => !item && handleTimeSlotClick(0, hour)}
+                >
+                  {item ? (
+                    <div className={cn('px-2 py-1 rounded text-white text-xs flex items-center justify-between', item.color)}>
+                      <span>{item.title}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeRoutineItem(item.id); }}
+                        className="ml-1 hover:bg-white/20 rounded p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-gray-300 text-xs">+ 클릭하여 추가</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Week 타입 주간 시간표 렌더링 (생성용 - 인터랙티브)
+  const renderWeekScheduleCreate = () => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* 요일 헤더 */}
+          <div className="flex border-b border-gray-200">
+            <div className="w-12 bg-gray-50 flex-shrink-0" />
+            {WEEKDAYS.map((day, idx) => (
+              <div
+                key={day}
+                className={cn(
+                  'flex-1 py-2 text-center text-xs font-medium border-l border-gray-100',
+                  idx >= 5 ? 'text-red-500' : 'text-gray-700'
+                )}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+          {/* 시간 슬롯 */}
+          {TIME_SLOTS.map(hour => (
+            <div key={hour} className="flex border-b border-gray-100 last:border-b-0">
+              <div className="w-12 py-1.5 px-1 text-[10px] text-gray-500 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+                {hour.toString().padStart(2, '0')}:00
+              </div>
+              {WEEKDAYS.map((_, dayIdx) => {
+                const item = newRoutineItems.find(i => i.day === dayIdx && i.startHour === hour);
+                return (
+                  <div
+                    key={dayIdx}
+                    className="flex-1 min-h-[32px] border-l border-gray-100 p-0.5 cursor-pointer hover:bg-orange-50 transition-colors"
+                    onClick={() => !item && handleTimeSlotClick(dayIdx, hour)}
+                  >
+                    {item ? (
+                      <div className={cn('px-1 py-0.5 rounded text-white text-[10px] truncate flex items-center justify-between group', item.color)}>
+                        <span className="truncate">{item.title}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeRoutineItem(item.id); }}
+                          className="opacity-0 group-hover:opacity-100 ml-0.5 hover:bg-white/20 rounded"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Month 타입 월간 캘린더 렌더링 (생성용 - 인터랙티브)
+  const renderMonthCalendarCreate = () => {
+    const days = getMonthDays();
+    const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+    return (
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        {/* 월 네비게이션 */}
+        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+          <button
+            onClick={() => {
+              if (routineMonth === 0) {
+                setRoutineMonth(11);
+                setRoutineYear(prev => prev - 1);
+              } else {
+                setRoutineMonth(prev => prev - 1);
+              }
+            }}
+            className="p-1 hover:bg-gray-200 rounded"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span className="text-sm font-medium text-gray-900">
+            {routineYear}년 {monthNames[routineMonth]}
+          </span>
+          <button
+            onClick={() => {
+              if (routineMonth === 11) {
+                setRoutineMonth(0);
+                setRoutineYear(prev => prev + 1);
+              } else {
+                setRoutineMonth(prev => prev + 1);
+              }
+            }}
+            className="p-1 hover:bg-gray-200 rounded"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+
+        {/* 요일 헤더 */}
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {WEEKDAYS.map((day, idx) => (
+            <div
+              key={day}
+              className={cn(
+                'py-1.5 text-center text-xs font-medium',
+                idx >= 5 ? 'text-red-500' : 'text-gray-700'
+              )}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* 날짜 그리드 */}
+        <div className="grid grid-cols-7">
+          {days.map((day, idx) => {
+            const dayItems = day ? newRoutineItems.filter(i => i.day === day) : [];
+            return (
+              <div
+                key={idx}
+                className={cn(
+                  'min-h-[60px] border-b border-r border-gray-100 p-1 cursor-pointer hover:bg-orange-50 transition-colors',
+                  !day && 'bg-gray-50 cursor-default hover:bg-gray-50',
+                  (idx + 1) % 7 === 0 && 'border-r-0'
+                )}
+                onClick={() => day && handleDateClick(day)}
+              >
+                {day && (
+                  <>
+                    <div className={cn(
+                      'text-xs mb-0.5',
+                      (idx % 7) >= 5 ? 'text-red-500' : 'text-gray-700'
+                    )}>
+                      {day}
+                    </div>
+                    <div className="space-y-0.5">
+                      {dayItems.slice(0, 2).map(item => (
+                        <div
+                          key={item.id}
+                          className={cn('px-1 py-0.5 rounded text-white text-[9px] truncate flex items-center justify-between group', item.color)}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="truncate">{item.title}</span>
+                          <button
+                            onClick={() => removeRoutineItem(item.id)}
+                            className="opacity-0 group-hover:opacity-100 ml-0.5"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {dayItems.length > 2 && (
+                        <div className="text-[9px] text-gray-500">+{dayItems.length - 2}</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Custom 타입 N일 플래너 렌더링 (생성용 - 인터랙티브)
+  const renderCustomPlannerCreate = () => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
+      {Array.from({ length: Math.min(customDays, 30) }, (_, i) => i + 1).map(day => {
+        const dayItems = newRoutineItems.filter(i => i.day === day);
+        return (
+          <div key={day} className="flex border-b border-gray-100 last:border-b-0">
+            <div className="w-16 py-2 px-2 text-xs font-medium text-gray-700 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+              Day {day}
+            </div>
+            <div
+              className="flex-1 py-2 px-2 min-h-[40px] cursor-pointer hover:bg-orange-50 transition-colors"
+              onClick={() => handleDateClick(day)}
+            >
+              {dayItems.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {dayItems.map(item => (
+                    <div
+                      key={item.id}
+                      className={cn('px-2 py-0.5 rounded text-white text-xs flex items-center gap-1 group', item.color)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>{item.title}</span>
+                      <button
+                        onClick={() => removeRoutineItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-300 text-xs">+ 클릭하여 추가</div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      {customDays > 30 && (
+        <div className="p-2 text-center text-xs text-gray-500 bg-gray-50">
+          {customDays - 30}일 더 있음
+        </div>
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-neutral-light">
@@ -1184,19 +1542,107 @@ export default function ProfilePage() {
             ) : (
               <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 mt-6">
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">내 루틴</p>
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Calendar className="w-6 h-6 text-gray-400" />
+
+                {isCreatingRoutine ? (
+                  // 루틴 생성 UI
+                  <div className="space-y-4">
+                    {/* 루틴 제목 입력 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">루틴 이름</label>
+                      <input
+                        type="text"
+                        value={newRoutineTitle}
+                        onChange={(e) => setNewRoutineTitle(e.target.value)}
+                        placeholder="예: 수능 대비 일정"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* 루틴 타입 선택 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">루틴 형식</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {ROUTINE_TYPES.map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setNewRoutineType(type.id as 'day' | 'week' | 'month' | 'custom')}
+                            className={cn(
+                              'p-2 rounded-lg border text-left transition-all',
+                              newRoutineType === type.id
+                                ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            )}
+                          >
+                            <div className="text-xs font-medium">{type.label}</div>
+                            <div className="text-[10px] text-gray-500">{type.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 커스텀 일수 설정 */}
+                    {newRoutineType === 'custom' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">기간 (일)</label>
+                        <input
+                          type="number"
+                          value={customDays}
+                          onChange={(e) => setCustomDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 30)))}
+                          min={1}
+                          max={365}
+                          className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                    )}
+
+                    {/* 스케줄 에디터 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">일정 추가</label>
+                      <p className="text-xs text-gray-500 mb-2">시간/날짜를 클릭하여 일정을 추가하세요</p>
+                      {newRoutineType === 'day' && renderDayScheduleCreate()}
+                      {newRoutineType === 'week' && renderWeekScheduleCreate()}
+                      {newRoutineType === 'month' && renderMonthCalendarCreate()}
+                      {newRoutineType === 'custom' && renderCustomPlannerCreate()}
+                    </div>
+
+                    {/* 버튼들 */}
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={cancelRoutineCreation}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={saveRoutine}
+                        disabled={!newRoutineTitle.trim() || newRoutineItems.length === 0 || isSavingRoutine}
+                        className={cn(
+                          'flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                          newRoutineTitle.trim() && newRoutineItems.length > 0 && !isSavingRoutine
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        )}
+                      >
+                        {isSavingRoutine ? '저장 중...' : '저장하기'}
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-3">아직 등록한 루틴이 없어요</p>
-                  <Link
-                    href="/dashboard/upload"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-medium transition-colors"
-                  >
-                    <Calendar className="w-3 h-3" />
-                    루틴 만들기
-                  </Link>
-                </div>
+                ) : (
+                  // 빈 상태 (루틴 없음)
+                  <div className="text-center py-6">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Calendar className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500 mb-3">아직 등록한 루틴이 없어요</p>
+                    <button
+                      onClick={() => setIsCreatingRoutine(true)}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      루틴 만들기
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>
@@ -1522,6 +1968,117 @@ export default function ProfilePage() {
                   className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50"
                 >
                   {isDeleting ? '삭제 중...' : '삭제'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 루틴 아이템 추가 모달 */}
+      <AnimatePresence>
+        {showAddItemModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => e.target === e.currentTarget && setShowAddItemModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="bg-white rounded-2xl p-6 max-w-sm w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">일정 추가</h3>
+                <button
+                  onClick={() => setShowAddItemModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* 시간 정보 표시 */}
+              {editingItem && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="w-4 h-4" />
+                    {newRoutineType === 'day' && editingItem.startHour !== undefined && (
+                      <span>{editingItem.startHour.toString().padStart(2, '0')}:00 - {(editingItem.endHour || editingItem.startHour + 1).toString().padStart(2, '0')}:00</span>
+                    )}
+                    {newRoutineType === 'week' && editingItem.startHour !== undefined && (
+                      <span>{WEEKDAYS[editingItem.day]} {editingItem.startHour.toString().padStart(2, '0')}:00</span>
+                    )}
+                    {newRoutineType === 'month' && (
+                      <span>{editingItem.day}일</span>
+                    )}
+                    {newRoutineType === 'custom' && (
+                      <span>Day {editingItem.day}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 일정 제목 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">일정 이름</label>
+                <input
+                  type="text"
+                  value={newItemTitle}
+                  onChange={(e) => setNewItemTitle(e.target.value)}
+                  placeholder="예: 수학 공부"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newItemTitle.trim()) {
+                      addRoutineItem();
+                    }
+                  }}
+                />
+              </div>
+
+              {/* 색상 선택 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">색상</label>
+                <div className="flex flex-wrap gap-2">
+                  {ROUTINE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setNewItemColor(color)}
+                      className={cn(
+                        'w-8 h-8 rounded-full transition-all',
+                        color,
+                        newItemColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : 'hover:scale-110'
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* 버튼 */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowAddItemModal(false)}
+                  className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={addRoutineItem}
+                  disabled={!newItemTitle.trim()}
+                  className={cn(
+                    'flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    newItemTitle.trim()
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  )}
+                >
+                  추가
                 </button>
               </div>
             </motion.div>
