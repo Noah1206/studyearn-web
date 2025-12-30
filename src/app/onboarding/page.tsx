@@ -420,7 +420,7 @@ function InterestsStep({ selectedInterests, toggleInterest }: {
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-[#FF5500] font-medium mt-5"
+          className="text-center text-[#FF5500] font-medium mt-10"
         >
           {selectedInterests.length}개 선택됨
         </motion.p>
