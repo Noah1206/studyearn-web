@@ -997,12 +997,16 @@ export default function ProfilePage() {
     setShowAddItemModal(true);
   };
 
-  // 아이템 추가 (중복 방지)
+  // 아이템 추가 (중복 방지 - useRef로 동기적 체크)
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const isAddingRef = useRef(false);
   const addRoutineItem = () => {
-    if (!newItemTitle.trim() || !editingItem || isAddingItem) return;
+    // useRef를 사용한 동기적 중복 방지 (React batching 우회)
+    if (!newItemTitle.trim() || !editingItem || isAddingRef.current) return;
 
+    isAddingRef.current = true;
     setIsAddingItem(true);
+
     const newItem: RoutineItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       day: editingItem.day,
@@ -1016,7 +1020,11 @@ export default function ProfilePage() {
     setShowAddItemModal(false);
     setNewItemTitle('');
     setEditingItem(null);
-    setTimeout(() => setIsAddingItem(false), 100);
+
+    setTimeout(() => {
+      isAddingRef.current = false;
+      setIsAddingItem(false);
+    }, 300);
   };
 
   // 아이템 제거
@@ -2588,6 +2596,8 @@ export default function ProfilePage() {
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newItemTitle.trim()) {
+                      e.preventDefault();
+                      e.stopPropagation();
                       addRoutineItem();
                     }
                   }}
@@ -2597,12 +2607,14 @@ export default function ProfilePage() {
               {/* 버튼 */}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setShowAddItemModal(false)}
                   className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
                 >
                   취소
                 </button>
                 <button
+                  type="button"
                   onClick={addRoutineItem}
                   disabled={!newItemTitle.trim() || isAddingItem}
                   className={cn(
