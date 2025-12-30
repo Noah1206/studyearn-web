@@ -482,10 +482,9 @@ export default function ProfilePage() {
       // 내 루틴 가져오기
       try {
         const { data: routineData, error: routineError } = await supabase
-          .from('contents')
+          .from('routines')
           .select('id, title, description, routine_type, routine_days, routine_items, created_at')
-          .eq('creator_id', user.id)
-          .eq('content_type', 'routine')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (!routineError && routineData) {
@@ -507,6 +506,9 @@ export default function ProfilePage() {
             created_at: r.created_at,
           }));
           setUserRoutines(mappedRoutines);
+          if (routineData.length > 0) {
+            setSelectedRoutineIndex(0);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch routines:', error);
