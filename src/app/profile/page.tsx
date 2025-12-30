@@ -1117,6 +1117,88 @@ export default function ProfilePage() {
                 </div>
               </div>
             </motion.div>
+
+            {/* 내 루틴 - 왼쪽 컬럼 */}
+            {userRoutines.length > 0 ? (
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">내 루틴</p>
+                  <Link
+                    href="/dashboard/upload"
+                    className="text-xs text-orange-500 hover:text-orange-600 font-medium"
+                  >
+                    + 새 루틴
+                  </Link>
+                </div>
+
+                {/* 루틴 선택 탭 (여러 개일 때) */}
+                {userRoutines.length > 1 && (
+                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {userRoutines.map((routine, idx) => (
+                      <button
+                        key={routine.id}
+                        onClick={() => setSelectedRoutineIndex(idx)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                          selectedRoutineIndex === idx
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        )}
+                      >
+                        {routine.title.slice(0, 15)}{routine.title.length > 15 ? '...' : ''}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 현재 루틴 */}
+                {currentRoutine && (
+                  <div>
+                    {/* 루틴 제목 및 정보 */}
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-gray-900 mb-1">{currentRoutine.title}</h3>
+                      {currentRoutine.description && (
+                        <p className="text-sm text-gray-500 mb-2">{currentRoutine.description}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">
+                          <Calendar className="w-3 h-3" />
+                          {ROUTINE_TYPES.find(t => t.id === currentRoutine.routine_type)?.label || '루틴'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {currentRoutine.routine_items.length}개 일정
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 루틴 스케줄 뷰 */}
+                    <div>
+                      {currentRoutine.routine_type === 'day' && renderDayScheduleView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'week' && renderWeekScheduleView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'month' && renderMonthCalendarView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'custom' && renderCustomPlannerView(currentRoutine.routine_items, currentRoutine.routine_days)}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 mt-6">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">내 루틴</p>
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Calendar className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">아직 등록한 루틴이 없어요</p>
+                  <Link
+                    href="/dashboard/upload"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-medium transition-colors"
+                  >
+                    <Calendar className="w-3 h-3" />
+                    루틴 만들기
+                  </Link>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* 오른쪽: 메뉴 섹션들 */}
@@ -1255,91 +1337,6 @@ export default function ProfilePage() {
                 </button>
               </div>
             </motion.div>
-
-            {/* 내 루틴 */}
-            {userRoutines.length > 0 && (
-              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">내 루틴</p>
-                  <Link
-                    href="/dashboard/upload"
-                    className="text-xs text-orange-500 hover:text-orange-600 font-medium"
-                  >
-                    + 새 루틴
-                  </Link>
-                </div>
-
-                {/* 루틴 선택 탭 (여러 개일 때) */}
-                {userRoutines.length > 1 && (
-                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                    {userRoutines.map((routine, idx) => (
-                      <button
-                        key={routine.id}
-                        onClick={() => setSelectedRoutineIndex(idx)}
-                        className={cn(
-                          'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
-                          selectedRoutineIndex === idx
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        )}
-                      >
-                        {routine.title.slice(0, 15)}{routine.title.length > 15 ? '...' : ''}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* 현재 루틴 */}
-                {currentRoutine && (
-                  <div>
-                    {/* 루틴 제목 및 정보 */}
-                    <div className="mb-4">
-                      <h3 className="font-semibold text-gray-900 mb-1">{currentRoutine.title}</h3>
-                      {currentRoutine.description && (
-                        <p className="text-sm text-gray-500 mb-2">{currentRoutine.description}</p>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">
-                          <Calendar className="w-3 h-3" />
-                          {ROUTINE_TYPES.find(t => t.id === currentRoutine.routine_type)?.label || '루틴'}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {currentRoutine.routine_items.length}개 일정
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 루틴 스케줄 뷰 */}
-                    <div>
-                      {currentRoutine.routine_type === 'day' && renderDayScheduleView(currentRoutine.routine_items)}
-                      {currentRoutine.routine_type === 'week' && renderWeekScheduleView(currentRoutine.routine_items)}
-                      {currentRoutine.routine_type === 'month' && renderMonthCalendarView(currentRoutine.routine_items)}
-                      {currentRoutine.routine_type === 'custom' && renderCustomPlannerView(currentRoutine.routine_items, currentRoutine.routine_days)}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* 루틴이 없을 때 */}
-            {userRoutines.length === 0 && (
-              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">내 루틴</p>
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <p className="text-gray-500 mb-4">아직 등록한 루틴이 없어요</p>
-                  <Link
-                    href="/dashboard/upload"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    루틴 만들기
-                  </Link>
-                </div>
-              </motion.div>
-            )}
 
             {/* 앱 버전 */}
             <motion.div variants={itemVariants} className="text-center py-4">
