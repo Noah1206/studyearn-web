@@ -20,6 +20,8 @@ import {
   UserPlus,
   UserMinus,
   Loader2,
+  Flame,
+  ExternalLink,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
@@ -51,6 +53,28 @@ interface StudyanUser {
   routines: UserRoutine[];
   isFollowing?: boolean;
   follower_count?: number;
+  streak_days?: number;
+  total_study_minutes?: number;
+}
+
+// Character avatars for users without profile pictures
+const CHARACTER_AVATARS = [
+  { gradient: 'from-green-300 to-green-500', emoji: '🌿' },
+  { gradient: 'from-yellow-300 to-yellow-500', emoji: '🌻' },
+  { gradient: 'from-pink-300 to-pink-500', emoji: '🐰' },
+  { gradient: 'from-blue-200 to-blue-400', emoji: '☁️' },
+  { gradient: 'from-cyan-300 to-cyan-500', emoji: '💧' },
+  { gradient: 'from-purple-300 to-purple-500', emoji: '🔮' },
+  { gradient: 'from-orange-300 to-orange-500', emoji: '🍊' },
+  { gradient: 'from-red-300 to-red-500', emoji: '🌸' },
+];
+
+function getCharacterAvatar(userId: string) {
+  const hash = userId.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  return CHARACTER_AVATARS[Math.abs(hash) % CHARACTER_AVATARS.length];
 }
 
 // Animation variants
@@ -103,152 +127,138 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
   followingUserId: string | null;
   currentUserId: string | null;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const isOwnProfile = currentUserId === user.id;
+  const characterAvatar = getCharacterAvatar(user.id);
 
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
     >
-      <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-gray-100 hover:border-blue-200">
-        <CardContent className="p-6">
-          {/* Profile Section */}
-          <div className="flex items-start gap-4 mb-4">
-            <div className="relative">
-              <Avatar
-                src={user.avatar_url}
-                alt={user.display_name || '사용자'}
-                size="lg"
-                className="ring-2 ring-gray-100"
-              />
+      <Link href={`/studyan/${user.id}`}>
+        <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 border-gray-100 hover:border-blue-300 cursor-pointer group">
+          {/* Gradient Header */}
+          <div className={`h-16 bg-gradient-to-r ${characterAvatar.gradient} relative`}>
+            {/* View Profile Hint */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs text-gray-600">
+                <ExternalLink className="w-3 h-3" />
+                프로필 보기
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-bold text-gray-900 truncate">
-                  {user.display_name || '익명 사용자'}
-                </h3>
-                {isOwnProfile && (
-                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                    나
+          </div>
+
+          <CardContent className="pt-0 pb-4 px-4 relative">
+            {/* Avatar - overlapping the gradient */}
+            <div className="absolute -top-8 left-4">
+              {user.avatar_url ? (
+                <Avatar
+                  src={user.avatar_url}
+                  alt={user.display_name || '사용자'}
+                  size="lg"
+                  className="w-16 h-16 ring-4 ring-white"
+                />
+              ) : (
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-2xl ring-4 ring-white shadow-lg`}>
+                  {characterAvatar.emoji}
+                </div>
+              )}
+            </div>
+
+            {/* Follow Button - positioned top right */}
+            <div className="flex justify-end pt-2 mb-6">
+              {currentUserId && !isOwnProfile && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleFollow(user.id, !!user.isFollowing);
+                  }}
+                  disabled={followingUserId === user.id}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full transition-all ${
+                    user.isFollowing
+                      ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  {followingUserId === user.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : user.isFollowing ? (
+                    <>
+                      <UserMinus className="w-4 h-4" />
+                      팔로잉
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      팔로우
+                    </>
+                  )}
+                </button>
+              )}
+              {isOwnProfile && (
+                <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+                  나
+                </Badge>
+              )}
+            </div>
+
+            {/* User Info */}
+            <div className="mb-3">
+              <h3 className="font-bold text-gray-900 truncate text-lg">
+                {user.display_name || '익명 사용자'}
+              </h3>
+              {user.bio && (
+                <p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{user.bio}</p>
+              )}
+            </div>
+
+            {/* Stats Row */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-1 text-gray-500">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">{user.routines.length}개 루틴</span>
+              </div>
+              {user.follower_count !== undefined && user.follower_count > 0 && (
+                <div className="flex items-center gap-1 text-gray-500">
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm">{user.follower_count}</span>
+                </div>
+              )}
+              {user.streak_days !== undefined && user.streak_days > 0 && (
+                <div className="flex items-center gap-1 text-orange-500">
+                  <Flame className="w-4 h-4" />
+                  <span className="text-sm font-medium">{user.streak_days}일</span>
+                </div>
+              )}
+            </div>
+
+            {/* Routines Preview - just show tags */}
+            {user.routines.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {user.routines.slice(0, 3).map((routine) => (
+                  <Badge
+                    key={routine.id}
+                    variant="outline"
+                    className="text-xs bg-gray-50 border-gray-200 truncate max-w-[120px]"
+                  >
+                    {routine.title}
+                  </Badge>
+                ))}
+                {user.routines.length > 3 && (
+                  <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200">
+                    +{user.routines.length - 3}
                   </Badge>
                 )}
               </div>
-              {user.bio && (
-                <p className="text-sm text-gray-500 line-clamp-1">{user.bio}</p>
-              )}
-            </div>
-            {/* Follow Button */}
-            {currentUserId && !isOwnProfile && (
-              <button
-                onClick={() => onToggleFollow(user.id, !!user.isFollowing)}
-                disabled={followingUserId === user.id}
-                className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                  user.isFollowing
-                    ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
-              >
-                {followingUserId === user.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : user.isFollowing ? (
-                  <>
-                    <UserMinus className="w-4 h-4" />
-                    팔로잉
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    팔로우
-                  </>
-                )}
-              </button>
             )}
-          </div>
 
-          {/* Stats */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-1.5 text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm font-medium">{user.routines.length}개 루틴</span>
-            </div>
-            {user.follower_count !== undefined && user.follower_count > 0 && (
-              <div className="flex items-center gap-1.5 text-gray-600">
-                <Users className="w-4 h-4" />
-                <span className="text-sm font-medium">{user.follower_count}명 팔로워</span>
-              </div>
+            {user.routines.length === 0 && (
+              <p className="text-sm text-gray-400">아직 공개 루틴이 없습니다</p>
             )}
-          </div>
-
-          {/* Routines Preview */}
-          {user.routines.length > 0 && (
-            <div className="border-t border-gray-100 pt-4">
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <span className="text-sm font-medium text-gray-700">루틴 목록</span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 space-y-2">
-                      {user.routines.map((routine) => (
-                        <div
-                          key={routine.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 truncate text-sm">
-                              {routine.title}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {ROUTINE_TYPE_LABELS[routine.routine_type]}
-                                {routine.routine_type === 'custom' && routine.routine_days && ` (${routine.routine_days}일)`}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {routine.routine_items.length}개 일정
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onCopyRoutine(routine, user.display_name || '익명 사용자');
-                            }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            {copiedRoutineId === routine.id ? (
-                              <>
-                                <Check className="w-4 h-4 text-green-500" />
-                                <span className="text-green-600">복사됨</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-4 h-4" />
-                                <span>복사</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Link>
     </motion.div>
   );
 }
@@ -331,10 +341,10 @@ export default function StudyanPage() {
     try {
       const supabase = createClient();
 
-      // Get all profiles first (with follower_count)
+      // Get all profiles first (with follower_count, streak_days, total_study_minutes)
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, follower_count')
+        .select('id, nickname, avatar_url, follower_count, streak_days, total_study_minutes')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -361,7 +371,7 @@ export default function StudyanPage() {
       // Combine data - all profiles
       const usersMap = new Map<string, StudyanUser>();
 
-      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; follower_count?: number }) => {
+      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; follower_count?: number; streak_days?: number; total_study_minutes?: number }) => {
         usersMap.set(profile.id, {
           id: profile.id,
           display_name: profile.nickname,
@@ -370,6 +380,8 @@ export default function StudyanPage() {
           routines: [],
           isFollowing: followingIds.has(profile.id),
           follower_count: profile.follower_count || 0,
+          streak_days: profile.streak_days || 0,
+          total_study_minutes: profile.total_study_minutes || 0,
         });
       });
 
