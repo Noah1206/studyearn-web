@@ -1121,7 +1121,7 @@ export default function ProfilePage() {
       if (error) throw error;
 
       // 목록에서 업데이트
-      setUserRoutines(prev => prev.map(r =>
+      const updatedRoutines = userRoutines.map(r =>
         r.id === editingRoutineId
           ? {
               ...r,
@@ -1131,10 +1131,23 @@ export default function ProfilePage() {
               routine_items: newRoutineItems,
             }
           : r
-      ));
+      );
+      setUserRoutines(updatedRoutines);
 
-      // 상태 초기화
-      cancelRoutineCreation();
+      // 수정한 루틴의 인덱스 찾아서 해당 루틴 표시
+      const editedIndex = updatedRoutines.findIndex(r => r.id === editingRoutineId);
+      if (editedIndex !== -1) {
+        setSelectedRoutineIndex(editedIndex);
+      }
+
+      // 상태 초기화 (루틴 표시는 유지)
+      setIsCreatingRoutine(false);
+      setIsEditingRoutine(false);
+      setEditingRoutineId(null);
+      setNewRoutineTitle('');
+      setNewRoutineItems([]);
+      setNewRoutineType('week');
+      setCustomDays(30);
 
       setSuccess('루틴이 수정되었습니다!');
       setTimeout(() => setSuccess(''), 2000);
