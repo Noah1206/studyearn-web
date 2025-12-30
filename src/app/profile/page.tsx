@@ -31,6 +31,10 @@ import {
   Pencil,
   Share2,
   Copy,
+  Eye,
+  EyeOff,
+  Globe,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -79,6 +83,7 @@ interface UserRoutine {
   routine_type: 'day' | 'week' | 'month' | 'custom';
   routine_days?: number;
   routine_items: RoutineItem[];
+  is_public: boolean;
   created_at: string;
 }
 
@@ -489,7 +494,7 @@ export default function ProfilePage() {
       try {
         const { data: routineData, error: routineError } = await supabase
           .from('routines')
-          .select('id, title, description, routine_type, routine_days, routine_items, created_at')
+          .select('id, title, description, routine_type, routine_days, routine_items, is_public, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -501,6 +506,7 @@ export default function ProfilePage() {
             routine_type: string;
             routine_days?: number;
             routine_items: RoutineItem[] | null;
+            is_public?: boolean;
             created_at: string;
           }) => ({
             id: r.id,
@@ -509,6 +515,7 @@ export default function ProfilePage() {
             routine_type: (r.routine_type || 'week') as UserRoutine['routine_type'],
             routine_days: r.routine_days,
             routine_items: r.routine_items || [],
+            is_public: r.is_public !== false, // 기본값 true
             created_at: r.created_at,
           }));
           setUserRoutines(mappedRoutines);
@@ -1028,6 +1035,7 @@ export default function ProfilePage() {
           routine_type: newRoutineType,
           routine_days: newRoutineType === 'custom' ? customDays : null,
           routine_items: newRoutineItems,
+          is_public: true, // 기본값 공개
         })
         .select()
         .single();
@@ -1035,12 +1043,13 @@ export default function ProfilePage() {
       if (error) throw error;
 
       // 목록에 추가
-      const newRoutine = {
+      const newRoutine: UserRoutine = {
         id: data.id,
         title: data.title,
         routine_type: data.routine_type,
         routine_days: data.routine_days,
         routine_items: data.routine_items || [],
+        is_public: data.is_public !== false,
         created_at: data.created_at,
       };
 
@@ -1163,6 +1172,37 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error deleting routine:', err);
       setError('루틴 삭제에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  // 루틴 공개/비공개 토글
+  const toggleRoutineVisibility = async (routineId: string) => {
+    if (!user) return;
+
+    const routine = userRoutines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    const newIsPublic = !routine.is_public;
+
+    try {
+      const { error } = await supabase
+        .from('routines')
+        .update({ is_public: newIsPublic })
+        .eq('id', routineId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setUserRoutines(prev => prev.map(r =>
+        r.id === routineId ? { ...r, is_public: newIsPublic } : r
+      ));
+
+      setSuccess(newIsPublic ? '루틴이 공개되었습니다.' : '루틴이 비공개로 전환되었습니다.');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Error toggling visibility:', err);
+      setError('공개 설정 변경에 실패했습니다.');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -1658,11 +1698,32 @@ export default function ProfilePage() {
                       {currentRoutine.description && (
                         <p className="text-sm text-gray-500 mb-2">{currentRoutine.description}</p>
                       )}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">
                           <Calendar className="w-3 h-3" />
                           {ROUTINE_TYPES.find(t => t.id === currentRoutine.routine_type)?.label || '루틴'}
                         </span>
+                        <button
+                          onClick={() => toggleRoutineVisibility(currentRoutine.id)}
+                          className={cn(
+                            'inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full transition-colors',
+                            currentRoutine.is_public
+                              ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          )}
+                        >
+                          {currentRoutine.is_public ? (
+                            <>
+                              <Globe className="w-3 h-3" />
+                              공개
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-3 h-3" />
+                              비공개
+                            </>
+                          )}
+                        </button>
                         <button
                           onClick={() => setShowScheduleList(!showScheduleList)}
                           className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"

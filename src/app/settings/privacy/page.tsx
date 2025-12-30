@@ -251,7 +251,7 @@ export default function PrivacySettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.warning('인증 필요', '로그인이 필요합니다.');
+        router.push('/login');
         return;
       }
 

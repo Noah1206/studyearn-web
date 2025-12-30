@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -16,6 +17,9 @@ import {
   BookOpen,
   Sparkles,
   User,
+  UserPlus,
+  UserMinus,
+  Loader2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
@@ -45,6 +49,8 @@ interface StudyanUser {
   avatar_url?: string;
   bio?: string;
   routines: UserRoutine[];
+  isFollowing?: boolean;
+  follower_count?: number;
 }
 
 // Animation variants
@@ -89,12 +95,16 @@ function formatTime(hour: number): string {
   return `${hour.toString().padStart(2, '0')}:00`;
 }
 
-function UserCard({ user, onCopyRoutine, copiedRoutineId }: {
+function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, followingUserId, currentUserId }: {
   user: StudyanUser;
   onCopyRoutine: (routine: UserRoutine, userName: string) => void;
   copiedRoutineId: string | null;
+  onToggleFollow: (userId: string, isFollowing: boolean) => void;
+  followingUserId: string | null;
+  currentUserId: string | null;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isOwnProfile = currentUserId === user.id;
 
   return (
     <motion.div
@@ -118,11 +128,42 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId }: {
                 <h3 className="font-bold text-gray-900 truncate">
                   {user.display_name || '익명 사용자'}
                 </h3>
+                {isOwnProfile && (
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                    나
+                  </Badge>
+                )}
               </div>
               {user.bio && (
                 <p className="text-sm text-gray-500 line-clamp-1">{user.bio}</p>
               )}
             </div>
+            {/* Follow Button */}
+            {currentUserId && !isOwnProfile && (
+              <button
+                onClick={() => onToggleFollow(user.id, !!user.isFollowing)}
+                disabled={followingUserId === user.id}
+                className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                  user.isFollowing
+                    ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+              >
+                {followingUserId === user.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : user.isFollowing ? (
+                  <>
+                    <UserMinus className="w-4 h-4" />
+                    팔로잉
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    팔로우
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Stats */}
@@ -131,6 +172,12 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId }: {
               <Calendar className="w-4 h-4" />
               <span className="text-sm font-medium">{user.routines.length}개 루틴</span>
             </div>
+            {user.follower_count !== undefined && user.follower_count > 0 && (
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">{user.follower_count}명 팔로워</span>
+              </div>
+            )}
           </div>
 
           {/* Routines Preview */}
@@ -229,17 +276,26 @@ function UserSkeleton() {
 }
 
 export default function StudyanPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<StudyanUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedRoutineId, setCopiedRoutineId] = useState<string | null>(null);
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
+  const [followingUserId, setFollowingUserId] = useState<string | null>(null);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    loadUsersWithRoutines();
     loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadFollowingList();
+    }
+    loadUsersWithRoutines();
+  }, [currentUser]);
 
   const loadCurrentUser = async () => {
     try {
@@ -253,20 +309,37 @@ export default function StudyanPage() {
     }
   };
 
+  const loadFollowingList = async () => {
+    if (!currentUser) return;
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.id);
+
+      if (!error && data) {
+        setFollowingIds(new Set(data.map((f: { following_id: string }) => f.following_id)));
+      }
+    } catch (error) {
+      console.error('Failed to load following list:', error);
+    }
+  };
+
   const loadUsersWithRoutines = async () => {
     setIsLoading(true);
     try {
       const supabase = createClient();
 
-      // Get all profiles first
+      // Get all profiles first (with follower_count)
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url')
+        .select('id, nickname, avatar_url, follower_count')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Get all public routines
+      // Get all public routines only
       const { data: routinesData, error: routinesError } = await supabase
         .from('routines')
         .select(`
@@ -276,9 +349,11 @@ export default function StudyanPage() {
           routine_type,
           routine_days,
           routine_items,
+          is_public,
           created_at
         `)
         .eq('is_active', true)
+        .eq('is_public', true)  // 공개 루틴만
         .order('created_at', { ascending: false });
 
       if (routinesError) throw routinesError;
@@ -286,18 +361,20 @@ export default function StudyanPage() {
       // Combine data - all profiles
       const usersMap = new Map<string, StudyanUser>();
 
-      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string }) => {
+      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; follower_count?: number }) => {
         usersMap.set(profile.id, {
           id: profile.id,
           display_name: profile.nickname,
           avatar_url: profile.avatar_url,
           bio: undefined,
           routines: [],
+          isFollowing: followingIds.has(profile.id),
+          follower_count: profile.follower_count || 0,
         });
       });
 
       // Attach routines to users
-      (routinesData || []).forEach((routine: { id: string; user_id: string; title: string; routine_type: 'day' | 'week' | 'month' | 'custom'; routine_days?: number; routine_items: RoutineItem[]; created_at: string }) => {
+      (routinesData || []).forEach((routine: { id: string; user_id: string; title: string; routine_type: 'day' | 'week' | 'month' | 'custom'; routine_days?: number; routine_items: RoutineItem[]; is_public?: boolean; created_at: string }) => {
         const user = usersMap.get(routine.user_id);
         if (user) {
           user.routines.push({
@@ -322,7 +399,7 @@ export default function StudyanPage() {
 
   const copyRoutineToMyProfile = async (routine: UserRoutine, userName: string) => {
     if (!currentUser) {
-      alert('로그인이 필요합니다.');
+      router.push('/login');
       return;
     }
 
@@ -353,6 +430,70 @@ export default function StudyanPage() {
     } catch (error) {
       console.error('Failed to copy routine:', error);
       alert('루틴 복사에 실패했습니다.');
+    }
+  };
+
+  const toggleFollow = async (userId: string, isCurrentlyFollowing: boolean) => {
+    if (!currentUser) {
+      router.push('/login');
+      return;
+    }
+
+    setFollowingUserId(userId);
+    try {
+      const supabase = createClient();
+
+      if (isCurrentlyFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', currentUser.id)
+          .eq('following_id', userId);
+
+        if (error) throw error;
+
+        setFollowingIds(prev => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
+
+        // Update local user state
+        setUsers(prev => prev.map(u =>
+          u.id === userId
+            ? { ...u, isFollowing: false, follower_count: Math.max(0, (u.follower_count || 0) - 1) }
+            : u
+        ));
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('user_follows')
+          .insert({
+            follower_id: currentUser.id,
+            following_id: userId,
+          });
+
+        if (error) throw error;
+
+        setFollowingIds(prev => {
+          const next = new Set(prev);
+          next.add(userId);
+          return next;
+        });
+
+        // Update local user state
+        setUsers(prev => prev.map(u =>
+          u.id === userId
+            ? { ...u, isFollowing: true, follower_count: (u.follower_count || 0) + 1 }
+            : u
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to toggle follow:', error);
+      alert('팔로우 처리에 실패했습니다.');
+    } finally {
+      setFollowingUserId(null);
     }
   };
 
@@ -454,6 +595,9 @@ export default function StudyanPage() {
                 user={user}
                 onCopyRoutine={copyRoutineToMyProfile}
                 copiedRoutineId={copiedRoutineId}
+                onToggleFollow={toggleFollow}
+                followingUserId={followingUserId}
+                currentUserId={currentUser?.id || null}
               />
             ))}
           </motion.div>

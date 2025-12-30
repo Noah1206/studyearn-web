@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -102,6 +103,7 @@ interface NotificationSettings {
 }
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const toast = useToastActions();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -200,7 +202,7 @@ export default function NotificationsPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.warning('인증 필요', '로그인이 필요합니다.');
+        router.push('/login');
         return;
       }
 

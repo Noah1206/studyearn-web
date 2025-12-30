@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -245,6 +245,7 @@ function QuestionCard({
 
 export default function QnARoomPage() {
   const params = useParams();
+  const router = useRouter();
   const roomId = params.roomId as string;
   const toast = useToastActions();
 
@@ -417,7 +418,7 @@ export default function QnARoomPage() {
       const supabase = createClient();
 
       if (!currentUserId) {
-        toast.warning('인증 필요', '로그인이 필요합니다.');
+        router.push('/login');
         return;
       }
 
@@ -493,7 +494,7 @@ export default function QnARoomPage() {
       const supabase = createClient();
 
       if (!currentUserId) {
-        toast.warning('인증 필요', '로그인이 필요합니다.');
+        router.push('/login');
         return;
       }
 
