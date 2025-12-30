@@ -67,15 +67,15 @@ async function getStatsData(creatorId: string) {
   const supabase = await createClient();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}`;
+  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}-01`;
 
   const [revenueStatsResult, contentsCountResult] = await Promise.all([
     supabase
       .from('creator_revenue_stats')
       .select('*')
       .eq('creator_id', creatorId)
-      .gte('year_month', startMonth)
-      .order('year_month', { ascending: false }),
+      .gte('month', startMonth)
+      .order('month', { ascending: false }),
     supabase
       .from('contents')
       .select('id, view_count')
@@ -96,8 +96,8 @@ async function getStatsData(creatorId: string) {
     lastMonthRevenue,
     contentCount: contents.length,
     totalViews,
-    revenueStats: revenueStats.map((stat: { year_month: string; total_revenue: number; subscription_revenue: number; content_revenue: number }) => ({
-      yearMonth: stat.year_month,
+    revenueStats: revenueStats.map((stat: { month: string; total_revenue: number; subscription_revenue: number; content_revenue: number }) => ({
+      yearMonth: stat.month,
       totalRevenue: stat.total_revenue,
       subscriptionRevenue: stat.subscription_revenue,
       contentRevenue: stat.content_revenue,
@@ -109,14 +109,14 @@ async function getPayoutData(creatorId: string) {
   const supabase = await createClient();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}`;
+  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}-01`;
 
   const [revenueStatsResult, pendingPayoutsResult, completedPayoutsResult, recentPurchasesResult] = await Promise.all([
     supabase
       .from('creator_revenue_stats')
       .select('total_revenue')
       .eq('creator_id', creatorId)
-      .gte('year_month', startMonth),
+      .gte('month', startMonth),
     supabase
       .from('creator_payouts')
       .select('*')
