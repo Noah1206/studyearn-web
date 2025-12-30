@@ -1642,7 +1642,7 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     {/* 루틴 제목 입력 */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">루틴 이름</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">루틴 이름</label>
                       <input
                         type="text"
                         value={newRoutineTitle}
