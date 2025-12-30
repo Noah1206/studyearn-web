@@ -26,6 +26,7 @@ import {
   ArrowRightLeft,
   Calendar,
   ChevronLeft,
+  ChevronDown,
   Clock,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -241,6 +242,8 @@ export default function ProfilePage() {
   const [selectedRoutineIndex, setSelectedRoutineIndex] = useState(0);
   const [routineMonth, setRoutineMonth] = useState(new Date().getMonth());
   const [routineYear, setRoutineYear] = useState(new Date().getFullYear());
+  const [showScheduleList, setShowScheduleList] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   // 루틴 생성 상태
   const [isCreatingRoutine, setIsCreatingRoutine] = useState(false);
@@ -1530,11 +1533,95 @@ export default function ProfilePage() {
                           <Calendar className="w-3 h-3" />
                           {ROUTINE_TYPES.find(t => t.id === currentRoutine.routine_type)?.label || '루틴'}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <button
+                          onClick={() => setShowScheduleList(!showScheduleList)}
+                          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        >
                           {currentRoutine.routine_items.length}개 일정
-                        </span>
+                          <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', showScheduleList && 'rotate-180')} />
+                        </button>
                       </div>
                     </div>
+
+                    {/* 일정 리스트 (펼쳐졌을 때) */}
+                    <AnimatePresence>
+                      {showScheduleList && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden mb-4"
+                        >
+                          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                            {currentRoutine.routine_items
+                              .sort((a, b) => {
+                                // 요일 → 시간 순으로 정렬
+                                if (a.day !== b.day) return a.day - b.day;
+                                return (a.startHour || 0) - (b.startHour || 0);
+                              })
+                              .map((item) => {
+                                const isChecked = checkedItems.has(item.id);
+                                const dayLabel = currentRoutine.routine_type === 'week'
+                                  ? WEEKDAYS[item.day]
+                                  : currentRoutine.routine_type === 'day'
+                                    ? ''
+                                    : `${item.day}일`;
+                                const timeLabel = item.startHour !== undefined
+                                  ? `${item.startHour.toString().padStart(2, '0')}:00`
+                                  : '';
+
+                                return (
+                                  <label
+                                    key={item.id}
+                                    className={cn(
+                                      'flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all',
+                                      isChecked ? 'bg-green-50' : 'bg-white hover:bg-gray-100'
+                                    )}
+                                  >
+                                    <div
+                                      className={cn(
+                                        'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+                                        isChecked
+                                          ? 'bg-green-500 border-green-500'
+                                          : 'border-gray-300'
+                                      )}
+                                      onClick={() => {
+                                        setCheckedItems(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(item.id)) {
+                                            next.delete(item.id);
+                                          } else {
+                                            next.add(item.id);
+                                          }
+                                          return next;
+                                        });
+                                      }}
+                                    >
+                                      {isChecked && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <div className={cn('w-2 h-2 rounded-full', item.color)} />
+                                    <div className="flex-1 min-w-0">
+                                      <span className={cn(
+                                        'text-sm',
+                                        isChecked ? 'text-gray-400 line-through' : 'text-gray-900'
+                                      )}>
+                                        {item.title}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                                      {dayLabel} {timeLabel}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            {currentRoutine.routine_items.length === 0 && (
+                              <p className="text-sm text-gray-400 text-center py-2">등록된 일정이 없습니다</p>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* 루틴 스케줄 뷰 */}
                     <div>
@@ -1711,12 +1798,12 @@ export default function ProfilePage() {
                   onClick={handleSwitchToCreator}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-6 text-left group hover:from-orange-600 hover:to-orange-500 transition-all"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
                       <p className="text-white font-semibold text-lg mb-1">크리에이터 되기</p>
                       <p className="text-orange-100 text-sm">콘텐츠를 공유하고 수익을 만들어보세요</p>
                     </div>
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                   </div>
