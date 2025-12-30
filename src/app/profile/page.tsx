@@ -45,7 +45,7 @@ const ROUTINE_TYPES = [
 ];
 
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
-const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => i + 6); // 6시 ~ 20시
+const TIME_SLOTS = Array.from({ length: 19 }, (_, i) => i + 6); // 6시 ~ 24시
 
 const ROUTINE_COLORS = [
   'bg-rose-500',
@@ -1555,7 +1555,7 @@ export default function ProfilePage() {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden mb-4"
                         >
-                          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                          <div className="space-y-2">
                             {currentRoutine.routine_items
                               .sort((a, b) => {
                                 // 요일 → 시간 순으로 정렬
