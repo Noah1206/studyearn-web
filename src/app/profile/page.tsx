@@ -997,10 +997,12 @@ export default function ProfilePage() {
     setShowAddItemModal(true);
   };
 
-  // 아이템 추가
+  // 아이템 추가 (중복 방지)
+  const [isAddingItem, setIsAddingItem] = useState(false);
   const addRoutineItem = () => {
-    if (!newItemTitle.trim() || !editingItem) return;
+    if (!newItemTitle.trim() || !editingItem || isAddingItem) return;
 
+    setIsAddingItem(true);
     const newItem: RoutineItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       day: editingItem.day,
@@ -1014,11 +1016,43 @@ export default function ProfilePage() {
     setShowAddItemModal(false);
     setNewItemTitle('');
     setEditingItem(null);
+    setTimeout(() => setIsAddingItem(false), 100);
   };
 
   // 아이템 제거
   const removeRoutineItem = (itemId: string) => {
     setNewRoutineItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  // 인라인 편집 상태
+  const [inlineEditingItemId, setInlineEditingItemId] = useState<string | null>(null);
+  const [inlineEditTitle, setInlineEditTitle] = useState('');
+
+  // 인라인 편집 시작
+  const startInlineEdit = (item: RoutineItem) => {
+    setInlineEditingItemId(item.id);
+    setInlineEditTitle(item.title);
+  };
+
+  // 인라인 편집 저장
+  const saveInlineEdit = () => {
+    if (!inlineEditingItemId || !inlineEditTitle.trim()) {
+      setInlineEditingItemId(null);
+      return;
+    }
+    setNewRoutineItems(prev => prev.map(item =>
+      item.id === inlineEditingItemId
+        ? { ...item, title: inlineEditTitle.trim() }
+        : item
+    ));
+    setInlineEditingItemId(null);
+    setInlineEditTitle('');
+  };
+
+  // 인라인 편집 취소
+  const cancelInlineEdit = () => {
+    setInlineEditingItemId(null);
+    setInlineEditTitle('');
   };
 
   // 루틴 저장
@@ -1272,7 +1306,28 @@ export default function ProfilePage() {
                 >
                   {item ? (
                     <div className={cn('px-2 py-1 rounded text-white text-xs flex items-center justify-between', item.color)}>
-                      <span>{item.title}</span>
+                      {inlineEditingItemId === item.id ? (
+                        <input
+                          type="text"
+                          value={inlineEditTitle}
+                          onChange={(e) => setInlineEditTitle(e.target.value)}
+                          onBlur={saveInlineEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveInlineEdit();
+                            if (e.key === 'Escape') cancelInlineEdit();
+                          }}
+                          className="flex-1 bg-white/20 text-white text-xs px-1 rounded outline-none"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span
+                          className="cursor-pointer flex-1"
+                          onClick={(e) => { e.stopPropagation(); startInlineEdit(item); }}
+                        >
+                          {item.title}
+                        </span>
+                      )}
                       <button
                         onClick={(e) => { e.stopPropagation(); removeRoutineItem(item.id); }}
                         className="ml-1 hover:bg-white/20 rounded p-0.5"
@@ -1328,7 +1383,28 @@ export default function ProfilePage() {
                   >
                     {item ? (
                       <div className={cn('px-1 py-0.5 text-white text-[10px] truncate flex items-center justify-between group', item.color)}>
-                        <span className="truncate">{item.title}</span>
+                        {inlineEditingItemId === item.id ? (
+                          <input
+                            type="text"
+                            value={inlineEditTitle}
+                            onChange={(e) => setInlineEditTitle(e.target.value)}
+                            onBlur={saveInlineEdit}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveInlineEdit();
+                              if (e.key === 'Escape') cancelInlineEdit();
+                            }}
+                            className="flex-1 bg-white/20 text-white text-[10px] px-0.5 rounded outline-none"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span
+                            className="truncate cursor-pointer flex-1"
+                            onClick={(e) => { e.stopPropagation(); startInlineEdit(item); }}
+                          >
+                            {item.title}
+                          </span>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); removeRoutineItem(item.id); }}
                           className="opacity-0 group-hover:opacity-100 ml-0.5 hover:bg-white/20"
@@ -1428,13 +1504,40 @@ export default function ProfilePage() {
                       {dayItems.slice(0, 2).map(item => (
                         <div
                           key={item.id}
-                          className={cn('px-1 py-0.5 rounded text-white text-[9px] truncate flex items-center justify-between group', item.color)}
+                          className={cn('px-1 py-0.5 rounded text-white text-[9px] flex items-center justify-between group', item.color)}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="truncate">{item.title}</span>
+                          {inlineEditingItemId === item.id ? (
+                            <input
+                              type="text"
+                              value={inlineEditTitle}
+                              onChange={(e) => setInlineEditTitle(e.target.value)}
+                              onBlur={saveInlineEdit}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveInlineEdit();
+                                if (e.key === 'Escape') cancelInlineEdit();
+                              }}
+                              className="w-full bg-white/20 text-white text-[9px] px-0.5 rounded outline-none"
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span
+                              className="truncate cursor-pointer flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startInlineEdit(item);
+                              }}
+                            >
+                              {item.title}
+                            </span>
+                          )}
                           <button
-                            onClick={() => removeRoutineItem(item.id)}
-                            className="opacity-0 group-hover:opacity-100 ml-0.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRoutineItem(item.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 ml-0.5 flex-shrink-0"
                           >
                             <X className="w-2.5 h-2.5" />
                           </button>
@@ -1476,9 +1579,36 @@ export default function ProfilePage() {
                       className={cn('px-2 py-0.5 rounded text-white text-xs flex items-center gap-1 group', item.color)}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span>{item.title}</span>
+                      {inlineEditingItemId === item.id ? (
+                        <input
+                          type="text"
+                          value={inlineEditTitle}
+                          onChange={(e) => setInlineEditTitle(e.target.value)}
+                          onBlur={saveInlineEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveInlineEdit();
+                            if (e.key === 'Escape') cancelInlineEdit();
+                          }}
+                          className="bg-white/20 text-white text-xs px-1 rounded outline-none w-20"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startInlineEdit(item);
+                          }}
+                        >
+                          {item.title}
+                        </span>
+                      )}
                       <button
-                        onClick={() => removeRoutineItem(item.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRoutineItem(item.id);
+                        }}
                         className="opacity-0 group-hover:opacity-100"
                       >
                         <X className="w-3 h-3" />
@@ -2478,15 +2608,15 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={addRoutineItem}
-                  disabled={!newItemTitle.trim()}
+                  disabled={!newItemTitle.trim() || isAddingItem}
                   className={cn(
                     'flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    newItemTitle.trim()
+                    newItemTitle.trim() && !isAddingItem
                       ? 'bg-orange-500 hover:bg-orange-600 text-white'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   )}
                 >
-                  추가
+                  {isAddingItem ? '추가 중...' : '추가'}
                 </button>
               </div>
             </motion.div>
