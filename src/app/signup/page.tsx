@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { pageVariants } from '@/components/ui/motion/variants';
+import { Mail } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const supabase = createClient();
 
@@ -74,24 +76,28 @@ export default function SignupPage() {
         return;
       }
 
-      let userId = data.user?.id;
+      const userId = data.user?.id;
 
-      // 회원가입 후 바로 로그인 시도 (앱과 동일)
+      // 이메일 확인이 필요한 경우 (세션이 없음)
       if (data.user && !data.session) {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          setError(signInError.message || '자동 로그인에 실패했습니다.');
-          return;
+        // 프로필 먼저 생성 (이메일 확인 후 로그인 시 필요)
+        if (userId) {
+          const nickname = email.split('@')[0];
+          await supabase.from('profiles').upsert({
+            id: userId,
+            nickname: nickname,
+            is_creator: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
         }
-        userId = signInData.user?.id;
+        // 이메일 확인 안내 화면 표시
+        setIsEmailSent(true);
+        return;
       }
 
-      // 프로필 자동 생성 (앱과 동일 - 이메일 앞부분을 닉네임으로 사용)
-      if (userId) {
+      // 이메일 확인이 비활성화된 경우 (세션이 바로 생성됨)
+      if (userId && data.session) {
         const nickname = email.split('@')[0];
         await supabase.from('profiles').upsert({
           id: userId,
@@ -101,17 +107,62 @@ export default function SignupPage() {
           updated_at: new Date().toISOString(),
         });
         console.log('Profile created for user:', userId);
-      }
 
-      // 메인 화면으로 이동 (앱과 동일)
-      router.push('/content');
-      router.refresh();
+        // 메인 화면으로 이동
+        router.push('/content');
+        router.refresh();
+      }
     } catch {
       setError('회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // 이메일 확인 안내 화면
+  if (isEmailSent) {
+    return (
+      <motion.div
+        className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gray-50"
+        initial="initial"
+        animate="enter"
+        exit="exit"
+        variants={pageVariants}
+      >
+        <Card variant="elevated" className="w-full max-w-lg px-12 py-20">
+          <CardContent className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Mail className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">이메일을 확인해주세요</h2>
+            <p className="text-gray-600 mb-2">
+              <span className="font-medium text-gray-900">{email}</span>
+            </p>
+            <p className="text-gray-500 mb-8">
+              위 이메일로 확인 링크를 보냈습니다.<br />
+              이메일의 링크를 클릭하면 가입이 완료됩니다.
+            </p>
+            <div className="space-y-3">
+              <Link href="/login">
+                <Button fullWidth>
+                  로그인 페이지로 이동
+                </Button>
+              </Link>
+              <p className="text-sm text-gray-500">
+                이메일이 오지 않았나요?{' '}
+                <button
+                  onClick={() => setIsEmailSent(false)}
+                  className="text-gray-900 underline font-medium"
+                >
+                  다시 시도
+                </button>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
