@@ -93,6 +93,34 @@ export async function requestTransferPayment(params: PaymentRequestParams): Prom
 }
 
 /**
+ * Request virtual account payment (가상계좌)
+ */
+export async function requestVirtualAccountPayment(params: PaymentRequestParams): Promise<void> {
+  const tossPayments = await getTossPayments();
+  const payment = tossPayments.payment({ customerKey: params.orderId });
+
+  await payment.requestPayment({
+    method: 'VIRTUAL_ACCOUNT',
+    amount: {
+      value: params.amount,
+      currency: 'KRW',
+    },
+    orderId: params.orderId,
+    orderName: params.orderName,
+    successUrl: params.successUrl,
+    failUrl: params.failUrl,
+    customerEmail: params.customerEmail,
+    customerName: params.customerName,
+    virtualAccount: {
+      cashReceipt: {
+        type: '소득공제',
+      },
+      validHours: 168, // 7일 (168시간)
+    },
+  });
+}
+
+/**
  * Request easy pay (Kakao Pay, Naver Pay, etc.)
  */
 export async function requestEasyPayPayment(

@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
 import { ArrowLeft, Lock, Shield, Sparkles, BookOpen } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { requestCardPayment, requestEasyPayPayment, requestTransferPayment } from '@/lib/toss/client';
+import { requestCardPayment, requestEasyPayPayment, requestTransferPayment, requestVirtualAccountPayment } from '@/lib/toss/client';
 import { formatCurrency } from '@/lib/utils';
 import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui';
 import { FallingCoins } from '@/components/animations';
@@ -33,7 +33,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   const [user, setUser] = useState<User | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'kakaopay' | 'naverpay' | 'tosspay' | 'transfer'>('tosspay');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'kakaopay' | 'naverpay' | 'tosspay' | 'transfer' | 'virtual_account'>('tosspay');
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -127,6 +127,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         await requestCardPayment(paymentParams);
       } else if (paymentMethod === 'transfer') {
         await requestTransferPayment(paymentParams);
+      } else if (paymentMethod === 'virtual_account') {
+        await requestVirtualAccountPayment(paymentParams);
       } else {
         const providerMap = {
           kakaopay: 'KAKAOPAY',
@@ -272,7 +274,16 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       iconBg: 'bg-gray-400',
       iconColor: 'text-white',
       isEmoji: true,
-      subText: '현금영수증 자동 발급',
+      subText: '실시간 계좌이체',
+    },
+    {
+      id: 'virtual_account' as const,
+      name: '가상계좌',
+      icon: '📋',
+      iconBg: 'bg-indigo-400',
+      iconColor: 'text-white',
+      isEmoji: true,
+      subText: '계좌번호 발급 후 입금 (7일 유효)',
     },
   ];
 
