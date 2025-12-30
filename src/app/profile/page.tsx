@@ -1264,11 +1264,18 @@ export default function ProfilePage() {
           return (a.startHour || 0) - (b.startHour || 0);
         })
         .map(item => {
-          const dayLabel = routine.routine_type === 'week'
-            ? WEEKDAYS[item.day]
-            : routine.routine_type === 'day'
-              ? ''
-              : `${item.day}일`;
+          let dayLabel = '';
+          if (routine.routine_type === 'week') {
+            dayLabel = WEEKDAYS[item.day];
+          } else if (routine.routine_type === 'day') {
+            dayLabel = '';
+          } else if (routine.routine_type === 'month') {
+            dayLabel = `${item.day}일`;
+          } else if (routine.routine_type === 'custom') {
+            const monthNum = Math.floor((item.day - 1) / 30) + 1;
+            const dayNum = ((item.day - 1) % 30) + 1;
+            dayLabel = `${monthNum}월차 ${dayNum}일`;
+          }
           const timeLabel = item.startHour !== undefined
             ? `${item.startHour.toString().padStart(2, '0')}:00`
             : '';
@@ -1981,11 +1988,18 @@ export default function ProfilePage() {
                               })
                               .map((item) => {
                                 const isChecked = checkedItems.has(item.id);
-                                const dayLabel = currentRoutine.routine_type === 'week'
-                                  ? WEEKDAYS[item.day]
-                                  : currentRoutine.routine_type === 'day'
-                                    ? ''
-                                    : `${item.day}일`;
+                                let dayLabel = '';
+                                if (currentRoutine.routine_type === 'week') {
+                                  dayLabel = WEEKDAYS[item.day];
+                                } else if (currentRoutine.routine_type === 'day') {
+                                  dayLabel = '';
+                                } else if (currentRoutine.routine_type === 'month') {
+                                  dayLabel = `${item.day}일`;
+                                } else if (currentRoutine.routine_type === 'custom') {
+                                  const monthNum = Math.floor((item.day - 1) / 30) + 1;
+                                  const dayNum = ((item.day - 1) % 30) + 1;
+                                  dayLabel = `${monthNum}월차 ${dayNum}일`;
+                                }
                                 const timeLabel = item.startHour !== undefined
                                   ? `${item.startHour.toString().padStart(2, '0')}:00`
                                   : '';
@@ -2553,10 +2567,10 @@ export default function ProfilePage() {
                       <span>{WEEKDAYS[editingItem.day]} {editingItem.startHour.toString().padStart(2, '0')}:00</span>
                     )}
                     {newRoutineType === 'month' && (
-                      <span>{editingItem.day}일</span>
+                      <span>{routineMonth + 1}월 {editingItem.day}일</span>
                     )}
                     {newRoutineType === 'custom' && (
-                      <span>Day {editingItem.day}</span>
+                      <span>{Math.floor((editingItem.day - 1) / 30) + 1}월차 {((editingItem.day - 1) % 30) + 1}일</span>
                     )}
                   </div>
                 </div>
@@ -2578,24 +2592,6 @@ export default function ProfilePage() {
                     }
                   }}
                 />
-              </div>
-
-              {/* 색상 선택 */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">색상</label>
-                <div className="flex flex-wrap gap-2">
-                  {ROUTINE_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setNewItemColor(color)}
-                      className={cn(
-                        'w-8 h-8 rounded-full transition-all',
-                        color,
-                        newItemColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : 'hover:scale-110'
-                      )}
-                    />
-                  ))}
-                </div>
               </div>
 
               {/* 버튼 */}

@@ -31,6 +31,8 @@ import {
   RefreshCw,
   X,
   Lightbulb,
+  Send,
+  MessageCircle,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
@@ -39,19 +41,6 @@ import { cn } from '@/lib/utils';
 import { agoraService, RemoteUser } from '@/lib/agora/agoraService';
 import type { ICameraVideoTrack, IRemoteVideoTrack } from 'agora-rtc-sdk-ng';
 import GoalSelectModal from '@/components/study/GoalSelectModal';
-
-// 3D 컴포넌트는 클라이언트에서만 로드 (SSR 비활성화)
-const PiggyBank3D = dynamic(() => import('@/components/study/PiggyBank3D'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50">
-      <div className="text-center">
-        <div className="text-6xl mb-4">🐷</div>
-        <p className="text-gray-500">로딩 중...</p>
-      </div>
-    </div>
-  ),
-});
 
 // 타입 정의
 interface Participant {
@@ -66,6 +55,25 @@ interface Participant {
   is_camera_on?: boolean;
   is_mic_on?: boolean;
 }
+
+// 채팅 메시지 타입
+interface ChatMessage {
+  id: string;
+  user_id: string;
+  nickname: string;
+  avatar_url?: string;
+  message: string;
+  created_at: string;
+}
+
+// 캐릭터 아바타 (카메라 OFF 시 사용)
+const CHARACTER_AVATARS = [
+  { color: 'from-green-300 to-green-400', emoji: '🌿' },
+  { color: 'from-yellow-300 to-yellow-400', emoji: '🌻' },
+  { color: 'from-pink-300 to-pink-400', emoji: '🐰' },
+  { color: 'from-blue-200 to-blue-300', emoji: '☁️' },
+  { color: 'from-cyan-300 to-cyan-400', emoji: '💧' },
+];
 
 // 로컬 카메라 프리뷰 컴포넌트 (Agora 트랙 또는 네이티브 스트림 사용)
 function LocalCameraPreview({
@@ -570,7 +578,7 @@ function SeatSelectionView({
   );
 }
 
-// 내 공부 화면 (3D 저금통 + 컨트롤 분할 레이아웃)
+// 내 공부 화면 (좌석 뷰 + 채팅 레이아웃)
 function MyStudyScreen({
   room,
   seatNumber,
@@ -580,10 +588,16 @@ function MyStudyScreen({
   audioLevel,
   localVideoTrack,
   nativeStream,
+  participants,
+  currentUserId,
+  cameraStates,
+  remoteUsers,
+  messages,
   onToggleCamera,
   onToggleMic,
   onBack,
   onLeave,
+  onSendMessage,
 }: {
   room: StudyRoom;
   seatNumber: number;
@@ -593,14 +607,24 @@ function MyStudyScreen({
   audioLevel: number;
   localVideoTrack: ICameraVideoTrack | null;
   nativeStream: MediaStream | null;
+  participants: Participant[];
+  currentUserId: string | null;
+  cameraStates: Record<string, boolean>;
+  remoteUsers: RemoteUser[];
+  messages: ChatMessage[];
   onToggleCamera: () => void;
   onToggleMic: () => void;
   onBack: () => void;
   onLeave: () => void;
+  onSendMessage: (message: string) => void;
 }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [showChat, setShowChat] = useState(true);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const theme = THEME_STYLES[room.theme] || THEME_STYLES.focus;
 
@@ -614,6 +638,11 @@ function MyStudyScreen({
 
     return () => clearInterval(interval);
   }, [isOnBreak]);
+
+  // 채팅 스크롤
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const elapsedMinutes = Math.floor(elapsedSeconds / 60);
   const progress = Math.min(1, elapsedMinutes / goalMinutes);
@@ -637,19 +666,52 @@ function MyStudyScreen({
     return m > 0 ? `${h}시간 ${m}분` : `${h}시간`;
   };
 
+  // user_id로부터 Agora UID 생성
+  const getUserAgoraUid = (userId: string): number => {
+    return Math.abs(userId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0)) % 1000000;
+  };
+
+  // 참여자의 remoteUser 찾기
+  const findRemoteUser = (participant: Participant): RemoteUser | undefined => {
+    const uid = getUserAgoraUid(participant.user_id);
+    return remoteUsers.find(u => u.uid === uid);
+  };
+
+  // 캐릭터 아바타 선택 (user_id 기반으로 일관되게)
+  const getCharacterAvatar = (userId: string) => {
+    const hash = userId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return CHARACTER_AVATARS[Math.abs(hash) % CHARACTER_AVATARS.length];
+  };
+
+  // 채팅 전송
+  const handleSendMessage = () => {
+    if (!chatMessage.trim()) return;
+    onSendMessage(chatMessage.trim());
+    setChatMessage('');
+  };
+
+  // 좌석 맵 생성
+  const seatMap = new Map(participants.map(p => [p.seat_number, p]));
+  const totalSeats = room.max_participants || 20;
+
   return (
     <div className={cn("min-h-screen flex flex-col lg:flex-row", theme.bg)}>
       {/* 왼쪽: 컨트롤 패널 */}
-      <div className="lg:w-[400px] xl:w-[450px] flex flex-col bg-white lg:border-r border-gray-100">
+      <div className="lg:w-[360px] xl:w-[400px] flex flex-col bg-white lg:border-r border-gray-100">
         {/* 헤더 */}
-        <header className="border-b border-gray-100 px-4 lg:px-6">
+        <header className="border-b border-gray-100 px-4">
           <div className="h-14 flex items-center justify-between">
             <button
               onClick={onBack}
               className="flex items-center gap-1 p-2 -ml-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm hidden sm:inline">좌석으로</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -659,7 +721,7 @@ function MyStudyScreen({
               {isGoalReached && (
                 <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
-                  목표 달성!
+                  달성!
                 </div>
               )}
             </div>
@@ -667,251 +729,359 @@ function MyStudyScreen({
         </header>
 
         {/* 컨트롤 영역 */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
-          {/* 타이머 & 목표 */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-            {/* 상태 */}
-            <div className="flex items-center justify-center mb-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* 타이머 & 목표 (간소화) */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+            <div className="flex items-center justify-between mb-2">
               <div className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
-                isOnBreak
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-green-100 text-green-700"
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+                isOnBreak ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
               )}>
-                {isOnBreak ? (
-                  <>
-                    <Coffee className="w-4 h-4" />
-                    <span>휴식 중</span>
-                  </>
-                ) : (
-                  <>
-                    <Target className="w-4 h-4" />
-                    <span>공부 중</span>
-                  </>
-                )}
+                {isOnBreak ? <Coffee className="w-3 h-3" /> : <Target className="w-3 h-3" />}
+                {isOnBreak ? '휴식' : '공부중'}
+              </div>
+              <div className="flex items-center gap-1 text-amber-600 text-sm">
+                <span>🪙</span>
+                <span className="font-bold">{earnedCoins}</span>
               </div>
             </div>
 
-            {/* 메인 타이머 */}
-            <div className="text-center mb-4">
-              <div className="text-5xl lg:text-6xl font-mono font-bold text-gray-900 mb-2">
+            <div className="text-center mb-3">
+              <div className="text-4xl font-mono font-bold text-gray-900">
                 {formatTime(elapsedSeconds)}
               </div>
-              <p className="text-gray-500 text-sm">
-                목표: {formatGoalTime(goalMinutes)}
-              </p>
             </div>
 
-            {/* 진행률 바 */}
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>{Math.round(progress * 100)}% 달성</span>
-                <span>{formatGoalTime(goalMinutes - elapsedMinutes)} 남음</span>
-              </div>
-              <div className="h-3 bg-white rounded-full overflow-hidden shadow-inner">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    isGoalReached
-                      ? "bg-gradient-to-r from-yellow-400 to-amber-500"
-                      : "bg-gradient-to-r from-green-400 to-emerald-500"
-                  )}
-                  style={{ width: `${Math.min(100, progress * 100)}%` }}
-                />
-              </div>
+            <div className="h-2 bg-white rounded-full overflow-hidden shadow-inner">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  isGoalReached
+                    ? "bg-gradient-to-r from-yellow-400 to-amber-500"
+                    : "bg-gradient-to-r from-green-400 to-emerald-500"
+                )}
+                style={{ width: `${Math.min(100, progress * 100)}%` }}
+              />
             </div>
-
-            {/* 획득 코인 */}
-            <div className="flex items-center justify-center gap-2 text-amber-600">
-              <span className="text-xl">🪙</span>
-              <span className="font-bold">{earnedCoins}개 획득</span>
-              {earnedCoins > 0 && (
-                <span className="text-xs text-gray-400">(10분당 1개)</span>
-              )}
-            </div>
+            <p className="text-xs text-gray-500 text-center mt-1">
+              {formatGoalTime(elapsedMinutes)} / {formatGoalTime(goalMinutes)}
+            </p>
           </div>
 
-          {/* 휴식 토글 버튼 */}
+          {/* 휴식/공부 토글 */}
           <button
             onClick={() => setIsOnBreak(!isOnBreak)}
             className={cn(
-              "w-full py-4 rounded-2xl font-medium transition-all flex items-center justify-center gap-2",
+              "w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm",
               isOnBreak
                 ? "bg-green-500 text-white hover:bg-green-600"
                 : "bg-amber-100 text-amber-700 hover:bg-amber-200"
             )}
           >
-            {isOnBreak ? (
-              <>
-                <Play className="w-5 h-5" />
-                공부 재개하기
-              </>
-            ) : (
-              <>
-                <Coffee className="w-5 h-5" />
-                휴식하기
-              </>
-            )}
+            {isOnBreak ? <Play className="w-4 h-4" /> : <Coffee className="w-4 h-4" />}
+            {isOnBreak ? '공부 재개' : '휴식하기'}
           </button>
 
-          {/* 설정 토글 */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="w-full flex items-center justify-between py-3 text-gray-600"
-          >
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              <span className="font-medium">설정</span>
-            </div>
-            <ArrowLeft className={cn(
-              "w-5 h-5 transition-transform",
-              showSettings ? "rotate-90" : "-rotate-90"
-            )} />
-          </button>
-
-          {/* 설정 패널 */}
-          {showSettings && (
-            <div className="space-y-4">
-              {/* 카메라 프리뷰 */}
-              {isCameraOn && (
-                <div className="rounded-xl overflow-hidden bg-gray-900 aspect-video">
-                  <LocalCameraPreview
-                    videoTrack={localVideoTrack}
-                    nativeStream={nativeStream}
-                    className="w-full h-full"
-                  />
-                </div>
+          {/* 카메라/마이크 컨트롤 */}
+          <div className="flex gap-2">
+            <button
+              onClick={onToggleCamera}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-all",
+                isCameraOn
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-500"
               )}
+            >
+              {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+              카메라
+            </button>
+            <button
+              onClick={onToggleMic}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-all",
+                isMicOn
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-500"
+              )}
+            >
+              {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+              마이크
+            </button>
+          </div>
 
-              {/* 카메라 토글 */}
-              <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  {isCameraOn ? (
-                    <Video className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <VideoOff className="w-5 h-5 text-gray-400" />
-                  )}
-                  <span className="font-medium text-gray-900">카메라</span>
-                </div>
-                <button
-                  onClick={onToggleCamera}
-                  className={cn(
-                    "w-12 h-7 rounded-full transition-colors relative",
-                    isCameraOn ? "bg-green-500" : "bg-gray-300"
-                  )}
-                >
-                  <div className={cn(
-                    "absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                    isCameraOn ? "right-1" : "left-1"
-                  )} />
-                </button>
-              </div>
-
-              {/* 마이크 토글 */}
-              <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  {isMicOn ? (
-                    <Mic className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <MicOff className="w-5 h-5 text-gray-400" />
-                  )}
-                  <span className="font-medium text-gray-900">마이크</span>
-                  {isMicOn && audioLevel > 5 && (
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="w-1 h-3 bg-green-500 rounded-full"
-                        style={{ opacity: Math.min(1, audioLevel / 50) }}
-                      />
-                      <div
-                        className="w-1 h-4 bg-green-500 rounded-full"
-                        style={{ opacity: Math.min(1, audioLevel / 30) }}
-                      />
-                      <div
-                        className="w-1 h-2 bg-green-500 rounded-full"
-                        style={{ opacity: Math.min(1, audioLevel / 70) }}
-                      />
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={onToggleMic}
-                  className={cn(
-                    "w-12 h-7 rounded-full transition-colors relative",
-                    isMicOn ? "bg-green-500" : "bg-gray-300"
-                  )}
-                >
-                  <div className={cn(
-                    "absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                    isMicOn ? "right-1" : "left-1"
-                  )} />
-                </button>
-              </div>
+          {/* 카메라 프리뷰 (켜져있을 때만) */}
+          {isCameraOn && (
+            <div className="rounded-xl overflow-hidden bg-gray-900 aspect-video">
+              <LocalCameraPreview
+                videoTrack={localVideoTrack}
+                nativeStream={nativeStream}
+                className="w-full h-full"
+              />
             </div>
           )}
 
           {/* 나가기 버튼 */}
           <button
             onClick={onLeave}
-            className="w-full py-3 text-red-500 hover:text-red-600 text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full py-2.5 text-red-500 hover:text-red-600 text-sm font-medium flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
-            공부 종료하고 나가기
+            나가기
           </button>
         </div>
       </div>
 
-      {/* 오른쪽: 3D 저금통 애니메이션 */}
-      <div className="flex-1 relative bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 min-h-[50vh] lg:min-h-screen">
-        {/* 3D 저금통 */}
-        <PiggyBank3D
-          elapsedMinutes={elapsedMinutes}
-          goalMinutes={goalMinutes}
-          className="w-full h-full"
-        />
-
-        {/* 오버레이 정보 */}
-        <div className="absolute top-6 left-6 right-6 flex items-start justify-between">
-          {/* 방 정보 */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
-            <p className="font-bold text-gray-900">{room.name}</p>
-            {room.goal && (
-              <p className="text-sm text-gray-500">{room.goal}</p>
-            )}
+      {/* 오른쪽: 좌석 뷰 + 채팅 */}
+      <div className="flex-1 flex flex-col bg-gray-900 min-h-[50vh] lg:min-h-screen">
+        {/* 상단: 방 정보 */}
+        <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h2 className="font-bold text-white">{room.name}</h2>
+            <p className="text-xs text-gray-400">{participants.length}명 참여중</p>
           </div>
-
-          {/* LIVE 뱃지 */}
           {isCameraOn && (
-            <div className="flex items-center gap-1.5 bg-red-500 text-white px-3 py-1.5 rounded-lg shadow-lg">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <span className="text-sm font-bold">LIVE</span>
+            <div className="flex items-center gap-1.5 bg-red-500 text-white px-2.5 py-1 rounded">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              <span className="text-xs font-bold">LIVE</span>
             </div>
           )}
         </div>
 
-        {/* 하단 진행 정보 */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-4xl">🐷</div>
-                <div>
-                  <p className="font-bold text-gray-900">
-                    {isGoalReached ? '목표 달성! 대단해요!' : '열심히 공부 중...'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatGoalTime(elapsedMinutes)} / {formatGoalTime(goalMinutes)}
-                  </p>
+        {/* 선택된 참여자 화면 또는 좌석 그리드 */}
+        <div className="flex-1 overflow-hidden">
+          {selectedParticipant ? (
+            // 선택된 참여자 화면
+            <div className="h-full flex flex-col">
+              <div className="flex-1 relative">
+                {/* 닫기 버튼 */}
+                <button
+                  onClick={() => setSelectedParticipant(null)}
+                  className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                {/* 참여자 화면 */}
+                {cameraStates[selectedParticipant.user_id] ? (
+                  // 카메라가 켜져있으면 비디오 표시
+                  <RemoteVideoPreview
+                    videoTrack={findRemoteUser(selectedParticipant)?.videoTrack}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  // 카메라가 꺼져있으면 캐릭터 아바타 표시
+                  <div className={cn(
+                    "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
+                    getCharacterAvatar(selectedParticipant.user_id).color
+                  )}>
+                    <div className="text-8xl mb-4">
+                      {getCharacterAvatar(selectedParticipant.user_id).emoji}
+                    </div>
+                    <p className="text-2xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
+                    <p className="text-gray-600 mt-2">
+                      {selectedParticipant.status === 'studying' ? '🎯 공부 중' : selectedParticipant.status === 'break' ? '☕ 휴식 중' : ''}
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {selectedParticipant.current_session_minutes}분째 공부
+                    </p>
+                  </div>
+                )}
+
+                {/* 하단 정보 오버레이 */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={selectedParticipant.avatar_url}
+                      alt={selectedParticipant.nickname}
+                      size="md"
+                    />
+                    <div>
+                      <p className="font-bold text-white">{selectedParticipant.nickname}</p>
+                      <p className="text-white/70 text-sm">
+                        {selectedParticipant.current_session_minutes}분 공부
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-2xl font-bold text-amber-600">
-                  <span>🪙</span>
-                  <span>{earnedCoins}</span>
-                </div>
-                <p className="text-xs text-gray-400">획득 코인</p>
               </div>
             </div>
-          </div>
+          ) : (
+            // 좌석 그리드
+            <div className="h-full p-4 overflow-y-auto">
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                {Array.from({ length: totalSeats }, (_, i) => i + 1).map((seatNum) => {
+                  const participant = seatMap.get(seatNum);
+                  const isMyself = participant?.user_id === currentUserId;
+                  const participantCameraOn = participant ? cameraStates[participant.user_id] : false;
+                  const charAvatar = participant ? getCharacterAvatar(participant.user_id) : null;
+
+                  return (
+                    <button
+                      key={seatNum}
+                      onClick={() => participant && !isMyself && setSelectedParticipant(participant)}
+                      disabled={!participant || isMyself}
+                      className={cn(
+                        "aspect-square rounded-lg overflow-hidden transition-all relative",
+                        participant
+                          ? isMyself
+                            ? "ring-2 ring-green-500 ring-offset-2 ring-offset-gray-900"
+                            : "hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-gray-900 cursor-pointer"
+                          : "bg-gray-800 border border-gray-700 border-dashed"
+                      )}
+                    >
+                      {participant ? (
+                        <>
+                          {participantCameraOn ? (
+                            // 카메라 ON - 작은 비디오 썸네일
+                            <div className="w-full h-full bg-gray-700">
+                              <RemoteVideoPreview
+                                videoTrack={findRemoteUser(participant)?.videoTrack}
+                                className="w-full h-full"
+                              />
+                            </div>
+                          ) : (
+                            // 카메라 OFF - 캐릭터 아바타
+                            <div className={cn(
+                              "w-full h-full flex items-center justify-center bg-gradient-to-br",
+                              charAvatar?.color
+                            )}>
+                              <span className="text-2xl">{charAvatar?.emoji}</span>
+                            </div>
+                          )}
+
+                          {/* 상태 표시 */}
+                          <div className={cn(
+                            "absolute top-1 right-1 w-2 h-2 rounded-full",
+                            participant.status === 'studying' ? 'bg-green-500' :
+                            participant.status === 'break' ? 'bg-amber-500' : 'bg-gray-400'
+                          )} />
+
+                          {/* LIVE 또는 나 배지 */}
+                          {participantCameraOn ? (
+                            <div className="absolute top-1 left-1 flex items-center gap-0.5 bg-red-500 px-1 py-0.5 rounded text-[8px] text-white font-bold">
+                              <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
+                              LIVE
+                            </div>
+                          ) : isMyself ? (
+                            <div className="absolute top-1 left-1 bg-blue-500 px-1 py-0.5 rounded text-[8px] text-white font-bold">
+                              나
+                            </div>
+                          ) : null}
+
+                          {/* 이름 */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                            <p className="text-[10px] text-white truncate text-center">
+                              {participant.nickname}
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-gray-600 text-xs">#{seatNum}</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 하단: 채팅 */}
+        <div className="border-t border-gray-800">
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className="w-full px-4 py-2 flex items-center justify-between text-gray-400 hover:text-white"
+          >
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">채팅</span>
+              {messages.length > 0 && (
+                <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  {messages.length}
+                </span>
+              )}
+            </div>
+            <ArrowLeft className={cn(
+              "w-4 h-4 transition-transform",
+              showChat ? "rotate-90" : "-rotate-90"
+            )} />
+          </button>
+
+          {showChat && (
+            <div className="bg-gray-800/50">
+              {/* 메시지 목록 */}
+              <div className="h-40 overflow-y-auto px-4 py-2 space-y-2">
+                {messages.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-4">
+                    채팅을 시작해보세요! 👋
+                  </p>
+                ) : (
+                  messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex gap-2",
+                        msg.user_id === currentUserId ? "flex-row-reverse" : ""
+                      )}
+                    >
+                      {msg.user_id !== currentUserId && (
+                        <Avatar
+                          src={msg.avatar_url}
+                          alt={msg.nickname}
+                          size="sm"
+                          className="w-6 h-6 flex-shrink-0"
+                        />
+                      )}
+                      <div className={cn(
+                        "max-w-[70%]",
+                        msg.user_id === currentUserId ? "text-right" : ""
+                      )}>
+                        {msg.user_id !== currentUserId && (
+                          <p className="text-xs text-gray-400 mb-0.5">{msg.nickname}</p>
+                        )}
+                        <div className={cn(
+                          "inline-block px-3 py-1.5 rounded-xl text-sm",
+                          msg.user_id === currentUserId
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-700 text-white"
+                        )}>
+                          {msg.message}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* 입력창 */}
+              <div className="px-4 py-3 border-t border-gray-700 flex gap-2">
+                <input
+                  type="text"
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="메시지 입력..."
+                  className="flex-1 bg-gray-700 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!chatMessage.trim()}
+                  className={cn(
+                    "px-3 py-2 rounded-lg transition-all",
+                    chatMessage.trim()
+                      ? "bg-green-500 text-white hover:bg-green-600"
+                      : "bg-gray-700 text-gray-500"
+                  )}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -956,6 +1126,9 @@ export default function StudyRoomPage() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioLevelIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 채팅 상태
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
   // 비디오 뷰어 상태
   const [videoViewerState, setVideoViewerState] = useState<{
     visible: boolean;
@@ -966,6 +1139,123 @@ export default function StudyRoomPage() {
   useEffect(() => {
     loadRoom();
   }, [roomId]);
+
+  // 채팅 메시지 로드
+  const loadMessages = async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('study_room_messages')
+        .select(`
+          id,
+          user_id,
+          message,
+          created_at,
+          profiles:user_id (
+            nickname,
+            avatar_url
+          )
+        `)
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.error('Failed to load messages:', error);
+        return;
+      }
+
+      if (data) {
+        setMessages(data.map((msg: any) => ({
+          id: msg.id,
+          user_id: msg.user_id,
+          nickname: msg.profiles?.nickname || '익명',
+          avatar_url: msg.profiles?.avatar_url,
+          message: msg.message,
+          created_at: msg.created_at,
+        })));
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  };
+
+  // 메시지 전송
+  const handleSendMessage = async (messageText: string) => {
+    if (!messageText.trim() || !currentUserId) return;
+
+    try {
+      const supabase = createClient();
+
+      // 현재 유저 정보 가져오기
+      const currentParticipant = participants.find(p => p.user_id === currentUserId);
+
+      const { error } = await supabase
+        .from('study_room_messages')
+        .insert({
+          room_id: roomId,
+          user_id: currentUserId,
+          message: messageText.trim(),
+        });
+
+      if (error) {
+        console.error('Failed to send message:', error);
+        toast.error('오류', '메시지 전송에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      toast.error('오류', '메시지 전송에 실패했습니다.');
+    }
+  };
+
+  // 채팅 실시간 구독
+  useEffect(() => {
+    if (!roomId || phase !== 'studying') return;
+
+    // 초기 메시지 로드
+    loadMessages();
+
+    const supabase = createClient();
+
+    // 실시간 구독
+    const channel = supabase
+      .channel(`room-messages-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'study_room_messages',
+          filter: `room_id=eq.${roomId}`,
+        },
+        async (payload: any) => {
+          const newMsg = payload.new;
+
+          // 유저 정보 가져오기
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', newMsg.user_id)
+            .single();
+
+          const chatMessage: ChatMessage = {
+            id: newMsg.id,
+            user_id: newMsg.user_id,
+            nickname: profile?.nickname || '익명',
+            avatar_url: profile?.avatar_url,
+            message: newMsg.message,
+            created_at: newMsg.created_at,
+          };
+
+          setMessages(prev => [...prev, chatMessage]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, phase]);
 
   const loadRoom = async () => {
     try {
@@ -1863,10 +2153,16 @@ export default function StudyRoomPage() {
         audioLevel={audioLevel}
         localVideoTrack={localVideoTrack}
         nativeStream={nativeCameraStream}
+        participants={participants}
+        currentUserId={currentUserId}
+        cameraStates={cameraStates}
+        remoteUsers={remoteUsers}
+        messages={messages}
         onToggleCamera={handleToggleCamera}
         onToggleMic={handleToggleMic}
         onBack={handleBackToSeats}
         onLeave={handleLeave}
+        onSendMessage={handleSendMessage}
       />
     </motion.div>
   );
