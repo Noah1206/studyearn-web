@@ -1424,8 +1424,8 @@ export default function ProfilePage() {
         {/* 2단 레이아웃 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 왼쪽: 프로필 카드 */}
-          <div className="lg:col-span-1">
-            <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 sticky top-24">
+          <div className="lg:col-span-1 space-y-6">
+            <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
               {/* 프로필 정보 */}
               <div className="text-center mb-6">
                 <div className="relative inline-block mb-4">
@@ -1478,7 +1478,7 @@ export default function ProfilePage() {
 
             {/* 내 루틴 - 왼쪽 컬럼 */}
             {userRoutines.length > 0 ? (
-              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 mt-6">
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">내 루틴</p>
                   <Link
@@ -1540,7 +1540,7 @@ export default function ProfilePage() {
                 )}
               </motion.div>
             ) : (
-              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 mt-6">
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">내 루틴</p>
 
                 {isCreatingRoutine ? (
