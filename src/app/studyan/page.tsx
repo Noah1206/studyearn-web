@@ -281,7 +281,7 @@ export default function StudyanPage() {
       // Get profiles for these users
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url, bio')
+        .select('id, nickname, avatar_url')
         .in('id', userIds);
 
       if (profilesError) throw profilesError;
@@ -289,12 +289,12 @@ export default function StudyanPage() {
       // Combine data
       const usersMap = new Map<string, StudyanUser>();
 
-      (profilesData || []).forEach((profile: { id: string; display_name?: string; avatar_url?: string; bio?: string }) => {
+      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string }) => {
         usersMap.set(profile.id, {
           id: profile.id,
-          display_name: profile.display_name,
+          display_name: profile.nickname,
           avatar_url: profile.avatar_url,
-          bio: profile.bio,
+          bio: undefined,
           routines: [],
         });
       });
@@ -359,7 +359,6 @@ export default function StudyanPage() {
 
   const filteredUsers = users.filter(user =>
     user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.routines.some(r => r.title.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
