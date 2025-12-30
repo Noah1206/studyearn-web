@@ -352,7 +352,7 @@ export default function StudyanUserPage() {
             </div>
 
             {/* Stats Row */}
-            <div className="flex items-center justify-around py-4 border-y border-gray-100">
+            <div className="flex items-center justify-around py-4">
               <div className="text-center">
                 <p className="text-xl font-bold text-gray-900">{user.routines.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">루틴</p>
