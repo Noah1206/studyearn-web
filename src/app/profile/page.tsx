@@ -782,7 +782,7 @@ export default function ProfilePage() {
 
   // Week 타입 주간 시간표 렌더링 (보기 전용)
   const renderWeekScheduleView = (routineItems: RoutineItem[]) => (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
           {/* 요일 헤더 */}
@@ -811,7 +811,7 @@ export default function ProfilePage() {
                 return (
                   <div key={dayIdx} className="flex-1 min-h-[32px] border-l border-gray-100 p-0.5">
                     {item && (
-                      <div className={cn('px-1 py-0.5 rounded text-white text-[10px] truncate', item.color)}>
+                      <div className={cn('px-1 py-0.5 text-white text-[10px] truncate', item.color)}>
                         {item.title}
                       </div>
                     )}
@@ -967,7 +967,7 @@ export default function ProfilePage() {
   const handleTimeSlotClick = (day: number, hour: number) => {
     setEditingItem({ day, startHour: hour, endHour: hour + 1 });
     setNewItemTitle('');
-    setNewItemColor(ROUTINE_COLORS[newRoutineItems.length % ROUTINE_COLORS.length]);
+    setNewItemColor(ROUTINE_COLORS[Math.floor(Math.random() * ROUTINE_COLORS.length)]);
     setShowAddItemModal(true);
   };
 
@@ -975,7 +975,7 @@ export default function ProfilePage() {
   const handleDateClick = (day: number) => {
     setEditingItem({ day });
     setNewItemTitle('');
-    setNewItemColor(ROUTINE_COLORS[newRoutineItems.length % ROUTINE_COLORS.length]);
+    setNewItemColor(ROUTINE_COLORS[Math.floor(Math.random() * ROUTINE_COLORS.length)]);
     setShowAddItemModal(true);
   };
 
@@ -1100,7 +1100,7 @@ export default function ProfilePage() {
 
   // Week 타입 주간 시간표 렌더링 (생성용 - 인터랙티브)
   const renderWeekScheduleCreate = () => (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
           {/* 요일 헤더 */}
@@ -1133,11 +1133,11 @@ export default function ProfilePage() {
                     onClick={() => !item && handleTimeSlotClick(dayIdx, hour)}
                   >
                     {item ? (
-                      <div className={cn('px-1 py-0.5 rounded text-white text-[10px] truncate flex items-center justify-between group', item.color)}>
+                      <div className={cn('px-1 py-0.5 text-white text-[10px] truncate flex items-center justify-between group', item.color)}>
                         <span className="truncate">{item.title}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); removeRoutineItem(item.id); }}
-                          className="opacity-0 group-hover:opacity-100 ml-0.5 hover:bg-white/20 rounded"
+                          className="opacity-0 group-hover:opacity-100 ml-0.5 hover:bg-white/20"
                         >
                           <X className="w-2.5 h-2.5" />
                         </button>
