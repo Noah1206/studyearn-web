@@ -1024,14 +1024,21 @@ export default function ProfilePage() {
       if (error) throw error;
 
       // 목록에 추가
-      setUserRoutines(prev => [...prev, {
+      const newRoutine = {
         id: data.id,
         title: data.title,
         routine_type: data.routine_type,
         routine_days: data.routine_days,
         routine_items: data.routine_items || [],
         created_at: data.created_at,
-      }]);
+      };
+
+      setUserRoutines(prev => {
+        const updated = [...prev, newRoutine];
+        // 새로 추가된 루틴을 선택
+        setSelectedRoutineIndex(updated.length - 1);
+        return updated;
+      });
 
       // 상태 초기화
       setIsCreatingRoutine(false);
