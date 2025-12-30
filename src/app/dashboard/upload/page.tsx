@@ -356,10 +356,12 @@ export default function UploadPage() {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
+          type: 'image' as const,
           content_type: 'routine',
           routine_type: routineType,
           routine_days: routineType === 'custom' ? customDays : null,
           routine_items: routineItems,
+          url: 'routine://placeholder',
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
@@ -378,9 +380,11 @@ export default function UploadPage() {
       } else {
         // 파일 타입 결정
         const ext = file!.name.split('.').pop()?.toLowerCase();
-        let fileContentType = 'document';
+        let fileType: 'video' | 'pdf' | 'image' = 'pdf';
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) {
-          fileContentType = 'image';
+          fileType = 'image';
+        } else if (ext === 'pdf') {
+          fileType = 'pdf';
         }
 
         // Supabase Storage에 파일 업로드
@@ -412,7 +416,7 @@ export default function UploadPage() {
 
         // 썸네일 URL 설정 (이미지인 경우 원본 URL 사용)
         let thumbnailUrl = null;
-        if (fileContentType === 'image') {
+        if (fileType === 'image') {
           thumbnailUrl = publicUrl;
         }
 
@@ -421,7 +425,8 @@ export default function UploadPage() {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
-          content_type: fileContentType,
+          type: fileType,
+          content_type: fileType,
           url: publicUrl,
           thumbnail_url: thumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',

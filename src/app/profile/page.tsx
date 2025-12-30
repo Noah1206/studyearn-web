@@ -24,12 +24,59 @@ import {
   DollarSign,
   BarChart3,
   ArrowRightLeft,
+  Calendar,
+  ChevronLeft,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Avatar, Spinner } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { cn } from '@/lib/utils';
+
+// 루틴 관련 상수
+const ROUTINE_TYPES = [
+  { id: 'day', label: '하루', description: '시간표 형식' },
+  { id: 'week', label: '일주일', description: '주간 플래너' },
+  { id: 'month', label: '한 달', description: '월간 캘린더' },
+  { id: 'custom', label: '직접 설정', description: 'N일 커스텀' },
+];
+
+const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => i + 6); // 6시 ~ 20시
+
+const ROUTINE_COLORS = [
+  'bg-rose-500',
+  'bg-blue-500',
+  'bg-purple-500',
+  'bg-green-500',
+  'bg-yellow-500',
+  'bg-orange-500',
+  'bg-cyan-500',
+  'bg-pink-500',
+];
+
+// 루틴 아이템 인터페이스
+interface RoutineItem {
+  id: string;
+  day: number;
+  startHour?: number;
+  endHour?: number;
+  title: string;
+  color: string;
+}
+
+// 루틴 데이터 인터페이스
+interface UserRoutine {
+  id: string;
+  title: string;
+  description?: string;
+  routine_type: 'day' | 'week' | 'month' | 'custom';
+  routine_days?: number;
+  routine_items: RoutineItem[];
+  created_at: string;
+}
 
 interface Profile {
   id: string;
@@ -188,6 +235,12 @@ export default function ProfilePage() {
 
   // 구매한 콘텐츠
   const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
+
+  // 내 루틴
+  const [userRoutines, setUserRoutines] = useState<UserRoutine[]>([]);
+  const [selectedRoutineIndex, setSelectedRoutineIndex] = useState(0);
+  const [routineMonth, setRoutineMonth] = useState(new Date().getMonth());
+  const [routineYear, setRoutineYear] = useState(new Date().getFullYear());
 
   // Check if user is in creator mode
   const isCreatorMode = userType === 'creator' && isCreatorOnboarded;
@@ -409,6 +462,39 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error('Failed to fetch purchases:', error);
+      }
+
+      // 내 루틴 가져오기
+      try {
+        const { data: routineData, error: routineError } = await supabase
+          .from('contents')
+          .select('id, title, description, routine_type, routine_days, routine_items, created_at')
+          .eq('creator_id', user.id)
+          .eq('content_type', 'routine')
+          .order('created_at', { ascending: false });
+
+        if (!routineError && routineData) {
+          const mappedRoutines: UserRoutine[] = routineData.map((r: {
+            id: string;
+            title: string;
+            description?: string;
+            routine_type: string;
+            routine_days?: number;
+            routine_items: RoutineItem[] | null;
+            created_at: string;
+          }) => ({
+            id: r.id,
+            title: r.title,
+            description: r.description,
+            routine_type: (r.routine_type || 'week') as UserRoutine['routine_type'],
+            routine_days: r.routine_days,
+            routine_items: r.routine_items || [],
+            created_at: r.created_at,
+          }));
+          setUserRoutines(mappedRoutines);
+        }
+      } catch (error) {
+        console.error('Failed to fetch routines:', error);
       }
 
       setIsLoading(false);
@@ -637,6 +723,231 @@ export default function ProfilePage() {
     const mins = minutes % 60;
     return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
   };
+
+  // 월간 캘린더 날짜 계산
+  const getMonthDays = () => {
+    const firstDay = new Date(routineYear, routineMonth, 1);
+    const lastDay = new Date(routineYear, routineMonth + 1, 0);
+    const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const totalDays = lastDay.getDate();
+
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startDay; i++) days.push(null);
+    for (let i = 1; i <= totalDays; i++) days.push(i);
+
+    return days;
+  };
+
+  // 현재 선택된 루틴
+  const currentRoutine = userRoutines[selectedRoutineIndex];
+
+  // Day 타입 시간표 렌더링 (보기 전용)
+  const renderDayScheduleView = (routineItems: RoutineItem[]) => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="min-w-[280px]">
+          {TIME_SLOTS.map(hour => {
+            const item = routineItems.find(i => i.day === 0 && i.startHour === hour);
+            return (
+              <div key={hour} className="flex border-b border-gray-100 last:border-b-0">
+                <div className="w-14 py-2 px-2 text-xs text-gray-500 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+                  {hour.toString().padStart(2, '0')}:00
+                </div>
+                <div className="flex-1 py-2 px-2 min-h-[36px]">
+                  {item && (
+                    <div className={cn('px-2 py-1 rounded text-white text-xs', item.color)}>
+                      {item.title}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Week 타입 주간 시간표 렌더링 (보기 전용)
+  const renderWeekScheduleView = (routineItems: RoutineItem[]) => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* 요일 헤더 */}
+          <div className="flex border-b border-gray-200">
+            <div className="w-12 bg-gray-50 flex-shrink-0" />
+            {WEEKDAYS.map((day, idx) => (
+              <div
+                key={day}
+                className={cn(
+                  'flex-1 py-2 text-center text-xs font-medium border-l border-gray-100',
+                  idx >= 5 ? 'text-red-500' : 'text-gray-700'
+                )}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+          {/* 시간 슬롯 */}
+          {TIME_SLOTS.map(hour => (
+            <div key={hour} className="flex border-b border-gray-100 last:border-b-0">
+              <div className="w-12 py-1.5 px-1 text-[10px] text-gray-500 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+                {hour.toString().padStart(2, '0')}:00
+              </div>
+              {WEEKDAYS.map((_, dayIdx) => {
+                const item = routineItems.find(i => i.day === dayIdx && i.startHour === hour);
+                return (
+                  <div key={dayIdx} className="flex-1 min-h-[32px] border-l border-gray-100 p-0.5">
+                    {item && (
+                      <div className={cn('px-1 py-0.5 rounded text-white text-[10px] truncate', item.color)}>
+                        {item.title}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Month 타입 월간 캘린더 렌더링 (보기 전용)
+  const renderMonthCalendarView = (routineItems: RoutineItem[]) => {
+    const days = getMonthDays();
+    const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+    return (
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        {/* 월 네비게이션 */}
+        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+          <button
+            onClick={() => {
+              if (routineMonth === 0) {
+                setRoutineMonth(11);
+                setRoutineYear(prev => prev - 1);
+              } else {
+                setRoutineMonth(prev => prev - 1);
+              }
+            }}
+            className="p-1 hover:bg-gray-200 rounded"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span className="text-sm font-medium text-gray-900">
+            {routineYear}년 {monthNames[routineMonth]}
+          </span>
+          <button
+            onClick={() => {
+              if (routineMonth === 11) {
+                setRoutineMonth(0);
+                setRoutineYear(prev => prev + 1);
+              } else {
+                setRoutineMonth(prev => prev + 1);
+              }
+            }}
+            className="p-1 hover:bg-gray-200 rounded"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+
+        {/* 요일 헤더 */}
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {WEEKDAYS.map((day, idx) => (
+            <div
+              key={day}
+              className={cn(
+                'py-1.5 text-center text-xs font-medium',
+                idx >= 5 ? 'text-red-500' : 'text-gray-700'
+              )}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* 날짜 그리드 */}
+        <div className="grid grid-cols-7">
+          {days.map((day, idx) => {
+            const dayItems = day ? routineItems.filter(i => i.day === day) : [];
+            return (
+              <div
+                key={idx}
+                className={cn(
+                  'min-h-[60px] border-b border-r border-gray-100 p-1',
+                  !day && 'bg-gray-50',
+                  (idx + 1) % 7 === 0 && 'border-r-0'
+                )}
+              >
+                {day && (
+                  <>
+                    <div className={cn(
+                      'text-xs mb-0.5',
+                      (idx % 7) >= 5 ? 'text-red-500' : 'text-gray-700'
+                    )}>
+                      {day}
+                    </div>
+                    <div className="space-y-0.5">
+                      {dayItems.slice(0, 2).map(item => (
+                        <div
+                          key={item.id}
+                          className={cn('px-1 py-0.5 rounded text-white text-[9px] truncate', item.color)}
+                        >
+                          {item.title}
+                        </div>
+                      ))}
+                      {dayItems.length > 2 && (
+                        <div className="text-[9px] text-gray-500">+{dayItems.length - 2}</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Custom 타입 N일 플래너 렌더링 (보기 전용)
+  const renderCustomPlannerView = (routineItems: RoutineItem[], customDays: number = 30) => (
+    <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
+      {Array.from({ length: Math.min(customDays, 30) }, (_, i) => i + 1).map(day => {
+        const dayItems = routineItems.filter(i => i.day === day);
+        return (
+          <div key={day} className="flex border-b border-gray-100 last:border-b-0">
+            <div className="w-16 py-2 px-2 text-xs font-medium text-gray-700 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+              Day {day}
+            </div>
+            <div className="flex-1 py-2 px-2 min-h-[40px]">
+              {dayItems.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {dayItems.map(item => (
+                    <div
+                      key={item.id}
+                      className={cn('px-2 py-0.5 rounded text-white text-xs', item.color)}
+                    >
+                      {item.title}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-300 text-xs">-</div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      {customDays > 30 && (
+        <div className="p-2 text-center text-xs text-gray-500 bg-gray-50">
+          {customDays - 30}일 더 있음
+        </div>
+      )}
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -944,6 +1255,91 @@ export default function ProfilePage() {
                 </button>
               </div>
             </motion.div>
+
+            {/* 내 루틴 */}
+            {userRoutines.length > 0 && (
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">내 루틴</p>
+                  <Link
+                    href="/dashboard/upload"
+                    className="text-xs text-orange-500 hover:text-orange-600 font-medium"
+                  >
+                    + 새 루틴
+                  </Link>
+                </div>
+
+                {/* 루틴 선택 탭 (여러 개일 때) */}
+                {userRoutines.length > 1 && (
+                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {userRoutines.map((routine, idx) => (
+                      <button
+                        key={routine.id}
+                        onClick={() => setSelectedRoutineIndex(idx)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                          selectedRoutineIndex === idx
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        )}
+                      >
+                        {routine.title.slice(0, 15)}{routine.title.length > 15 ? '...' : ''}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 현재 루틴 */}
+                {currentRoutine && (
+                  <div>
+                    {/* 루틴 제목 및 정보 */}
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-gray-900 mb-1">{currentRoutine.title}</h3>
+                      {currentRoutine.description && (
+                        <p className="text-sm text-gray-500 mb-2">{currentRoutine.description}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">
+                          <Calendar className="w-3 h-3" />
+                          {ROUTINE_TYPES.find(t => t.id === currentRoutine.routine_type)?.label || '루틴'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {currentRoutine.routine_items.length}개 일정
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 루틴 스케줄 뷰 */}
+                    <div>
+                      {currentRoutine.routine_type === 'day' && renderDayScheduleView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'week' && renderWeekScheduleView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'month' && renderMonthCalendarView(currentRoutine.routine_items)}
+                      {currentRoutine.routine_type === 'custom' && renderCustomPlannerView(currentRoutine.routine_items, currentRoutine.routine_days)}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* 루틴이 없을 때 */}
+            {userRoutines.length === 0 && (
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">내 루틴</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 mb-4">아직 등록한 루틴이 없어요</p>
+                  <Link
+                    href="/dashboard/upload"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    루틴 만들기
+                  </Link>
+                </div>
+              </motion.div>
+            )}
 
             {/* 앱 버전 */}
             <motion.div variants={itemVariants} className="text-center py-4">
