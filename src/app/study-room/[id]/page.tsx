@@ -702,119 +702,130 @@ function MyStudyScreen({
   const totalSeats = room.max_participants || 20;
 
   return (
-    <div className={cn("min-h-screen flex flex-col lg:flex-row", theme.bg)}>
+    <div className={cn("min-h-screen flex flex-col lg:flex-row bg-gray-50")}>
       {/* 왼쪽: 컨트롤 패널 */}
-      <div className="lg:w-[360px] xl:w-[400px] flex flex-col bg-white lg:border-r border-gray-100">
+      <div className="lg:w-[380px] xl:w-[420px] flex flex-col bg-white lg:border-r border-gray-200 shadow-sm">
         {/* 헤더 */}
-        <header className="border-b border-gray-100 px-4">
-          <div className="h-14 flex items-center justify-between">
+        <header className="border-b border-gray-100 px-5 py-4">
+          <div className="flex items-center justify-between">
             <button
               onClick={onBack}
-              className="flex items-center gap-1 p-2 -ml-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">돌아가기</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium text-gray-600">
-                {seatNumber}번 좌석
-              </div>
+              <span className="text-sm text-gray-500">{seatNumber}번 좌석</span>
               {isGoalReached && (
-                <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                <span className="bg-blue-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
-                  달성!
-                </div>
+                  목표 달성
+                </span>
               )}
             </div>
           </div>
         </header>
 
         {/* 컨트롤 영역 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* 타이머 & 목표 (간소화) */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
-            <div className="flex items-center justify-between mb-2">
-              <div className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-                isOnBreak ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* 타이머 카드 */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+            {/* 상태 & 코인 */}
+            <div className="flex items-center justify-between mb-4">
+              <span className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
+                isOnBreak
+                  ? "bg-amber-50 text-amber-600 border border-amber-200"
+                  : "bg-blue-50 text-blue-600 border border-blue-200"
               )}>
-                {isOnBreak ? <Coffee className="w-3 h-3" /> : <Target className="w-3 h-3" />}
-                {isOnBreak ? '휴식' : '공부중'}
-              </div>
-              <div className="flex items-center gap-1 text-amber-600 text-sm">
-                <span>🪙</span>
-                <span className="font-bold">{earnedCoins}</span>
-              </div>
+                {isOnBreak ? <Coffee className="w-3.5 h-3.5" /> : <Target className="w-3.5 h-3.5" />}
+                {isOnBreak ? '휴식 중' : '공부 중'}
+              </span>
+              <span className="flex items-center gap-1.5 text-amber-500 font-semibold">
+                <span className="text-base">🪙</span>
+                <span>{earnedCoins}</span>
+              </span>
             </div>
 
-            <div className="text-center mb-3">
-              <div className="text-4xl font-mono font-bold text-gray-900">
+            {/* 타이머 */}
+            <div className="text-center py-4">
+              <p className="text-5xl font-bold text-gray-900 tracking-tight tabular-nums">
                 {formatTime(elapsedSeconds)}
-              </div>
+              </p>
+              <p className="text-sm text-gray-400 mt-2">
+                목표: {formatGoalTime(goalMinutes)}
+              </p>
             </div>
 
-            <div className="h-2 bg-white rounded-full overflow-hidden shadow-inner">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-500",
-                  isGoalReached
-                    ? "bg-gradient-to-r from-yellow-400 to-amber-500"
-                    : "bg-gradient-to-r from-green-400 to-emerald-500"
-                )}
-                style={{ width: `${Math.min(100, progress * 100)}%` }}
-              />
+            {/* 프로그레스 바 */}
+            <div className="mt-4">
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-500 ease-out",
+                    isGoalReached ? "bg-blue-500" : "bg-gray-900"
+                  )}
+                  style={{ width: `${Math.min(100, progress * 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-gray-400">{formatGoalTime(elapsedMinutes)}</span>
+                <span className="text-xs text-gray-400">{Math.round(progress * 100)}%</span>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 text-center mt-1">
-              {formatGoalTime(elapsedMinutes)} / {formatGoalTime(goalMinutes)}
-            </p>
           </div>
 
           {/* 휴식/공부 토글 */}
           <button
             onClick={() => setIsOnBreak(!isOnBreak)}
             className={cn(
-              "w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm",
+              "w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2",
               isOnBreak
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                ? "bg-gray-900 text-white hover:bg-gray-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             )}
           >
             {isOnBreak ? <Play className="w-4 h-4" /> : <Coffee className="w-4 h-4" />}
-            {isOnBreak ? '공부 재개' : '휴식하기'}
+            {isOnBreak ? '공부 재개하기' : '잠시 휴식하기'}
           </button>
 
           {/* 카메라/마이크 컨트롤 */}
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={onToggleCamera}
               className={cn(
-                "flex-1 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-all",
+                "flex-1 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border",
                 isCameraOn
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-blue-50 text-blue-600 border-blue-200"
+                  : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
               )}
             >
               {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-              카메라
+              <span className="text-sm">카메라</span>
             </button>
             <button
               onClick={onToggleMic}
               className={cn(
-                "flex-1 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-all",
+                "flex-1 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border",
                 isMicOn
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-blue-50 text-blue-600 border-blue-200"
+                  : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
               )}
             >
               {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-              마이크
+              <span className="text-sm">마이크</span>
             </button>
           </div>
 
-          {/* 미니 좌석 선택기 */}
-          <div className="bg-gray-50 rounded-xl p-3">
-            <h3 className="text-xs font-medium text-gray-500 mb-2">좌석 선택</h3>
-            <div className="grid grid-cols-5 gap-1">
+          {/* 좌석 선택기 */}
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700">좌석 선택</h3>
+              <span className="text-xs text-gray-400">{participants.length}명 참여중</span>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
               {Array.from({ length: totalSeats }, (_, i) => i + 1).map((seatNum) => {
                 const participant = seatMap.get(seatNum);
                 const isMyself = participant?.user_id === currentUserId;
@@ -827,36 +838,33 @@ function MyStudyScreen({
                     onClick={() => participant && setSelectedSeatNumber(seatNum)}
                     disabled={!participant}
                     className={cn(
-                      "aspect-square rounded text-[10px] font-medium transition-all relative",
+                      "aspect-square rounded-lg text-xs font-medium transition-all relative flex items-center justify-center",
                       participant
                         ? isSelected
-                          ? "bg-green-500 text-white"
+                          ? "bg-gray-900 text-white shadow-sm"
                           : isMyself
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-white text-gray-600 hover:bg-gray-100"
-                        : "bg-gray-100 text-gray-300"
+                            ? "bg-blue-100 text-blue-700 border border-blue-200"
+                            : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
                     )}
                   >
                     {seatNum}
                     {participant && participantCameraOn && (
-                      <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-red-500 rounded-full" />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
                     )}
                   </button>
                 );
               })}
             </div>
-            <p className="text-[10px] text-gray-400 mt-1.5 text-center">
-              {participants.length}명 참여중
-            </p>
           </div>
 
           {/* 나가기 버튼 */}
           <button
             onClick={onLeave}
-            className="w-full py-2.5 text-red-500 hover:text-red-600 text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full py-3 text-gray-400 hover:text-red-500 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            나가기
+            스터디룸 나가기
           </button>
         </div>
       </div>
@@ -871,34 +879,38 @@ function MyStudyScreen({
           return (
             <>
               {/* 상단: 선택된 좌석 정보 */}
-              <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-gray-800/50 flex items-center justify-between bg-gray-900/80 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   {selectedParticipant && (
                     <Avatar
                       src={selectedParticipant.avatar_url}
                       alt={selectedParticipant.nickname}
                       size="sm"
-                      className="w-8 h-8"
+                      className="w-10 h-10 ring-2 ring-gray-700"
                     />
                   )}
                   <div>
-                    <h2 className="font-bold text-white">
-                      {selectedParticipant ? selectedParticipant.nickname : `${selectedSeatNumber}번 좌석`}
-                      {isMyself && <span className="ml-2 text-xs text-blue-400">(나)</span>}
-                    </h2>
-                    <p className="text-xs text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-semibold text-white text-lg">
+                        {selectedParticipant ? selectedParticipant.nickname : `${selectedSeatNumber}번 좌석`}
+                      </h2>
+                      {isMyself && (
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-medium">나</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">
                       {selectedParticipant
-                        ? `${selectedParticipant.current_session_minutes}분 공부중`
+                        ? `${selectedParticipant.current_session_minutes}분째 공부 중`
                         : '빈 좌석'
                       }
                     </p>
                   </div>
                 </div>
                 {participantCameraOn && (
-                  <div className="flex items-center gap-1.5 bg-red-500 text-white px-2.5 py-1 rounded">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                    <span className="text-xs font-bold">LIVE</span>
-                  </div>
+                  <span className="flex items-center gap-1.5 bg-red-500/90 text-white px-3 py-1.5 rounded-full">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    <span className="text-xs font-semibold tracking-wide">LIVE</span>
+                  </span>
                 )}
               </div>
 
@@ -914,20 +926,27 @@ function MyStudyScreen({
                         className="w-full h-full"
                       />
                     ) : (
-                      // 내 카메라 OFF - 캐릭터 아바타
-                      <div className={cn(
-                        "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
-                        getCharacterAvatar(selectedParticipant.user_id).color
-                      )}>
-                        <div className="text-9xl mb-6">
-                          {getCharacterAvatar(selectedParticipant.user_id).emoji}
+                      // 내 카메라 OFF - 프로필 사진
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                        <div className="relative">
+                          <Avatar
+                            src={selectedParticipant.avatar_url}
+                            alt={selectedParticipant.nickname}
+                            size="xl"
+                            className="w-36 h-36 ring-4 ring-gray-700"
+                          />
+                          <span className={cn(
+                            "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
+                            isOnBreak
+                              ? "bg-amber-500/90 text-white"
+                              : "bg-blue-500/90 text-white"
+                          )}>
+                            {isOnBreak ? '휴식 중' : '공부 중'}
+                          </span>
                         </div>
-                        <p className="text-3xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
-                        <p className="text-gray-600 mt-3 text-lg">
-                          {isOnBreak ? '☕ 휴식 중' : '🎯 공부 중'}
-                        </p>
-                        <p className="text-gray-500 mt-2">
-                          {formatTime(elapsedSeconds)} 공부
+                        <p className="text-2xl font-bold text-white mt-6">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-400 mt-2 text-lg tabular-nums">
+                          {formatTime(elapsedSeconds)}
                         </p>
                       </div>
                     )
@@ -940,49 +959,56 @@ function MyStudyScreen({
                         className="w-full h-full"
                       />
                     ) : (
-                      // 카메라 OFF - 캐릭터 아바타
-                      <div className={cn(
-                        "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
-                        getCharacterAvatar(selectedParticipant.user_id).color
-                      )}>
-                        <div className="text-9xl mb-6">
-                          {getCharacterAvatar(selectedParticipant.user_id).emoji}
+                      // 카메라 OFF - 프로필 사진
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                        <div className="relative">
+                          <Avatar
+                            src={selectedParticipant.avatar_url}
+                            alt={selectedParticipant.nickname}
+                            size="xl"
+                            className="w-36 h-36 ring-4 ring-gray-700"
+                          />
+                          <span className={cn(
+                            "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
+                            selectedParticipant.status === 'break'
+                              ? "bg-amber-500/90 text-white"
+                              : "bg-blue-500/90 text-white"
+                          )}>
+                            {selectedParticipant.status === 'break' ? '휴식 중' : '공부 중'}
+                          </span>
                         </div>
-                        <p className="text-3xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
-                        <p className="text-gray-600 mt-3 text-lg">
-                          {selectedParticipant.status === 'studying' ? '🎯 공부 중' : selectedParticipant.status === 'break' ? '☕ 휴식 중' : ''}
-                        </p>
-                        <p className="text-gray-500 mt-2">
-                          {selectedParticipant.current_session_minutes}분째 공부
+                        <p className="text-2xl font-bold text-white mt-6">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-400 mt-2 text-lg">
+                          {selectedParticipant.current_session_minutes}분째
                         </p>
                       </div>
                     )
                   )
                 ) : (
                   // 빈 좌석
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800">
-                    <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center mb-4">
-                      <span className="text-4xl text-gray-500">+</span>
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                    <div className="w-28 h-28 rounded-full bg-gray-700/50 border-2 border-dashed border-gray-600 flex items-center justify-center mb-5">
+                      <Users className="w-10 h-10 text-gray-500" />
                     </div>
-                    <p className="text-xl font-medium text-gray-400">{selectedSeatNumber}번 좌석</p>
-                    <p className="text-gray-500 mt-2">빈 좌석입니다</p>
+                    <p className="text-xl font-semibold text-gray-300">{selectedSeatNumber}번 좌석</p>
+                    <p className="text-gray-500 mt-2">아직 아무도 없어요</p>
                   </div>
                 )}
 
-                {/* 하단 정보 오버레이 (참여자가 있을 때만) */}
-                {selectedParticipant && !isMyself && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                {/* 하단 정보 오버레이 (카메라 ON인 다른 참여자일 때만) */}
+                {selectedParticipant && !isMyself && participantCameraOn && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6">
                     <div className="flex items-center gap-4">
                       <Avatar
                         src={selectedParticipant.avatar_url}
                         alt={selectedParticipant.nickname}
                         size="lg"
-                        className="w-14 h-14"
+                        className="w-12 h-12 ring-2 ring-white/20"
                       />
                       <div>
-                        <p className="text-xl font-bold text-white">{selectedParticipant.nickname}</p>
-                        <p className="text-white/70">
-                          {selectedParticipant.current_session_minutes}분 공부
+                        <p className="text-lg font-semibold text-white">{selectedParticipant.nickname}</p>
+                        <p className="text-sm text-white/60">
+                          {selectedParticipant.current_session_minutes}분째 공부 중
                         </p>
                       </div>
                     </div>
@@ -994,40 +1020,40 @@ function MyStudyScreen({
         })()}
 
         {/* 하단: 채팅 (접이식) */}
-        <div className="border-t border-gray-800">
+        <div className="border-t border-gray-800/50">
           <button
             onClick={() => setShowChat(!showChat)}
-            className="w-full px-4 py-2 flex items-center justify-between text-gray-400 hover:text-white"
+            className="w-full px-5 py-3 flex items-center justify-between text-gray-400 hover:text-white transition-colors"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm font-medium">채팅</span>
               {messages.length > 0 && (
-                <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                   {messages.length}
                 </span>
               )}
             </div>
             <ArrowLeft className={cn(
-              "w-4 h-4 transition-transform",
+              "w-4 h-4 transition-transform duration-200",
               showChat ? "rotate-90" : "-rotate-90"
             )} />
           </button>
 
           {showChat && (
-            <div className="bg-gray-800/50">
+            <div className="bg-gray-800/30">
               {/* 메시지 목록 */}
-              <div className="h-40 overflow-y-auto px-4 py-2 space-y-2">
+              <div className="h-48 overflow-y-auto px-5 py-3 space-y-3">
                 {messages.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">
-                    채팅을 시작해보세요! 👋
+                  <p className="text-gray-500 text-sm text-center py-6">
+                    함께 공부하는 사람들과 대화해보세요
                   </p>
                 ) : (
                   messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={cn(
-                        "flex gap-2",
+                        "flex gap-2.5",
                         msg.user_id === currentUserId ? "flex-row-reverse" : ""
                       )}
                     >
@@ -1036,21 +1062,21 @@ function MyStudyScreen({
                           src={msg.avatar_url}
                           alt={msg.nickname}
                           size="sm"
-                          className="w-6 h-6 flex-shrink-0"
+                          className="w-7 h-7 flex-shrink-0 ring-1 ring-gray-700"
                         />
                       )}
                       <div className={cn(
-                        "max-w-[70%]",
+                        "max-w-[75%]",
                         msg.user_id === currentUserId ? "text-right" : ""
                       )}>
                         {msg.user_id !== currentUserId && (
-                          <p className="text-xs text-gray-400 mb-0.5">{msg.nickname}</p>
+                          <p className="text-xs text-gray-500 mb-1">{msg.nickname}</p>
                         )}
                         <div className={cn(
-                          "inline-block px-3 py-1.5 rounded-xl text-sm",
+                          "inline-block px-3.5 py-2 rounded-2xl text-sm",
                           msg.user_id === currentUserId
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-700 text-white"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-700/80 text-gray-100"
                         )}>
                           {msg.message}
                         </div>
@@ -1062,23 +1088,23 @@ function MyStudyScreen({
               </div>
 
               {/* 입력창 */}
-              <div className="px-4 py-3 border-t border-gray-700 flex gap-2">
+              <div className="px-5 py-3 border-t border-gray-700/50 flex gap-2.5">
                 <input
                   type="text"
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="메시지 입력..."
-                  className="flex-1 bg-gray-700 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="메시지를 입력하세요..."
+                  className="flex-1 bg-gray-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-500"
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!chatMessage.trim()}
                   className={cn(
-                    "px-3 py-2 rounded-lg transition-all",
+                    "px-3.5 py-2.5 rounded-xl transition-all",
                     chatMessage.trim()
-                      ? "bg-green-500 text-white hover:bg-green-600"
-                      : "bg-gray-700 text-gray-500"
+                      ? "bg-blue-500 text-white hover:bg-blue-600"
+                      : "bg-gray-700/60 text-gray-500"
                   )}
                 >
                   <Send className="w-4 h-4" />
