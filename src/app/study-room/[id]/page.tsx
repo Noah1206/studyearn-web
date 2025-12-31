@@ -66,14 +66,6 @@ interface ChatMessage {
   created_at: string;
 }
 
-// 캐릭터 아바타 (카메라 OFF 시 사용)
-const CHARACTER_AVATARS = [
-  { color: 'from-green-300 to-green-400', emoji: '🌿' },
-  { color: 'from-yellow-300 to-yellow-400', emoji: '🌻' },
-  { color: 'from-pink-300 to-pink-400', emoji: '🐰' },
-  { color: 'from-blue-200 to-blue-300', emoji: '☁️' },
-  { color: 'from-cyan-300 to-cyan-400', emoji: '💧' },
-];
 
 // 로컬 카메라 프리뷰 컴포넌트 (Agora 트랙 또는 네이티브 스트림 사용)
 function LocalCameraPreview({
@@ -681,15 +673,6 @@ function MyStudyScreen({
     return remoteUsers.find(u => u.uid === uid);
   };
 
-  // 캐릭터 아바타 선택 (user_id 기반으로 일관되게)
-  const getCharacterAvatar = (userId: string) => {
-    const hash = userId.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    return CHARACTER_AVATARS[Math.abs(hash) % CHARACTER_AVATARS.length];
-  };
-
   // 채팅 전송
   const handleSendMessage = () => {
     if (!chatMessage.trim()) return;
@@ -743,9 +726,8 @@ function MyStudyScreen({
                 {isOnBreak ? <Coffee className="w-3.5 h-3.5" /> : <Target className="w-3.5 h-3.5" />}
                 {isOnBreak ? '휴식 중' : '공부 중'}
               </span>
-              <span className="flex items-center gap-1.5 text-amber-500 font-semibold">
-                <span className="text-base">🪙</span>
-                <span>{earnedCoins}</span>
+              <span className="flex items-center gap-1 text-amber-500 font-semibold text-sm">
+                <span>{earnedCoins} 코인</span>
               </span>
             </div>
 
