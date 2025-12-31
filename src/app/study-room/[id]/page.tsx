@@ -621,9 +621,10 @@ function MyStudyScreen({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+  // 선택된 좌석 번호 (기본값: 내 좌석)
+  const [selectedSeatNumber, setSelectedSeatNumber] = useState<number>(seatNumber);
   const [chatMessage, setChatMessage] = useState('');
-  const [showChat, setShowChat] = useState(true);
+  const [showChat, setShowChat] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const theme = THEME_STYLES[room.theme] || THEME_STYLES.focus;
@@ -810,16 +811,44 @@ function MyStudyScreen({
             </button>
           </div>
 
-          {/* 카메라 프리뷰 (켜져있을 때만) */}
-          {isCameraOn && (
-            <div className="rounded-xl overflow-hidden bg-gray-900 aspect-video">
-              <LocalCameraPreview
-                videoTrack={localVideoTrack}
-                nativeStream={nativeStream}
-                className="w-full h-full"
-              />
+          {/* 미니 좌석 선택기 */}
+          <div className="bg-gray-50 rounded-xl p-3">
+            <h3 className="text-xs font-medium text-gray-500 mb-2">좌석 선택</h3>
+            <div className="grid grid-cols-5 gap-1">
+              {Array.from({ length: totalSeats }, (_, i) => i + 1).map((seatNum) => {
+                const participant = seatMap.get(seatNum);
+                const isMyself = participant?.user_id === currentUserId;
+                const isSelected = selectedSeatNumber === seatNum;
+                const participantCameraOn = participant ? cameraStates[participant.user_id] : false;
+
+                return (
+                  <button
+                    key={seatNum}
+                    onClick={() => participant && setSelectedSeatNumber(seatNum)}
+                    disabled={!participant}
+                    className={cn(
+                      "aspect-square rounded text-[10px] font-medium transition-all relative",
+                      participant
+                        ? isSelected
+                          ? "bg-green-500 text-white"
+                          : isMyself
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-white text-gray-600 hover:bg-gray-100"
+                        : "bg-gray-100 text-gray-300"
+                    )}
+                  >
+                    {seatNum}
+                    {participant && participantCameraOn && (
+                      <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-red-500 rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          )}
+            <p className="text-[10px] text-gray-400 mt-1.5 text-center">
+              {participants.length}명 참여중
+            </p>
+          </div>
 
           {/* 나가기 버튼 */}
           <button
@@ -832,164 +861,139 @@ function MyStudyScreen({
         </div>
       </div>
 
-      {/* 오른쪽: 좌석 뷰 + 채팅 */}
+      {/* 오른쪽: 선택된 좌석 대형 뷰 */}
       <div className="flex-1 flex flex-col bg-gray-900 min-h-[50vh] lg:min-h-screen">
-        {/* 상단: 방 정보 */}
-        <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-          <div>
-            <h2 className="font-bold text-white">{room.name}</h2>
-            <p className="text-xs text-gray-400">{participants.length}명 참여중</p>
-          </div>
-          {isCameraOn && (
-            <div className="flex items-center gap-1.5 bg-red-500 text-white px-2.5 py-1 rounded">
-              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              <span className="text-xs font-bold">LIVE</span>
-            </div>
-          )}
-        </div>
+        {(() => {
+          const selectedParticipant = seatMap.get(selectedSeatNumber);
+          const isMyself = selectedParticipant?.user_id === currentUserId;
+          const participantCameraOn = selectedParticipant ? cameraStates[selectedParticipant.user_id] : false;
 
-        {/* 선택된 참여자 화면 또는 좌석 그리드 */}
-        <div className="flex-1 overflow-hidden">
-          {selectedParticipant ? (
-            // 선택된 참여자 화면
-            <div className="h-full flex flex-col">
-              <div className="flex-1 relative">
-                {/* 닫기 버튼 */}
-                <button
-                  onClick={() => setSelectedParticipant(null)}
-                  className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* 참여자 화면 */}
-                {cameraStates[selectedParticipant.user_id] ? (
-                  // 카메라가 켜져있으면 비디오 표시
-                  <RemoteVideoPreview
-                    videoTrack={findRemoteUser(selectedParticipant)?.videoTrack}
-                    className="w-full h-full"
-                  />
-                ) : (
-                  // 카메라가 꺼져있으면 캐릭터 아바타 표시
-                  <div className={cn(
-                    "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
-                    getCharacterAvatar(selectedParticipant.user_id).color
-                  )}>
-                    <div className="text-8xl mb-4">
-                      {getCharacterAvatar(selectedParticipant.user_id).emoji}
-                    </div>
-                    <p className="text-2xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
-                    <p className="text-gray-600 mt-2">
-                      {selectedParticipant.status === 'studying' ? '🎯 공부 중' : selectedParticipant.status === 'break' ? '☕ 휴식 중' : ''}
-                    </p>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {selectedParticipant.current_session_minutes}분째 공부
-                    </p>
-                  </div>
-                )}
-
-                {/* 하단 정보 오버레이 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <div className="flex items-center gap-3">
+          return (
+            <>
+              {/* 상단: 선택된 좌석 정보 */}
+              <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {selectedParticipant && (
                     <Avatar
                       src={selectedParticipant.avatar_url}
                       alt={selectedParticipant.nickname}
-                      size="md"
+                      size="sm"
+                      className="w-8 h-8"
                     />
-                    <div>
-                      <p className="font-bold text-white">{selectedParticipant.nickname}</p>
-                      <p className="text-white/70 text-sm">
-                        {selectedParticipant.current_session_minutes}분 공부
-                      </p>
-                    </div>
+                  )}
+                  <div>
+                    <h2 className="font-bold text-white">
+                      {selectedParticipant ? selectedParticipant.nickname : `${selectedSeatNumber}번 좌석`}
+                      {isMyself && <span className="ml-2 text-xs text-blue-400">(나)</span>}
+                    </h2>
+                    <p className="text-xs text-gray-400">
+                      {selectedParticipant
+                        ? `${selectedParticipant.current_session_minutes}분 공부중`
+                        : '빈 좌석'
+                      }
+                    </p>
                   </div>
                 </div>
+                {participantCameraOn && (
+                  <div className="flex items-center gap-1.5 bg-red-500 text-white px-2.5 py-1 rounded">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    <span className="text-xs font-bold">LIVE</span>
+                  </div>
+                )}
               </div>
-            </div>
-          ) : (
-            // 좌석 그리드
-            <div className="h-full p-4 overflow-y-auto">
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                {Array.from({ length: totalSeats }, (_, i) => i + 1).map((seatNum) => {
-                  const participant = seatMap.get(seatNum);
-                  const isMyself = participant?.user_id === currentUserId;
-                  const participantCameraOn = participant ? cameraStates[participant.user_id] : false;
-                  const charAvatar = participant ? getCharacterAvatar(participant.user_id) : null;
 
-                  return (
-                    <button
-                      key={seatNum}
-                      onClick={() => participant && !isMyself && setSelectedParticipant(participant)}
-                      disabled={!participant || isMyself}
-                      className={cn(
-                        "aspect-square rounded-lg overflow-hidden transition-all relative",
-                        participant
-                          ? isMyself
-                            ? "ring-2 ring-green-500 ring-offset-2 ring-offset-gray-900"
-                            : "hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-gray-900 cursor-pointer"
-                          : "bg-gray-800 border border-gray-700 border-dashed"
-                      )}
-                    >
-                      {participant ? (
-                        <>
-                          {participantCameraOn ? (
-                            // 카메라 ON - 작은 비디오 썸네일
-                            <div className="w-full h-full bg-gray-700">
-                              <RemoteVideoPreview
-                                videoTrack={findRemoteUser(participant)?.videoTrack}
-                                className="w-full h-full"
-                              />
-                            </div>
-                          ) : (
-                            // 카메라 OFF - 캐릭터 아바타
-                            <div className={cn(
-                              "w-full h-full flex items-center justify-center bg-gradient-to-br",
-                              charAvatar?.color
-                            )}>
-                              <span className="text-2xl">{charAvatar?.emoji}</span>
-                            </div>
-                          )}
-
-                          {/* 상태 표시 */}
-                          <div className={cn(
-                            "absolute top-1 right-1 w-2 h-2 rounded-full",
-                            participant.status === 'studying' ? 'bg-green-500' :
-                            participant.status === 'break' ? 'bg-amber-500' : 'bg-gray-400'
-                          )} />
-
-                          {/* LIVE 또는 나 배지 */}
-                          {participantCameraOn ? (
-                            <div className="absolute top-1 left-1 flex items-center gap-0.5 bg-red-500 px-1 py-0.5 rounded text-[8px] text-white font-bold">
-                              <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
-                              LIVE
-                            </div>
-                          ) : isMyself ? (
-                            <div className="absolute top-1 left-1 bg-blue-500 px-1 py-0.5 rounded text-[8px] text-white font-bold">
-                              나
-                            </div>
-                          ) : null}
-
-                          {/* 이름 */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
-                            <p className="text-[10px] text-white truncate text-center">
-                              {participant.nickname}
-                            </p>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-gray-600 text-xs">#{seatNum}</span>
+              {/* 메인: 선택된 좌석 대형 화면 */}
+              <div className="flex-1 relative">
+                {selectedParticipant ? (
+                  isMyself ? (
+                    // 내 좌석 - 내 카메라 프리뷰
+                    isCameraOn ? (
+                      <LocalCameraPreview
+                        videoTrack={localVideoTrack}
+                        nativeStream={nativeStream}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      // 내 카메라 OFF - 캐릭터 아바타
+                      <div className={cn(
+                        "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
+                        getCharacterAvatar(selectedParticipant.user_id).color
+                      )}>
+                        <div className="text-9xl mb-6">
+                          {getCharacterAvatar(selectedParticipant.user_id).emoji}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+                        <p className="text-3xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-600 mt-3 text-lg">
+                          {isOnBreak ? '☕ 휴식 중' : '🎯 공부 중'}
+                        </p>
+                        <p className="text-gray-500 mt-2">
+                          {formatTime(elapsedSeconds)} 공부
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    // 다른 참여자 좌석
+                    participantCameraOn ? (
+                      // 카메라 ON - 비디오 표시
+                      <RemoteVideoPreview
+                        videoTrack={findRemoteUser(selectedParticipant)?.videoTrack}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      // 카메라 OFF - 캐릭터 아바타
+                      <div className={cn(
+                        "w-full h-full flex flex-col items-center justify-center bg-gradient-to-br",
+                        getCharacterAvatar(selectedParticipant.user_id).color
+                      )}>
+                        <div className="text-9xl mb-6">
+                          {getCharacterAvatar(selectedParticipant.user_id).emoji}
+                        </div>
+                        <p className="text-3xl font-bold text-gray-800">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-600 mt-3 text-lg">
+                          {selectedParticipant.status === 'studying' ? '🎯 공부 중' : selectedParticipant.status === 'break' ? '☕ 휴식 중' : ''}
+                        </p>
+                        <p className="text-gray-500 mt-2">
+                          {selectedParticipant.current_session_minutes}분째 공부
+                        </p>
+                      </div>
+                    )
+                  )
+                ) : (
+                  // 빈 좌석
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800">
+                    <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center mb-4">
+                      <span className="text-4xl text-gray-500">+</span>
+                    </div>
+                    <p className="text-xl font-medium text-gray-400">{selectedSeatNumber}번 좌석</p>
+                    <p className="text-gray-500 mt-2">빈 좌석입니다</p>
+                  </div>
+                )}
 
-        {/* 하단: 채팅 */}
+                {/* 하단 정보 오버레이 (참여자가 있을 때만) */}
+                {selectedParticipant && !isMyself && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                    <div className="flex items-center gap-4">
+                      <Avatar
+                        src={selectedParticipant.avatar_url}
+                        alt={selectedParticipant.nickname}
+                        size="lg"
+                        className="w-14 h-14"
+                      />
+                      <div>
+                        <p className="text-xl font-bold text-white">{selectedParticipant.nickname}</p>
+                        <p className="text-white/70">
+                          {selectedParticipant.current_session_minutes}분 공부
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
+
+        {/* 하단: 채팅 (접이식) */}
         <div className="border-t border-gray-800">
           <button
             onClick={() => setShowChat(!showChat)}

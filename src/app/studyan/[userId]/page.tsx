@@ -328,8 +328,8 @@ export default function StudyanUserPage() {
                   className="w-16 h-16"
                 />
               ) : (
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-2xl flex-shrink-0`}>
-                  {characterAvatar.emoji}
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-400 flex-shrink-0">
+                  {user.nickname?.charAt(0) || '?'}
                 </div>
               )}
 
