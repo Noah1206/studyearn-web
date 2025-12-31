@@ -135,7 +135,7 @@ function LoginForm() {
           <button
             type="button"
             onClick={handleKakaoLogin}
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl text-lg"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-bold rounded-xl transition-all text-lg"
           >
             <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
               <path
@@ -145,13 +145,8 @@ function LoginForm() {
                 fill="#191919"
               />
             </svg>
-            카카오로 빠른 로그인
+            카카오로 시작하기
           </button>
-
-          {/* 무료 배지 */}
-          <p className="text-center text-xs text-green-600 mt-2 font-medium">
-            SMS 인증 없이 바로 로그인
-          </p>
 
           {/* Divider */}
           <div className="relative my-8">
