@@ -852,7 +852,7 @@ function MyStudyScreen({
       </div>
 
       {/* 오른쪽: 선택된 좌석 대형 뷰 */}
-      <div className="flex-1 flex flex-col bg-gray-900 min-h-[50vh] lg:min-h-screen">
+      <div className="flex-1 flex flex-col bg-white min-h-[50vh] lg:min-h-screen">
         {(() => {
           const selectedParticipant = seatMap.get(selectedSeatNumber);
           const isMyself = selectedParticipant?.user_id === currentUserId;
@@ -861,23 +861,23 @@ function MyStudyScreen({
           return (
             <>
               {/* 상단: 선택된 좌석 정보 */}
-              <div className="px-5 py-4 border-b border-gray-800/50 flex items-center justify-between bg-gray-900/80 backdrop-blur-sm">
+              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-white/80 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   {selectedParticipant && (
                     <Avatar
                       src={selectedParticipant.avatar_url}
                       alt={selectedParticipant.nickname}
                       size="sm"
-                      className="w-10 h-10 ring-2 ring-gray-700"
+                      className="w-10 h-10 ring-2 ring-gray-200"
                     />
                   )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="font-semibold text-white text-lg">
+                      <h2 className="font-semibold text-gray-900 text-lg">
                         {selectedParticipant ? selectedParticipant.nickname : `${selectedSeatNumber}번 좌석`}
                       </h2>
                       {isMyself && (
-                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-medium">나</span>
+                        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium border border-blue-200">나</span>
                       )}
                     </div>
                     <p className="text-sm text-gray-500">
@@ -909,25 +909,25 @@ function MyStudyScreen({
                       />
                     ) : (
                       // 내 카메라 OFF - 프로필 사진
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-white">
                         <div className="relative">
                           <Avatar
                             src={selectedParticipant.avatar_url}
                             alt={selectedParticipant.nickname}
                             size="xl"
-                            className="w-36 h-36 ring-4 ring-gray-700"
+                            className="w-36 h-36 ring-4 ring-gray-200"
                           />
                           <span className={cn(
                             "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
                             isOnBreak
-                              ? "bg-amber-500/90 text-white"
-                              : "bg-blue-500/90 text-white"
+                              ? "bg-amber-500 text-white"
+                              : "bg-blue-500 text-white"
                           )}>
                             {isOnBreak ? '휴식 중' : '공부 중'}
                           </span>
                         </div>
-                        <p className="text-2xl font-bold text-white mt-6">{selectedParticipant.nickname}</p>
-                        <p className="text-gray-400 mt-2 text-lg tabular-nums">
+                        <p className="text-2xl font-bold text-gray-900 mt-6">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-500 mt-2 text-lg tabular-nums">
                           {formatTime(elapsedSeconds)}
                         </p>
                       </div>
@@ -942,25 +942,25 @@ function MyStudyScreen({
                       />
                     ) : (
                       // 카메라 OFF - 프로필 사진
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-white">
                         <div className="relative">
                           <Avatar
                             src={selectedParticipant.avatar_url}
                             alt={selectedParticipant.nickname}
                             size="xl"
-                            className="w-36 h-36 ring-4 ring-gray-700"
+                            className="w-36 h-36 ring-4 ring-gray-200"
                           />
                           <span className={cn(
                             "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
                             selectedParticipant.status === 'break'
-                              ? "bg-amber-500/90 text-white"
-                              : "bg-blue-500/90 text-white"
+                              ? "bg-amber-500 text-white"
+                              : "bg-blue-500 text-white"
                           )}>
                             {selectedParticipant.status === 'break' ? '휴식 중' : '공부 중'}
                           </span>
                         </div>
-                        <p className="text-2xl font-bold text-white mt-6">{selectedParticipant.nickname}</p>
-                        <p className="text-gray-400 mt-2 text-lg">
+                        <p className="text-2xl font-bold text-gray-900 mt-6">{selectedParticipant.nickname}</p>
+                        <p className="text-gray-500 mt-2 text-lg">
                           {selectedParticipant.current_session_minutes}분째
                         </p>
                       </div>
@@ -968,12 +968,12 @@ function MyStudyScreen({
                   )
                 ) : (
                   // 빈 좌석
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900">
-                    <div className="w-28 h-28 rounded-full bg-gray-700/50 border-2 border-dashed border-gray-600 flex items-center justify-center mb-5">
-                      <Users className="w-10 h-10 text-gray-500" />
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-white">
+                    <div className="w-28 h-28 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mb-5">
+                      <Users className="w-10 h-10 text-gray-400" />
                     </div>
-                    <p className="text-xl font-semibold text-gray-300">{selectedSeatNumber}번 좌석</p>
-                    <p className="text-gray-500 mt-2">아직 아무도 없어요</p>
+                    <p className="text-xl font-semibold text-gray-700">{selectedSeatNumber}번 좌석</p>
+                    <p className="text-gray-400 mt-2">아직 아무도 없어요</p>
                   </div>
                 )}
 
@@ -1002,10 +1002,10 @@ function MyStudyScreen({
         })()}
 
         {/* 하단: 채팅 (접이식) */}
-        <div className="border-t border-gray-800/50">
+        <div className="border-t border-gray-200">
           <button
             onClick={() => setShowChat(!showChat)}
-            className="w-full px-5 py-3 flex items-center justify-between text-gray-400 hover:text-white transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-gray-500 hover:text-gray-900 transition-colors"
           >
             <div className="flex items-center gap-2.5">
               <MessageCircle className="w-4 h-4" />
@@ -1023,11 +1023,11 @@ function MyStudyScreen({
           </button>
 
           {showChat && (
-            <div className="bg-gray-800/30">
+            <div className="bg-white">
               {/* 메시지 목록 */}
               <div className="h-48 overflow-y-auto px-5 py-3 space-y-3">
                 {messages.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-6">
+                  <p className="text-gray-400 text-sm text-center py-6">
                     함께 공부하는 사람들과 대화해보세요
                   </p>
                 ) : (
@@ -1044,7 +1044,7 @@ function MyStudyScreen({
                           src={msg.avatar_url}
                           alt={msg.nickname}
                           size="sm"
-                          className="w-7 h-7 flex-shrink-0 ring-1 ring-gray-700"
+                          className="w-7 h-7 flex-shrink-0 ring-1 ring-gray-200"
                         />
                       )}
                       <div className={cn(
@@ -1058,7 +1058,7 @@ function MyStudyScreen({
                           "inline-block px-3.5 py-2 rounded-2xl text-sm",
                           msg.user_id === currentUserId
                             ? "bg-blue-500 text-white"
-                            : "bg-gray-700/80 text-gray-100"
+                            : "bg-gray-100 text-gray-900"
                         )}>
                           {msg.message}
                         </div>
@@ -1070,14 +1070,14 @@ function MyStudyScreen({
               </div>
 
               {/* 입력창 */}
-              <div className="px-5 py-3 border-t border-gray-700/50 flex gap-2.5">
+              <div className="px-5 py-3 border-t border-gray-200 flex gap-2.5">
                 <input
                   type="text"
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="메시지를 입력하세요..."
-                  className="flex-1 bg-gray-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-500"
+                  className="flex-1 bg-gray-100 text-gray-900 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-400"
                 />
                 <button
                   onClick={handleSendMessage}
@@ -1086,7 +1086,7 @@ function MyStudyScreen({
                     "px-3.5 py-2.5 rounded-xl transition-all",
                     chatMessage.trim()
                       ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "bg-gray-700/60 text-gray-500"
+                      : "bg-gray-100 text-gray-400"
                   )}
                 >
                   <Send className="w-4 h-4" />
@@ -1125,6 +1125,9 @@ export default function StudyRoomPage() {
   // 카메라/마이크 상태
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
+  // DB에서 불러온 저장된 카메라/마이크 상태 (재입장 시 복원용)
+  const [savedCameraEnabled, setSavedCameraEnabled] = useState<boolean | null>(null);
+  const [savedMicEnabled, setSavedMicEnabled] = useState<boolean | null>(null);
   const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null);
   const [cameraStates, setCameraStates] = useState<Record<string, boolean>>({});
   const [remoteUsers, setRemoteUsers] = useState<RemoteUser[]>([]);
@@ -1350,6 +1353,10 @@ export default function StudyRoomPage() {
           // 기존 참여자: 좌석 번호 설정하고 좌석 화면부터 시작 (이미 참여 중 표시)
           setMySeatNumber(myParticipation.seat_number);
           setIsAlreadyJoined(true);
+          // 저장된 카메라/마이크 상태 복원용으로 저장
+          setSavedCameraEnabled(myParticipation.camera_enabled ?? false);
+          setSavedMicEnabled(myParticipation.mic_enabled ?? false);
+          console.log('[StudyRoom] Loaded saved states - camera:', myParticipation.camera_enabled, ', mic:', myParticipation.mic_enabled);
         }
       }
 
@@ -1573,6 +1580,43 @@ export default function StudyRoomPage() {
       joinAgoraChannel();
     }
   }, [phase, mySeatNumber, isAgoraJoined, joinAgoraChannel]);
+
+  // beforeunload 이벤트: 브라우저 닫기/새로고침 시 경고 메시지 표시
+  // (카메라/마이크 상태는 토글 시마다 DB에 저장되므로 별도 저장 불필요)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (phase === 'studying') {
+        // 경고 메시지 표시 (브라우저마다 다르게 표시됨)
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    // popstate 이벤트: 뒤로가기 감지
+    const handlePopState = () => {
+      if (phase === 'studying') {
+        // 뒤로가기 시 현재 상태 유지하고 경고
+        const confirmLeave = window.confirm('스터디룸을 나가시겠어요? 나가기 버튼을 사용하면 공부 기록이 저장됩니다.');
+        if (!confirmLeave) {
+          // 뒤로가기 취소 - 히스토리에 다시 추가
+          window.history.pushState(null, '', window.location.href);
+        }
+      }
+    };
+
+    // 히스토리 상태 추가 (뒤로가기 감지용)
+    if (phase === 'studying') {
+      window.history.pushState(null, '', window.location.href);
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [phase]);
 
   // 세션 상태 업데이트 함수
   const updateSessionStatus = useCallback(async (status: 'waiting' | 'live' | 'ended') => {
@@ -1952,6 +1996,8 @@ export default function StudyRoomPage() {
   // 카메라 토글
   const handleToggleCamera = async () => {
     try {
+      const supabase = createClient();
+
       if (isCameraOn) {
         // 카메라 끄기
         await agoraService.setCameraEnabled(false);
@@ -1964,12 +2010,18 @@ export default function StudyRoomPage() {
           setCameraStates(prev => ({ ...prev, [currentUserId]: false }));
         }
 
+        // DB에 카메라 상태 저장
+        await supabase
+          .from('study_with_me_participants')
+          .update({ camera_enabled: false })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUserId);
+
         // 다른 사람도 카메라가 꺼져있으면 session_status를 waiting으로
         const anyOtherCameraOn = remoteUsers.some(u => u.hasVideo);
         if (!anyOtherCameraOn) {
           await updateSessionStatus('waiting');
           // 썸네일도 초기화
-          const supabase = createClient();
           await supabase
             .from('study_with_me_rooms')
             .update({ thumbnail_url: null })
@@ -1987,6 +2039,13 @@ export default function StudyRoomPage() {
           setCameraStates(prev => ({ ...prev, [currentUserId]: true }));
         }
 
+        // DB에 카메라 상태 저장
+        await supabase
+          .from('study_with_me_participants')
+          .update({ camera_enabled: true })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUserId);
+
         // session_status를 live로 업데이트
         await updateSessionStatus('live');
 
@@ -2003,24 +2062,83 @@ export default function StudyRoomPage() {
   // 마이크 토글 (네이티브 마이크 우선 사용)
   const handleToggleMic = async () => {
     try {
+      const supabase = createClient();
+
       if (isMicOn) {
         // 마이크 끄기
         await agoraService.setMicrophoneEnabled(false);
         stopNativeMic();
         setIsMicOn(false);
         console.log('[StudyRoom] Microphone turned off');
+
+        // DB에 마이크 상태 저장
+        await supabase
+          .from('study_with_me_participants')
+          .update({ mic_enabled: false })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUserId);
       } else {
         // 마이크 켜기 (Agora + 네이티브)
         await agoraService.setMicrophoneEnabled(true);
         await startNativeMic();
         setIsMicOn(true);
         console.log('[StudyRoom] Microphone turned on');
+
+        // DB에 마이크 상태 저장
+        await supabase
+          .from('study_with_me_participants')
+          .update({ mic_enabled: true })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUserId);
       }
     } catch (err) {
       console.error('Failed to toggle mic:', err);
       toast.error('마이크 오류', '마이크 접근에 실패했습니다. 브라우저 권한을 확인해주세요.');
     }
   };
+
+  // 재입장 시 저장된 카메라/마이크 상태 복원
+  const hasRestoredStateRef = useRef(false);
+  useEffect(() => {
+    // Agora 채널 입장 후, 기존 참여자인 경우에만 상태 복원
+    if (!isAgoraJoined || !isAlreadyJoined || hasRestoredStateRef.current) return;
+
+    const restoreSavedStates = async () => {
+      console.log('[StudyRoom] Restoring saved states - camera:', savedCameraEnabled, ', mic:', savedMicEnabled);
+
+      // 카메라 상태 복원
+      if (savedCameraEnabled === true) {
+        try {
+          await agoraService.setCameraEnabled(true);
+          const videoTrack = agoraService.getLocalVideoTrack();
+          setLocalVideoTrack(videoTrack);
+          setIsCameraOn(true);
+          if (currentUserId) {
+            setCameraStates(prev => ({ ...prev, [currentUserId]: true }));
+          }
+          console.log('[StudyRoom] Camera restored to ON');
+        } catch (err) {
+          console.error('[StudyRoom] Failed to restore camera:', err);
+        }
+      }
+
+      // 마이크 상태 복원
+      if (savedMicEnabled === true) {
+        try {
+          await agoraService.setMicrophoneEnabled(true);
+          await startNativeMic();
+          setIsMicOn(true);
+          console.log('[StudyRoom] Microphone restored to ON');
+        } catch (err) {
+          console.error('[StudyRoom] Failed to restore microphone:', err);
+        }
+      }
+
+      hasRestoredStateRef.current = true;
+    };
+
+    restoreSavedStates();
+  }, [isAgoraJoined, isAlreadyJoined, savedCameraEnabled, savedMicEnabled, currentUserId, startNativeMic]);
 
   // 참여자 비디오 보기
   const handleViewParticipant = (participant: Participant) => {
