@@ -298,8 +298,8 @@ function Seat({
 }) {
   const isEmpty = !participant;
   const statusColors = {
-    studying: 'bg-green-500',
-    break: 'bg-amber-500',
+    studying: 'bg-orange-500',
+    break: 'bg-gray-900',
     away: 'bg-gray-400',
     offline: 'bg-gray-300',
   };
@@ -317,19 +317,19 @@ function Seat({
       <div className={cn(
         "relative w-full aspect-[4/3] rounded-xl transition-all duration-200 overflow-hidden",
         isEmpty
-          ? "bg-gradient-to-b from-gray-200 to-gray-300 border-2 border-dashed border-gray-400 group-hover:from-green-100 group-hover:to-green-200 group-hover:border-green-400"
+          ? "bg-gradient-to-b from-gray-200 to-gray-300 border-2 border-dashed border-gray-400 group-hover:from-orange-100 group-hover:to-orange-200 group-hover:border-orange-400"
           : "bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-gray-700",
-        isMyself && "ring-3 ring-green-500 ring-offset-2",
+        isMyself && "ring-3 ring-orange-500 ring-offset-2",
         isSelected && "ring-3 ring-blue-500 ring-offset-2"
       )}>
         {isEmpty ? (
           // 빈 좌석
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2 group-hover:bg-green-100 transition-colors">
-              <Users className="w-7 h-7 text-gray-400 group-hover:text-green-500" />
+            <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2 group-hover:bg-orange-100 transition-colors">
+              <Users className="w-7 h-7 text-gray-400 group-hover:text-orange-500" />
             </div>
-            <span className="text-base font-bold text-gray-500 group-hover:text-green-600">{seatNumber}번</span>
-            <span className="text-sm text-gray-400 group-hover:text-green-500">빈 좌석</span>
+            <span className="text-base font-bold text-gray-500 group-hover:text-orange-600">{seatNumber}번</span>
+            <span className="text-sm text-gray-400 group-hover:text-orange-500">빈 좌석</span>
           </div>
         ) : (
           // 참여 중인 좌석
@@ -379,7 +379,7 @@ function Seat({
       <div className={cn(
         "w-2/3 h-3 rounded-b-lg -mt-0.5 transition-colors",
         isEmpty
-          ? "bg-gray-300 group-hover:bg-green-300"
+          ? "bg-gray-300 group-hover:bg-orange-300"
           : "bg-gray-600"
       )} />
 
@@ -387,7 +387,7 @@ function Seat({
       <div className={cn(
         "w-1/3 h-4 rounded-b transition-colors",
         isEmpty
-          ? "bg-gray-400 group-hover:bg-green-400"
+          ? "bg-gray-400 group-hover:bg-orange-400"
           : "bg-gray-700"
       )} />
 
@@ -395,9 +395,9 @@ function Seat({
       <div className={cn(
         "mt-2 px-3 py-1 rounded-full text-sm font-bold transition-colors",
         isEmpty
-          ? "bg-gray-200 text-gray-600 group-hover:bg-green-100 group-hover:text-green-700"
+          ? "bg-gray-200 text-gray-600 group-hover:bg-orange-100 group-hover:text-orange-700"
           : isMyself
-          ? "bg-green-100 text-green-700"
+          ? "bg-orange-100 text-orange-700"
           : "bg-gray-100 text-gray-700"
       )}>
         {seatNumber}번 좌석
@@ -493,11 +493,11 @@ function SeatSelectionView({
         {/* 상태 범례 */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-8 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-full shadow-sm" />
+            <div className="w-4 h-4 bg-orange-500 rounded-full shadow-sm" />
             <span className="text-sm font-medium text-gray-700">공부중</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-amber-500 rounded-full shadow-sm" />
+            <div className="w-4 h-4 bg-gray-900 rounded-full shadow-sm" />
             <span className="text-sm font-medium text-gray-700">휴식중</span>
           </div>
           <div className="flex items-center gap-2">
@@ -561,7 +561,7 @@ function SeatSelectionView({
                 // 기존 좌석 유지
                 <Button
                   onClick={onMyProfilePress}
-                  className="w-full h-16 text-lg font-bold bg-green-500 hover:bg-green-600 rounded-2xl shadow-lg shadow-green-500/30"
+                  className="w-full h-16 text-lg font-bold bg-orange-500 hover:bg-orange-600 rounded-2xl shadow-lg shadow-orange-500/30"
                 >
                   <Play className="w-6 h-6 mr-2" />
                   {mySeatNumber}번 좌석에서 공부 시작하기
@@ -580,7 +580,7 @@ function SeatSelectionView({
                 className={cn(
                   "w-full h-16 text-lg font-bold rounded-2xl transition-all duration-200",
                   selectedSeat
-                    ? "bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30"
+                    ? "bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-500/30"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 )}
               >
@@ -2223,7 +2223,7 @@ export default function StudyRoomPage() {
         variants={pageVariants}
       >
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-green-500 mx-auto mb-4" />
+          <Loader2 className="w-10 h-10 animate-spin text-orange-500 mx-auto mb-4" />
           <p className="text-gray-500">스터디룸에 입장하는 중...</p>
         </div>
       </motion.div>
@@ -2246,7 +2246,7 @@ export default function StudyRoomPage() {
           </div>
           <p className="text-gray-900 font-medium mb-2">{error || '방을 찾을 수 없습니다'}</p>
           <Link href="/study-with-me">
-            <Button className="bg-green-500 hover:bg-green-600">
+            <Button className="bg-orange-500 hover:bg-orange-600">
               돌아가기
             </Button>
           </Link>
