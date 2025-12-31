@@ -278,7 +278,7 @@ const THEME_STYLES: Record<string, { bg: string; accent: string; icon: React.Ele
   night: { bg: 'bg-indigo-50', accent: 'text-indigo-600', icon: Moon },
 };
 
-// 좌석 컴포넌트
+// 좌석 컴포넌트 - 실제 좌석 느낌으로 디자인
 function Seat({
   seatNumber,
   participant,
@@ -308,71 +308,100 @@ function Seat({
     <button
       onClick={isEmpty ? onSelect : onViewProfile}
       className={cn(
-        "relative aspect-square rounded-2xl p-3 transition-all",
-        isEmpty
-          ? "bg-gray-100 hover:bg-green-50 hover:border-green-300 border-2 border-dashed border-gray-300"
-          : "bg-white border-2 border-gray-200",
-        isMyself && "ring-2 ring-green-500 ring-offset-2",
-        isSelected && "ring-2 ring-blue-500 ring-offset-2"
+        "group relative flex flex-col items-center transition-all duration-200",
+        isEmpty ? "cursor-pointer" : "cursor-pointer",
+        isSelected && "scale-105"
       )}
     >
-      {isEmpty ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-2">
-            <span className="text-gray-400 text-lg">+</span>
-          </div>
-          <span className="text-xs text-gray-500">빈 좌석</span>
-          <span className="text-xs font-medium text-gray-600">#{seatNumber}</span>
-        </div>
-      ) : (
-        <>
-          <div className="relative w-full h-full flex items-center justify-center">
-            <Avatar
-              src={participant.avatar_url}
-              alt={participant.nickname}
-              size="lg"
-              className="w-16 h-16"
-            />
-          </div>
-
-          {/* 상태 표시 */}
-          <div className={cn(
-            "absolute top-2 right-2 w-3 h-3 rounded-full ring-2 ring-white",
-            statusColors[participant.status]
-          )} />
-
-          {/* 호스트 배지 또는 LIVE 배지 */}
-          {isCameraOn ? (
-            <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              LIVE
+      {/* 책상 (모니터) */}
+      <div className={cn(
+        "relative w-full aspect-[4/3] rounded-xl transition-all duration-200 overflow-hidden",
+        isEmpty
+          ? "bg-gradient-to-b from-gray-200 to-gray-300 border-2 border-dashed border-gray-400 group-hover:from-green-100 group-hover:to-green-200 group-hover:border-green-400"
+          : "bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-gray-700",
+        isMyself && "ring-3 ring-green-500 ring-offset-2",
+        isSelected && "ring-3 ring-blue-500 ring-offset-2"
+      )}>
+        {isEmpty ? (
+          // 빈 좌석
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2 group-hover:bg-green-100 transition-colors">
+              <Users className="w-7 h-7 text-gray-400 group-hover:text-green-500" />
             </div>
-          ) : participant.is_host ? (
-            <div className="absolute top-2 left-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-              호스트
-            </div>
-          ) : isMyself ? (
-            <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-              나
-            </div>
-          ) : null}
-
-          {/* 이름 & 시간 */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900/60 to-transparent p-2 rounded-b-xl">
-            <p className="text-white text-xs font-medium truncate text-center">
-              {participant.nickname}
-            </p>
-            <p className="text-white/70 text-[10px] text-center">
-              {participant.current_session_minutes}분
-            </p>
+            <span className="text-base font-bold text-gray-500 group-hover:text-green-600">{seatNumber}번</span>
+            <span className="text-sm text-gray-400 group-hover:text-green-500">빈 좌석</span>
           </div>
+        ) : (
+          // 참여 중인 좌석
+          <>
+            {/* 모니터 화면 영역 */}
+            <div className="absolute inset-2 bg-gradient-to-b from-gray-700 to-gray-800 rounded-lg flex flex-col items-center justify-center">
+              <Avatar
+                src={participant.avatar_url}
+                alt={participant.nickname}
+                size="lg"
+                className="w-16 h-16 md:w-20 md:h-20 ring-2 ring-gray-600"
+              />
+              <p className="mt-2 text-white text-sm font-semibold truncate max-w-[90%]">
+                {participant.nickname}
+              </p>
+              <p className="text-gray-400 text-xs">
+                {participant.current_session_minutes}분 공부중
+              </p>
+            </div>
 
-          {/* 좌석 번호 */}
-          <div className="absolute bottom-2 right-2 bg-black/40 px-1.5 py-0.5 rounded text-[10px] text-white">
-            #{seatNumber}
-          </div>
-        </>
-      )}
+            {/* 상태 표시 (우상단) */}
+            <div className={cn(
+              "absolute top-3 right-3 w-4 h-4 rounded-full ring-2 ring-gray-900",
+              statusColors[participant.status]
+            )} />
+
+            {/* 호스트/LIVE/나 배지 (좌상단) */}
+            {isCameraOn ? (
+              <div className="absolute top-3 left-3 flex items-center gap-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                LIVE
+              </div>
+            ) : participant.is_host ? (
+              <div className="absolute top-3 left-3 bg-amber-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+                HOST
+              </div>
+            ) : isMyself ? (
+              <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+                ME
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      {/* 의자 받침대 */}
+      <div className={cn(
+        "w-2/3 h-3 rounded-b-lg -mt-0.5 transition-colors",
+        isEmpty
+          ? "bg-gray-300 group-hover:bg-green-300"
+          : "bg-gray-600"
+      )} />
+
+      {/* 의자 다리 */}
+      <div className={cn(
+        "w-1/3 h-4 rounded-b transition-colors",
+        isEmpty
+          ? "bg-gray-400 group-hover:bg-green-400"
+          : "bg-gray-700"
+      )} />
+
+      {/* 좌석 번호 (하단 라벨) */}
+      <div className={cn(
+        "mt-2 px-3 py-1 rounded-full text-sm font-bold transition-colors",
+        isEmpty
+          ? "bg-gray-200 text-gray-600 group-hover:bg-green-100 group-hover:text-green-700"
+          : isMyself
+          ? "bg-green-100 text-green-700"
+          : "bg-gray-100 text-gray-700"
+      )}>
+        {seatNumber}번 좌석
+      </div>
     </button>
   );
 }
@@ -460,32 +489,32 @@ function SeatSelectionView({
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {/* 상태 범례 */}
-        <div className="flex items-center justify-center gap-6 mb-6">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-8 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full" />
-            <span className="text-sm text-gray-600">공부중</span>
+            <div className="w-4 h-4 bg-green-500 rounded-full shadow-sm" />
+            <span className="text-sm font-medium text-gray-700">공부중</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-amber-500 rounded-full" />
-            <span className="text-sm text-gray-600">휴식중</span>
+            <div className="w-4 h-4 bg-amber-500 rounded-full shadow-sm" />
+            <span className="text-sm font-medium text-gray-700">휴식중</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-400 rounded-full" />
-            <span className="text-sm text-gray-600">자리비움</span>
+            <div className="w-4 h-4 bg-gray-400 rounded-full shadow-sm" />
+            <span className="text-sm font-medium text-gray-700">자리비움</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5 text-red-500">
-              <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-              <span className="text-xs font-bold">LIVE</span>
+            <div className="flex items-center gap-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              LIVE
             </div>
-            <span className="text-sm text-gray-600">카메라 ON</span>
+            <span className="text-sm font-medium text-gray-700">카메라 ON</span>
           </div>
         </div>
 
-        {/* 좌석 그리드 */}
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-20">
+        {/* 좌석 그리드 - 더 크고 여유있게 */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 mb-28">
           {Array.from({ length: totalSeats }, (_, i) => i + 1).map((seatNumber) => {
             const participant = seatMap.get(seatNumber);
             const isMyself = participant?.user_id === currentUserId;
@@ -514,8 +543,8 @@ function SeatSelectionView({
       </main>
 
       {/* 하단 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
-        <div className="max-w-md mx-auto space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent">
+        <div className="max-w-lg mx-auto space-y-3">
           {isAlreadyJoined && mySeatNumber ? (
             // 기존 참여자
             <>
@@ -523,18 +552,18 @@ function SeatSelectionView({
                 // 새 좌석을 선택한 경우
                 <Button
                   onClick={handleConfirm}
-                  className="w-full h-14 text-base bg-blue-500 hover:bg-blue-600"
+                  className="w-full h-16 text-lg font-bold bg-blue-500 hover:bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/30"
                 >
-                  <Check className="w-5 h-5 mr-2" />
+                  <RefreshCw className="w-6 h-6 mr-2" />
                   {selectedSeat}번 좌석으로 변경하기
                 </Button>
               ) : (
                 // 기존 좌석 유지
                 <Button
                   onClick={onMyProfilePress}
-                  className="w-full h-14 text-base bg-green-500 hover:bg-green-600"
+                  className="w-full h-16 text-lg font-bold bg-green-500 hover:bg-green-600 rounded-2xl shadow-lg shadow-green-500/30"
                 >
-                  <Check className="w-5 h-5 mr-2" />
+                  <Play className="w-6 h-6 mr-2" />
                   {mySeatNumber}번 좌석에서 공부 시작하기
                 </Button>
               )}
@@ -544,25 +573,35 @@ function SeatSelectionView({
             </>
           ) : (
             // 신규 참여자: 좌석 선택 버튼
-            <Button
-              onClick={handleConfirm}
-              disabled={!selectedSeat}
-              className={cn(
-                "w-full h-14 text-base",
-                selectedSeat
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-300 cursor-not-allowed"
+            <>
+              <Button
+                onClick={handleConfirm}
+                disabled={!selectedSeat}
+                className={cn(
+                  "w-full h-16 text-lg font-bold rounded-2xl transition-all duration-200",
+                  selectedSeat
+                    ? "bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                )}
+              >
+                {selectedSeat ? (
+                  <>
+                    <Check className="w-6 h-6 mr-2" />
+                    {selectedSeat}번 좌석에서 공부 시작
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-6 h-6 mr-2" />
+                    원하는 좌석을 선택해주세요
+                  </>
+                )}
+              </Button>
+              {!selectedSeat && (
+                <p className="text-center text-sm text-gray-400">
+                  빈 좌석을 클릭하면 선택됩니다
+                </p>
               )}
-            >
-              {selectedSeat ? (
-                <>
-                  <Check className="w-5 h-5 mr-2" />
-                  {selectedSeat}번 좌석 선택
-                </>
-              ) : (
-                '좌석을 선택해주세요'
-              )}
-            </Button>
+            </>
           )}
         </div>
       </div>
