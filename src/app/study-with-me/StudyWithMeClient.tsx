@@ -124,12 +124,8 @@ function RoomCard({ room }: { room: StudyRoom }) {
           </div>
         )}
 
-        {/* 호버 시 재생 버튼 */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20">
-          <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
-            <Play className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" />
-          </div>
-        </div>
+        {/* 호버 시 어두워지는 효과 */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-2xl" />
 
         {/* 상태 뱃지 */}
         <div className="absolute top-3 left-3">
