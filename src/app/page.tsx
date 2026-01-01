@@ -5,46 +5,22 @@ import { motion } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
 import {
   ArrowRight,
-  Download,
   FileText,
   BookOpen,
-  Calendar,
-  Play,
-  MessageCircle,
   TrendingUp,
   Users,
-  Shield,
-  Clock,
-  Headphones,
-  Video,
   Star,
-  CheckCircle,
   Timer,
   ChevronDown,
-  Pause,
-  Volume2,
   Heart,
   Share2,
-  Bell,
   Search,
   Home,
   User,
   Plus,
   Wallet,
-  Settings,
   Camera,
-  Image,
   ChevronRight,
-  Sparkles,
-  Music,
-  Coffee,
-  CloudRain,
-  Grid3X3,
-  Smile,
-  Target,
-  Moon,
-  Sun,
-  Leaf,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -1117,104 +1093,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Live Room Preview */}
-          <div className="mb-16 animate-on-scroll">
-            <div className="relative max-w-4xl mx-auto">
-              {/* Main Preview Card */}
-              <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden shadow-2xl">
-                {/* Video Area Mockup */}
-                <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 relative">
-                  {/* Desk Setup Illustration */}
-                  <div className="absolute inset-0 flex items-end justify-center pb-8">
-                    <div className="w-64 h-40 bg-gray-700/50 rounded-lg border border-gray-600/30" />
-                  </div>
-
-                  {/* Live Badge */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500 rounded-lg">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                      <span className="text-white text-sm font-bold">LIVE</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg">
-                      <Users className="w-4 h-4 text-white" />
-                      <span className="text-white text-sm">1,247</span>
-                    </div>
-                  </div>
-
-                  {/* Timer Overlay */}
-                  <div className="absolute top-4 right-4 px-4 py-2 bg-black/50 backdrop-blur-sm rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <Timer className="w-5 h-5 text-cta" />
-                      <span className="text-white font-mono text-lg font-bold">24:59</span>
-                    </div>
-                    <p className="text-gray-400 text-xs text-center mt-1">집중 시간</p>
-                  </div>
-
-                  {/* Floating Emojis */}
-                  <div className="absolute bottom-20 right-8 flex flex-col gap-2">
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center animate-bounce" style={{ animationDelay: '0ms' }}>
-                      <span className="text-xl">🔥</span>
-                    </div>
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center animate-bounce" style={{ animationDelay: '150ms' }}>
-                      <span className="text-xl">💪</span>
-                    </div>
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center animate-bounce" style={{ animationDelay: '300ms' }}>
-                      <span className="text-xl">📚</span>
-                    </div>
-                  </div>
-
-                  {/* Creator Info */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cta to-orange-400 flex items-center justify-center text-white font-bold">
-                          JM
-                        </div>
-                        <div>
-                          <h4 className="text-white font-bold">정민쌤의 공부방</h4>
-                          <p className="text-gray-400 text-sm">수능 국어 • 매일 오후 7시</p>
-                        </div>
-                      </div>
-                      <button className="px-4 py-2 bg-cta text-white font-medium rounded-full text-sm hover:bg-cta/90 transition-colors">
-                        팔로우
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Control Bar */}
-                <div className="p-4 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors">
-                        <Headphones className="w-5 h-5 text-gray-400" />
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Lofi Beats</span>
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="w-1 bg-cta rounded-full animate-pulse" style={{ height: `${8 + i * 4}px`, animationDelay: `${i * 100}ms` }} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {['🔥', '💪', '👏', '❤️', '📚'].map((emoji, i) => (
-                        <button key={i} className="w-10 h-10 bg-gray-700/50 hover:bg-gray-600/50 rounded-full flex items-center justify-center transition-colors hover:scale-110">
-                          <span className="text-lg">{emoji}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Decorative Elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-cta/20 rounded-full blur-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl" />
-            </div>
-          </div>
-
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 animate-on-scroll">
             <div className="text-center p-6 bg-gray-50 rounded-2xl">
@@ -1235,77 +1113,37 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {/* Live Streaming */}
-            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <Video className="w-6 h-6 text-red-500" />
-              </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">실시간 스트리밍</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                크리에이터의 공부 모습을 실시간으로 시청하세요.
-              </p>
-            </div>
-
-            {/* Pomodoro Timer */}
-            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '100ms' }}>
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
-                <Timer className="w-6 h-6 text-cta" />
-              </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">포모도로 타이머</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                집중과 휴식을 번갈아가며 효율적으로 공부하세요.
-              </p>
-            </div>
-
-            {/* Social Features */}
-            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '200ms' }}>
-              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
-                <Smile className="w-6 h-6 text-pink-500" />
-              </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">이모지 리액션</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                실시간으로 응원을 보내고 함께 소통하세요.
-              </p>
-            </div>
-
-            {/* Background Music */}
-            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '300ms' }}>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                <Headphones className="w-6 h-6 text-purple-500" />
-              </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">배경음악</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                집중력을 높이는 Lofi, 자연, 카페 음악을 선택하세요.
-              </p>
-            </div>
-          </div>
-
-          {/* Popular Creators */}
-          <div className="mb-12 animate-on-scroll">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">지금 인기있는 스터디 크리에이터</h3>
-            <div className="flex flex-wrap justify-center gap-4">
-              {[
-                { name: '정민쌤', subject: '수능 국어', viewers: '1.2K', color: 'from-cta to-orange-400' },
-                { name: '수학왕', subject: '수능 수학', viewers: '892', color: 'from-blue-500 to-cyan-400' },
-                { name: '영어달인', subject: 'TOEIC', viewers: '756', color: 'from-purple-500 to-pink-400' },
-                { name: '코딩마스터', subject: '코딩테스트', viewers: '634', color: 'from-green-500 to-emerald-400' },
-              ].map((creator, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${creator.color} flex items-center justify-center text-white font-bold text-sm`}>
-                    {creator.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{creator.name}</p>
-                    <p className="text-gray-500 text-xs">{creator.subject}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-red-500">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-xs font-medium">{creator.viewers}</span>
-                  </div>
+          {/* Feature List - Simple Text */}
+          <div className="max-w-3xl mx-auto mb-16 animate-on-scroll">
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">실시간 스트리밍</h4>
+                  <p className="text-gray-500 text-sm">크리에이터의 공부 모습을 실시간으로 시청하세요.</p>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">포모도로 타이머</h4>
+                  <p className="text-gray-500 text-sm">집중과 휴식을 번갈아가며 효율적으로 공부하세요.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">이모지 리액션</h4>
+                  <p className="text-gray-500 text-sm">실시간으로 응원을 보내고 함께 소통하세요.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">배경음악</h4>
+                  <p className="text-gray-500 text-sm">Lofi, 자연, 카페 음악으로 집중력을 높이세요.</p>
+                </div>
+              </div>
             </div>
           </div>
 
