@@ -33,6 +33,10 @@ import {
   Lightbulb,
   Send,
   MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeft,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
@@ -655,7 +659,8 @@ function MyStudyScreen({
   // 선택된 좌석 번호 (기본값: 내 좌석)
   const [selectedSeatNumber, setSelectedSeatNumber] = useState<number>(seatNumber);
   const [chatMessage, setChatMessage] = useState('');
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true);  // 채팅 기본 표시
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);  // 왼쪽 패널 접기/펼치기
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const theme = THEME_STYLES[room.theme] || THEME_STYLES.focus;
@@ -724,9 +729,16 @@ function MyStudyScreen({
   const totalSeats = room.max_participants || 20;
 
   return (
-    <div className={cn("min-h-screen flex flex-col lg:flex-row bg-gray-50")}>
-      {/* 왼쪽: 컨트롤 패널 */}
-      <div className="lg:w-[380px] xl:w-[420px] flex flex-col bg-white lg:border-r border-gray-200 shadow-sm">
+    <div className={cn("min-h-screen flex flex-col lg:flex-row bg-gray-50 relative")}>
+      {/* 왼쪽: 컨트롤 패널 (접기/펼치기 가능) */}
+      <div
+        className={cn(
+          "flex flex-col bg-white lg:border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out relative",
+          isLeftPanelCollapsed
+            ? "lg:w-0 lg:overflow-hidden lg:opacity-0"
+            : "lg:w-[380px] xl:w-[420px]"
+        )}
+      >
         {/* 헤더 */}
         <header className="border-b border-gray-100 px-5 py-4">
           <div className="flex items-center justify-between">
@@ -889,6 +901,24 @@ function MyStudyScreen({
           </button>
         </div>
       </div>
+
+      {/* 왼쪽 패널 접기/펼치기 토글 버튼 */}
+      <button
+        onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
+        className={cn(
+          "hidden lg:flex items-center justify-center w-6 h-16 bg-white border border-gray-200 rounded-r-lg shadow-sm hover:bg-gray-50 transition-all duration-300 absolute left-0 top-1/2 -translate-y-1/2 z-20",
+          isLeftPanelCollapsed
+            ? "left-0"
+            : "left-[380px] xl:left-[420px]"
+        )}
+        title={isLeftPanelCollapsed ? "패널 펼치기" : "패널 접기"}
+      >
+        {isLeftPanelCollapsed ? (
+          <ChevronRight className="w-4 h-4 text-gray-500" />
+        ) : (
+          <ChevronLeft className="w-4 h-4 text-gray-500" />
+        )}
+      </button>
 
       {/* 오른쪽: 선택된 좌석 대형 뷰 */}
       <div className="flex-1 flex flex-col bg-white min-h-[50vh] lg:min-h-screen">
