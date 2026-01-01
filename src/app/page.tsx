@@ -1100,364 +1100,79 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Study With Me Section - Full Page */}
-      <section className="relative overflow-hidden">
-        {/* Hero Area - Dark Theme */}
-        <div className="bg-gray-900 py-24 relative">
-          {/* Animated Background - Hidden on mobile for performance */}
-          <div className="absolute inset-0 overflow-hidden hidden md:block">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl animate-float" />
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-gray-800/50 to-transparent rounded-full" />
+      {/* Study With Me Section - Single White Theme */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16 animate-on-scroll">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full mb-6">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm text-gray-700 font-medium">LIVE STUDY</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-4">
+              Study With Me
+            </h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+              혼자 공부가 어려우셨나요? 크리에이터와 함께 실시간으로 공부하세요.
+            </p>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-16 animate-blur-in">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 border border-white/20">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-sm text-white/90 font-medium">LIVE STUDY</span>
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Live Streaming */}
+            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                <Video className="w-6 h-6 text-red-500" />
               </div>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                Study With Me
-              </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-lg sm:text-xl">
-                혼자 공부가 어려우셨나요?<br />
-                크리에이터와 함께 <span className="text-white font-semibold">실시간으로</span> 공부하세요.
+              <h4 className="text-lg font-bold text-gray-900 mb-2">실시간 스트리밍</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                크리에이터의 공부 모습을 실시간으로 시청하세요.
               </p>
             </div>
 
-            {/* Live Room Preview */}
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl p-4 md:p-6 border border-gray-700/50 animate-scale-up">
-                {/* Video Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Main Video */}
-                  <div className="md:col-span-2 relative aspect-video bg-gray-900 rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
-                        <Video className="w-12 h-12 text-gray-600" />
-                      </div>
-                    </div>
-                    <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-red-500/90 rounded-full">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                      <span className="text-xs text-white font-medium">LIVE</span>
-                    </div>
-                    <div className="absolute bottom-4 left-4 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-cta rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        수
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold text-sm">수능만점 수연</div>
-                        <div className="text-gray-400 text-xs">고3 · 서울대 목표</div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                      <div className="flex items-center gap-1 px-2 py-1 bg-black/50 rounded-lg">
-                        <Users className="w-3 h-3 text-gray-300" />
-                        <span className="text-xs text-gray-300">127</span>
-                      </div>
-                      <div className="px-2 py-1 bg-black/50 rounded-lg">
-                        <span className="text-xs text-gray-300 font-mono">02:34:12</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Side Panel - Timer & Stats */}
-                  <div className="space-y-4">
-                    {/* Pomodoro Timer */}
-                    <div className="bg-gray-900 rounded-2xl p-4 text-center">
-                      <div className="text-xs text-gray-500 mb-2">포모도로 타이머</div>
-                      <div className="text-3xl font-bold text-white font-mono mb-3">18:42</div>
-                      <div className="flex items-center justify-center gap-2 mb-3">
-                        <button className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition">
-                          <Pause className="w-4 h-4 text-white" />
-                        </button>
-                        <button className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition">
-                          <Volume2 className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                      <div className="text-xs text-cta">25분 집중 · 5분 휴식</div>
-                    </div>
-
-                    {/* Room Stats */}
-                    <div className="bg-gray-900 rounded-2xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-500">총 공부시간</span>
-                        <span className="text-sm text-white font-bold">4h 23m</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">완료 세션</span>
-                        <span className="text-sm text-white font-bold">8회</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Emoji Reactions */}
-                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                    {['👏', '💪', '🔥', '❤️', '👍', '😊', '🎯', '⭐'].map((emoji, i) => (
-                      <button key={i} className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-transform hover:scale-110 flex-shrink-0">
-                        <span className="text-lg">{emoji}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm flex items-center gap-2 transition">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>채팅</span>
-                    </button>
-                    <button className="px-4 py-2 bg-cta hover:bg-cta-hover rounded-full text-white text-sm font-medium transition">
-                      참여하기
-                    </button>
-                  </div>
-                </div>
+            {/* Pomodoro Timer */}
+            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '100ms' }}>
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                <Timer className="w-6 h-6 text-cta" />
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features Grid - Light Theme */}
-        <div className="bg-gray-50 py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16 animate-on-scroll">
-              <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                함께 공부하면 달라지는 것들
-              </h3>
-              <p className="text-gray-500 max-w-xl mx-auto">
-                Study With Me의 다양한 기능들로 더 효과적으로 공부하세요.
+              <h4 className="text-lg font-bold text-gray-900 mb-2">포모도로 타이머</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                집중과 휴식을 번갈아가며 효율적으로 공부하세요.
               </p>
             </div>
 
-            {/* Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* 1. Live Streaming */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-shadow animate-on-scroll">
-                <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
-                  <Video className="w-7 h-7 text-red-500" />
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-3">실시간 스트리밍</h4>
-                <p className="text-gray-500 leading-relaxed">
-                  크리에이터의 공부 모습을 실시간으로 시청하세요.
-                  Agora 기술로 끊김 없는 고화질 스트리밍을 제공합니다.
-                </p>
+            {/* Social Features */}
+            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '200ms' }}>
+              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+                <Smile className="w-6 h-6 text-pink-500" />
               </div>
-
-              {/* 2. Pomodoro Timer */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '100ms' }}>
-                <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6">
-                  <Timer className="w-7 h-7 text-cta" />
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-3">포모도로 타이머</h4>
-                <p className="text-gray-500 leading-relaxed mb-4">
-                  집중과 휴식을 번갈아가며 효율적으로 공부하세요.
-                </p>
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-600">25/5분</span>
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-600">50/10분</span>
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-600">커스텀</span>
-                </div>
-              </div>
-
-              {/* 3. Background Music */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '200ms' }}>
-                <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-6">
-                  <Headphones className="w-7 h-7 text-purple-500" />
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-3">배경음악</h4>
-                <p className="text-gray-500 leading-relaxed mb-4">
-                  집중력을 높이는 배경음악을 선택하세요.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                    <Music className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs text-gray-600">Lofi</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                    <Leaf className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs text-gray-600">자연</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                    <Coffee className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs text-gray-600">카페</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                    <CloudRain className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs text-gray-600">빗소리</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. Seat Selection - Wide Card */}
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 md:col-span-2 animate-on-scroll" style={{ transitionDelay: '300ms' }}>
-                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-                  <div className="flex-1">
-                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
-                      <Grid3X3 className="w-7 h-7 text-white" />
-                    </div>
-                    <h4 className="text-xl font-bold text-white mb-3">좌석 선택</h4>
-                    <p className="text-gray-400 leading-relaxed">
-                      가상 스터디룸에서 원하는 좌석을 선택하세요.
-                      다양한 레이아웃으로 실제 스터디카페처럼 공부할 수 있어요.
-                    </p>
-                  </div>
-                  <div className="flex gap-4">
-                    {/* Layout Options */}
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-white/10 rounded-xl flex items-center justify-center mb-2">
-                        <div className="grid grid-cols-3 gap-1">
-                          {[...Array(9)].map((_, i) => (
-                            <div key={i} className={`w-2 h-2 rounded-sm ${i === 4 ? 'bg-cta' : 'bg-white/30'}`} />
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-400">그리드</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-white/10 rounded-xl flex items-center justify-center mb-2">
-                        <div className="space-y-1.5">
-                          {[...Array(3)].map((_, i) => (
-                            <div key={i} className="flex gap-1">
-                              {[...Array(4)].map((_, j) => (
-                                <div key={j} className={`w-2 h-2 rounded-sm ${i === 1 && j === 2 ? 'bg-cta' : 'bg-white/30'}`} />
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-400">행렬</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-white/10 rounded-xl flex items-center justify-center mb-2">
-                        <div className="relative w-12 h-10">
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-white/30" />
-                          <div className="absolute top-2 left-0 w-2 h-2 rounded-sm bg-white/30" />
-                          <div className="absolute top-2 right-0 w-2 h-2 rounded-sm bg-cta" />
-                          <div className="absolute bottom-0 left-1 w-2 h-2 rounded-sm bg-white/30" />
-                          <div className="absolute bottom-0 right-1 w-2 h-2 rounded-sm bg-white/30" />
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-400">U자형</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 5. Room Themes */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '400ms' }}>
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
-                  <Moon className="w-7 h-7 text-blue-500" />
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-3">룸 테마</h4>
-                <p className="text-gray-500 leading-relaxed mb-4">
-                  분위기에 맞는 테마를 선택하세요.
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-900 rounded-xl">
-                    <Target className="w-4 h-4 text-white" />
-                    <span className="text-xs text-white">집중</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-xl">
-                    <Sun className="w-4 h-4 text-amber-500" />
-                    <span className="text-xs text-amber-700">코지</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-indigo-900 rounded-xl">
-                    <Moon className="w-4 h-4 text-indigo-300" />
-                    <span className="text-xs text-indigo-200">나이트</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
-                    <Sparkles className="w-4 h-4 text-gray-500" />
-                    <span className="text-xs text-gray-600">미니멀</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Social Features */}
-        <div className="bg-gray-900 py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16 animate-on-scroll">
-              <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                함께라서 더 즐거운 공부
-              </h3>
-              <p className="text-gray-400 max-w-xl mx-auto">
-                실시간 리액션, 채팅, 팔로우 기능으로
-                다른 학습자들과 연결되세요.
+              <h4 className="text-lg font-bold text-gray-900 mb-2">이모지 리액션</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                실시간으로 응원을 보내고 함께 소통하세요.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Reactions */}
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 animate-on-scroll">
-                <div className="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center mb-6">
-                  <Smile className="w-7 h-7 text-pink-400" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-3">이모지 리액션</h4>
-                <p className="text-gray-400 leading-relaxed mb-4">
-                  8가지 이모지로 크리에이터와 참여자들에게
-                  실시간으로 응원을 보내세요.
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {['👏', '💪', '🔥', '❤️', '👍', '😊', '🎯', '⭐'].map((emoji, i) => (
-                    <span key={i} className="text-2xl hover:scale-125 transition-transform cursor-pointer">
-                      {emoji}
-                    </span>
-                  ))}
-                </div>
+            {/* Background Music */}
+            <div className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-shadow animate-on-scroll" style={{ transitionDelay: '300ms' }}>
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                <Headphones className="w-6 h-6 text-purple-500" />
               </div>
-
-              {/* Chat */}
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 animate-on-scroll" style={{ transitionDelay: '100ms' }}>
-                <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6">
-                  <MessageCircle className="w-7 h-7 text-blue-400" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-3">휴식시간 채팅</h4>
-                <p className="text-gray-400 leading-relaxed mb-4">
-                  포모도로 휴식 시간에 참여자들과
-                  채팅으로 소통하세요.
-                </p>
-                <div className="bg-gray-900 rounded-xl p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 bg-gray-700 rounded-full flex-shrink-0" />
-                    <div className="bg-gray-800 rounded-lg px-3 py-1.5">
-                      <span className="text-xs text-gray-300">화이팅이에요! 💪</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 bg-cta rounded-full flex-shrink-0" />
-                    <div className="bg-gray-800 rounded-lg px-3 py-1.5">
-                      <span className="text-xs text-gray-300">다들 힘내세요~</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Following */}
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 animate-on-scroll" style={{ transitionDelay: '200ms' }}>
-                <div className="w-14 h-14 bg-green-500/20 rounded-2xl flex items-center justify-center mb-6">
-                  <Heart className="w-7 h-7 text-green-400" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-3">팔로우 & 알림</h4>
-                <p className="text-gray-400 leading-relaxed mb-4">
-                  좋아하는 크리에이터를 팔로우하고
-                  라이브 시작 알림을 받으세요.
-                </p>
-                <div className="flex items-center gap-3 bg-gray-900 rounded-xl p-3">
-                  <div className="w-10 h-10 bg-cta rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    수
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-white">수능만점 수연</div>
-                    <div className="text-xs text-gray-500">팔로워 2.3K</div>
-                  </div>
-                  <button className="px-3 py-1.5 bg-cta text-white text-xs font-medium rounded-full">
-                    팔로우
-                  </button>
-                </div>
-              </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">배경음악</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                집중력을 높이는 Lofi, 자연, 카페 음악을 선택하세요.
+              </p>
             </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center mt-12 animate-on-scroll">
+            <Link
+              href="/study-with-me"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
+            >
+              <span>Study With Me 시작하기</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </div>
       </section>
