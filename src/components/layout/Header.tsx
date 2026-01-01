@@ -127,7 +127,7 @@ export function Header() {
             {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
             {pathname?.startsWith('/study-with-me') && (
               <Link href="/study-with-me/create">
-                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2 text-orange-500 hover:text-orange-600 rounded-lg transition-colors">
                   <Video className="w-4 h-4" />
                   <span className="text-sm font-medium">만들기</span>
                 </button>
