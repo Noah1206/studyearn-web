@@ -1082,10 +1082,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-16 animate-on-scroll">
-            <p className="text-emerald-500 font-medium mb-4 text-sm tracking-wider">Solution</p>
+            <p className="text-orange-500 font-medium mb-4 text-sm tracking-wider">Solution</p>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
               스터플에서는 공부 시간을 내가 주도적으로 만들고<br />
-              <span className="text-emerald-500">다른 이들과 함께</span> 목표를 달성할 수 있어요
+              <span className="text-orange-500">다른 이들과 함께</span> 목표를 달성할 수 있어요
             </h2>
           </div>
 
@@ -1098,16 +1098,16 @@ export default function HomePage() {
                 <span className="text-gray-600 text-sm">혼자 공부하면 금방 지침</span>
               </div>
               <div className="flex justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
               </div>
               <p className="text-gray-400 text-sm mb-3">To be</p>
-              <div className="border-2 border-emerald-400 rounded-full px-6 py-3 mb-6 inline-block">
-                <span className="text-emerald-600 font-medium">Less burdensome</span>
+              <div className="border-2 border-orange-400 rounded-full px-6 py-3 mb-6 inline-block">
+                <span className="text-orange-600 font-medium">Less burdensome</span>
               </div>
-              <div className="bg-emerald-50 rounded-2xl p-6">
-                <h4 className="text-emerald-600 font-bold mb-2">함께라서 덜 지치는 공부</h4>
+              <div className="bg-orange-50 rounded-2xl p-6">
+                <h4 className="text-orange-600 font-bold mb-2">함께라서 덜 지치는 공부</h4>
                 <p className="text-gray-500 text-sm leading-relaxed">
                   크리에이터와 함께 공부하면<br />
                   혼자보다 오래 집중할 수 있어요
@@ -1122,16 +1122,16 @@ export default function HomePage() {
                 <span className="text-gray-600 text-sm">동기부여가 부족함</span>
               </div>
               <div className="flex justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
               </div>
               <p className="text-gray-400 text-sm mb-3">To be</p>
-              <div className="border-2 border-emerald-400 rounded-full px-6 py-3 mb-6 inline-block">
-                <span className="text-emerald-600 font-medium">Motivating</span>
+              <div className="border-2 border-orange-400 rounded-full px-6 py-3 mb-6 inline-block">
+                <span className="text-orange-600 font-medium">Motivating</span>
               </div>
-              <div className="bg-emerald-50 rounded-2xl p-6">
-                <h4 className="text-emerald-600 font-bold mb-2">실시간 응원과 소통</h4>
+              <div className="bg-orange-50 rounded-2xl p-6">
+                <h4 className="text-orange-600 font-bold mb-2">실시간 응원과 소통</h4>
                 <p className="text-gray-500 text-sm leading-relaxed">
                   이모지 리액션과 채팅으로<br />
                   서로 동기부여를 주고받아요
@@ -1146,16 +1146,16 @@ export default function HomePage() {
                 <span className="text-gray-600 text-sm">공부 기록이 흩어져 있음</span>
               </div>
               <div className="flex justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
               </div>
               <p className="text-gray-400 text-sm mb-3">To be</p>
-              <div className="border-2 border-emerald-400 rounded-full px-6 py-3 mb-6 inline-block">
-                <span className="text-emerald-600 font-medium">Track & Share</span>
+              <div className="border-2 border-orange-400 rounded-full px-6 py-3 mb-6 inline-block">
+                <span className="text-orange-600 font-medium">Track & Share</span>
               </div>
-              <div className="bg-emerald-50 rounded-2xl p-6">
-                <h4 className="text-emerald-600 font-bold mb-2">공부 기록 자동 저장</h4>
+              <div className="bg-orange-50 rounded-2xl p-6">
+                <h4 className="text-orange-600 font-bold mb-2">공부 기록 자동 저장</h4>
                 <p className="text-gray-500 text-sm leading-relaxed">
                   얼마나 공부했는지 자동으로<br />
                   기록되고 친구와 공유할 수 있어요
@@ -1166,31 +1166,31 @@ export default function HomePage() {
 
           {/* Core Value Service */}
           <div className="mb-16 animate-on-scroll">
-            <p className="text-emerald-500 font-medium mb-8 text-sm tracking-wider text-center">Core Value Service</p>
+            <p className="text-orange-500 font-medium mb-8 text-sm tracking-wider text-center">Core Value Service</p>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                <span className="text-emerald-500 font-bold text-lg">01</span>
+              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-colors">
+                <span className="text-orange-500 font-bold text-lg">01</span>
                 <div>
                   <h4 className="text-gray-900 font-bold mb-2">실시간 스트리밍으로 함께 공부</h4>
                   <p className="text-gray-500 text-sm">크리에이터의 공부 모습을 실시간으로 시청하며 같이 집중해요</p>
                 </div>
               </div>
-              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                <span className="text-emerald-500 font-bold text-lg">02</span>
+              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-colors">
+                <span className="text-orange-500 font-bold text-lg">02</span>
                 <div>
                   <h4 className="text-gray-900 font-bold mb-2">포모도로 타이머로 집중 관리</h4>
                   <p className="text-gray-500 text-sm">25분 집중, 5분 휴식을 반복하며 효율적으로 공부해요</p>
                 </div>
               </div>
-              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                <span className="text-emerald-500 font-bold text-lg">03</span>
+              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-colors">
+                <span className="text-orange-500 font-bold text-lg">03</span>
                 <div>
                   <h4 className="text-gray-900 font-bold mb-2">이모지 리액션과 채팅</h4>
                   <p className="text-gray-500 text-sm">실시간으로 응원하고 소통하며 동기부여를 받아요</p>
                 </div>
               </div>
-              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                <span className="text-emerald-500 font-bold text-lg">04</span>
+              <div className="flex gap-6 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-colors">
+                <span className="text-orange-500 font-bold text-lg">04</span>
                 <div>
                   <h4 className="text-gray-900 font-bold mb-2">집중력 높이는 배경음악</h4>
                   <p className="text-gray-500 text-sm">Lofi, 자연, 카페 등 다양한 배경음악을 선택해요</p>
@@ -1201,16 +1201,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* App & Web Preview - Dark Green Background */}
-      <section className="py-24 bg-gradient-to-b from-emerald-800 to-emerald-900">
+      {/* App & Web Preview - Dark Orange Background */}
+      <section className="py-24 bg-gradient-to-b from-orange-600 to-orange-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 animate-on-scroll">
-            <p className="text-emerald-300 font-medium mb-4 text-sm tracking-wider">App & Web</p>
+            <p className="text-orange-200 font-medium mb-4 text-sm tracking-wider">App & Web</p>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
               앱과 웹 어디서든<br />
               Study With Me를 시작하세요
             </h2>
-            <p className="text-emerald-200/70 max-w-xl mx-auto">
+            <p className="text-orange-100/70 max-w-xl mx-auto">
               모바일에서는 앱으로, 데스크탑에서는 웹으로 끊김없이 공부하세요
             </p>
           </div>
@@ -1249,7 +1249,7 @@ export default function HomePage() {
                       </div>
                       <div className="absolute bottom-3 left-3 right-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500" />
+                          <div className="w-8 h-8 rounded-full bg-orange-500" />
                           <div>
                             <p className="text-white text-sm font-medium">공부하는 정민</p>
                             <p className="text-gray-400 text-xs">수능 국어</p>
@@ -1259,8 +1259,8 @@ export default function HomePage() {
                     </div>
                     {/* Sidebar */}
                     <div className="w-32 space-y-3">
-                      <div className="bg-emerald-500/20 rounded-lg p-3 text-center">
-                        <p className="text-emerald-400 text-xs mb-1">집중 시간</p>
+                      <div className="bg-orange-500/20 rounded-lg p-3 text-center">
+                        <p className="text-orange-400 text-xs mb-1">집중 시간</p>
                         <p className="text-white font-mono font-bold">24:59</p>
                       </div>
                       <div className="bg-gray-700/50 rounded-lg p-2">
@@ -1274,7 +1274,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <p className="text-center text-emerald-300 mt-4 text-sm font-medium">웹 버전</p>
+              <p className="text-center text-orange-200 mt-4 text-sm font-medium">웹 버전</p>
             </div>
 
             {/* App Preview */}
@@ -1300,15 +1300,15 @@ export default function HomePage() {
                     </div>
                     <div className="aspect-video bg-gray-600/50 rounded-lg mb-2" />
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500" />
+                      <div className="w-6 h-6 rounded-full bg-orange-500" />
                       <div>
                         <p className="text-white text-xs font-medium">공부하는 정민</p>
                         <p className="text-gray-400 text-[10px]">수능 국어</p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-emerald-500/20 rounded-xl p-3 text-center mb-3">
-                    <p className="text-emerald-400 text-[10px] mb-1">포모도로 타이머</p>
+                  <div className="bg-orange-500/20 rounded-xl p-3 text-center mb-3">
+                    <p className="text-orange-400 text-[10px] mb-1">포모도로 타이머</p>
                     <p className="text-white font-mono text-xl font-bold">24:59</p>
                   </div>
                   <div className="flex justify-center gap-2">
@@ -1320,7 +1320,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <p className="text-center text-emerald-300 mt-4 text-sm font-medium">앱 버전</p>
+              <p className="text-center text-orange-200 mt-4 text-sm font-medium">앱 버전</p>
             </div>
           </div>
 
@@ -1328,7 +1328,7 @@ export default function HomePage() {
           <div className="text-center mt-16 animate-on-scroll">
             <Link
               href="/study-with-me"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-emerald-800 font-medium rounded-full hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-orange-600 font-medium rounded-full hover:bg-orange-50 transition-colors"
             >
               <span>Study With Me 시작하기</span>
               <ArrowRight className="w-5 h-5" />
