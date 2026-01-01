@@ -659,7 +659,7 @@ function MyStudyScreen({
   // 선택된 좌석 번호 (기본값: 내 좌석)
   const [selectedSeatNumber, setSelectedSeatNumber] = useState<number>(seatNumber);
   const [chatMessage, setChatMessage] = useState('');
-  const [showChat, setShowChat] = useState(true);  // 채팅 기본 표시
+  const [showChat, setShowChat] = useState(false);  // 채팅 기본 숨김, 유저가 열어야 보임
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);  // 왼쪽 패널 접기/펼치기
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -921,7 +921,7 @@ function MyStudyScreen({
       </button>
 
       {/* 오른쪽: 선택된 좌석 대형 뷰 */}
-      <div className="flex-1 flex flex-col bg-white min-h-[50vh] lg:min-h-screen">
+      <div className="flex-1 flex flex-col bg-white min-h-[50vh] lg:h-screen lg:max-h-screen overflow-hidden">
         {(() => {
           const selectedParticipant = seatMap.get(selectedSeatNumber);
           const isMyself = selectedParticipant?.user_id === currentUserId;
@@ -966,7 +966,7 @@ function MyStudyScreen({
               </div>
 
               {/* 메인: 선택된 좌석 대형 화면 */}
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-h-0 overflow-hidden">
                 {selectedParticipant ? (
                   isMyself ? (
                     // 내 좌석 - 내 카메라 프리뷰
@@ -1070,11 +1070,15 @@ function MyStudyScreen({
           );
         })()}
 
-        {/* 하단: 채팅 (접이식) */}
-        <div className="border-t border-gray-200">
+        {/* 하단: 채팅 (토글 가능) */}
+        <div className={cn(
+          "border-t border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300",
+          showChat ? "h-[280px]" : "h-auto"
+        )}>
+          {/* 채팅 토글 버튼 */}
           <button
             onClick={() => setShowChat(!showChat)}
-            className="w-full px-5 py-3 flex items-center justify-between text-gray-500 hover:text-gray-900 transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-2.5">
               <MessageCircle className="w-4 h-4" />
@@ -1085,16 +1089,16 @@ function MyStudyScreen({
                 </span>
               )}
             </div>
-            <ArrowLeft className={cn(
+            <ChevronRight className={cn(
               "w-4 h-4 transition-transform duration-200",
-              showChat ? "rotate-90" : "-rotate-90"
+              showChat ? "rotate-90" : ""
             )} />
           </button>
 
+          {/* 메시지 목록 (열렸을 때만 표시) */}
           {showChat && (
-            <div className="bg-white">
-              {/* 메시지 목록 */}
-              <div className="h-48 overflow-y-auto px-5 py-3 space-y-3">
+            <>
+              <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3 bg-white">
                 {messages.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-6">
                     함께 공부하는 사람들과 대화해보세요
@@ -1139,7 +1143,7 @@ function MyStudyScreen({
               </div>
 
               {/* 입력창 */}
-              <div className="px-5 py-3 border-t border-gray-200 flex gap-2.5">
+              <div className="px-5 py-3 border-t border-gray-200 flex gap-2.5 flex-shrink-0 bg-white">
                 <input
                   type="text"
                   value={chatMessage}
@@ -1161,7 +1165,7 @@ function MyStudyScreen({
                   <Send className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
