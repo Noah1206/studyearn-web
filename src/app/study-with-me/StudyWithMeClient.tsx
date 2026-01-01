@@ -357,7 +357,7 @@ export default function StudyWithMeClient({
 
             <div className="flex flex-wrap gap-3">
               <Link href="/study-with-me/create">
-                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl gap-2 px-6">
+                <Button size="lg" className="bg-gray-900 text-white hover:bg-gray-800 shadow-xl gap-2 px-6 border-2 border-white/20">
                   <Users className="w-5 h-5" />
                   스터디룸 만들기
                 </Button>
