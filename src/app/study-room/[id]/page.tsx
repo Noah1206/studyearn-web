@@ -434,6 +434,7 @@ function SeatSelectionView({
   onViewParticipant?: (participant: Participant) => void;
   onLeave: () => void;
 }) {
+  const router = useRouter();
   const toast = useToastActions();
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const totalSeats = room.max_participants || 20;
@@ -462,7 +463,7 @@ function SeatSelectionView({
         <div className="max-w-4xl mx-auto px-4">
           <div className="h-14 flex items-center justify-between">
             <button
-              onClick={onLeave}
+              onClick={() => router.back()}
               className="p-2 -ml-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
