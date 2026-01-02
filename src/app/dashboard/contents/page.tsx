@@ -53,6 +53,7 @@ interface ContentWithStats extends Content {
   purchase_count?: number;
   revenue?: number;
   tags?: string[];
+  download_count?: number;
 }
 
 async function getCreatorContents(userId: string) {
