@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -23,7 +23,7 @@ interface Content {
   id: string;
   title: string;
   type: 'video' | 'pdf' | 'image';
-  url: string;
+  url: string | null;
   thumbnail_url: string | null;
   duration: number | null;
   sort_order: number;
@@ -42,10 +42,6 @@ interface Product {
     avatar_url?: string | null;
     bio?: string | null;
   };
-}
-
-interface ProductPageProps {
-  params: Promise<{ id: string }>;
 }
 
 const contentTypeIcons: Record<string, React.ElementType> = {
@@ -137,8 +133,9 @@ function ContentItem({
   );
 }
 
-export default function ProductDetailPage({ params }: ProductPageProps) {
-  const { id } = use(params);
+export default function ProductDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
 
   const [product, setProduct] = useState<Product | null>(null);
