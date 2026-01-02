@@ -104,7 +104,7 @@ async function getCreatorContents(userId: string) {
   return { contents: contentsWithStats, stats };
 }
 
-// Content Card Component
+// Content Card Component - Product Style
 function ContentCard({ content }: { content: ContentWithStats }) {
   const Icon = getContentTypeIcon(content.content_type);
   const now = new Date();
@@ -112,118 +112,122 @@ function ContentCard({ content }: { content: ContentWithStats }) {
   const isScheduled = content.is_published && publishedAt && publishedAt > now;
   const isDraft = !content.is_published;
 
-  const getStatusBadge = () => {
-    if (isDraft) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
-          <Clock className="w-3 h-3" />
-          임시저장
-        </span>
-      );
-    }
-    if (isScheduled) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-600">
-          <Calendar className="w-3 h-3" />
-          예약됨
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-600">
-        <CheckCircle className="w-3 h-3" />
-        발행됨
-      </span>
-    );
-  };
-
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200">
-      <div className="flex">
-        {/* Thumbnail */}
-        <Link
-          href={`/content/${content.id}`}
-          className="w-36 sm:w-44 h-32 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-l-2xl overflow-hidden flex items-center justify-center"
-        >
+    <div className="group bg-white rounded-2xl border border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+      {/* Thumbnail */}
+      <Link href={`/content/${content.id}`} className="block relative">
+        <div className="aspect-[4/3] bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden">
           {content.thumbnail_url ? (
             <Image
               src={content.thumbnail_url}
               alt={content.title}
-              width={176}
-              height={128}
-              className="w-full h-full object-cover"
+              width={400}
+              height={300}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-white/80 flex items-center justify-center">
-              <Icon className="w-7 h-7 text-gray-400" />
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/80 flex items-center justify-center mb-2 shadow-sm">
+                <Icon className="w-8 h-8 text-orange-400" />
+              </div>
+              <span className="text-sm text-orange-400 font-medium">
+                {contentTypeLabels[content.content_type] || 'PDF'}
+              </span>
             </div>
           )}
+        </div>
+
+        {/* Status Badge */}
+        <div className="absolute top-3 left-3">
+          {isDraft ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-900/70 text-white backdrop-blur-sm">
+              <Clock className="w-3 h-3" />
+              임시저장
+            </span>
+          ) : isScheduled ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white">
+              <Calendar className="w-3 h-3" />
+              예약됨
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-white">
+              <CheckCircle className="w-3 h-3" />
+              발행중
+            </span>
+          )}
+        </div>
+
+        {/* Type Badge */}
+        <div className="absolute top-3 right-3">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 backdrop-blur-sm shadow-sm">
+            {contentTypeLabels[content.content_type] || content.content_type}
+          </span>
+        </div>
+      </Link>
+
+      {/* Content Info */}
+      <div className="p-4">
+        {/* Title */}
+        <Link href={`/content/${content.id}`}>
+          <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-orange-600 transition-colors">
+            {content.title}
+          </h3>
         </Link>
 
-        {/* Content Info */}
-        <div className="flex-1 p-4 min-w-0 flex flex-col">
-          {/* Top Row: Status + Actions */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              {getStatusBadge()}
-              <span className="text-xs text-gray-400">
-                {contentTypeLabels[content.content_type] || content.content_type}
-              </span>
-            </div>
+        {/* Description */}
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3 min-h-[40px]">
+          {content.description || '설명이 없습니다'}
+        </p>
 
-            {/* Actions - Always visible on mobile, hover on desktop */}
-            <div className="flex items-center gap-1">
-              <Link href={`/dashboard/contents/${content.id}/edit`}>
-                <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                  <Edit3 className="w-4 h-4" />
-                </button>
-              </Link>
-              <Link href={`/dashboard/analytics?content=${content.id}`}>
-                <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                  <BarChart2 className="w-4 h-4" />
-                </button>
-              </Link>
-              <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Title */}
-          <Link href={`/content/${content.id}`} className="block mb-1">
-            <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
-              {content.title}
-            </h3>
-          </Link>
-
-          {/* Description */}
-          <p className="text-sm text-gray-500 line-clamp-1 mb-auto">
-            {content.description || '설명이 없습니다'}
-          </p>
-
-          {/* Bottom Row: Stats + Time */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5" />
-                {formatNumber(content.view_count || 0)}
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="w-3.5 h-3.5" />
-                {formatNumber(content.like_count || 0)}
-              </span>
-              {content.download_count !== undefined && content.download_count > 0 && (
-                <span className="flex items-center gap-1">
-                  <Download className="w-3.5 h-3.5" />
-                  {formatNumber(content.download_count)}
-                </span>
-              )}
-            </div>
-            <span className="text-xs text-gray-400">
-              {formatRelativeTime(content.created_at)}
+        {/* Price & Stats */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-lg font-bold text-orange-600">
+            {content.price ? formatCurrency(content.price) : '무료'}
+          </span>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span className="flex items-center gap-0.5">
+              <Eye className="w-3.5 h-3.5" />
+              {formatNumber(content.view_count || 0)}
+            </span>
+            <span className="flex items-center gap-0.5">
+              <Heart className="w-3.5 h-3.5" />
+              {formatNumber(content.like_count || 0)}
             </span>
           </div>
         </div>
+
+        {/* Revenue Info */}
+        {(content.purchase_count || 0) > 0 && (
+          <div className="flex items-center justify-between py-2 px-3 bg-orange-50 rounded-xl mb-3">
+            <span className="text-xs text-orange-600 font-medium">
+              {formatNumber(content.purchase_count || 0)}건 판매
+            </span>
+            <span className="text-sm font-bold text-orange-600">
+              {formatCurrency(content.revenue || 0)} 수익
+            </span>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+          <Link href={`/dashboard/contents/${content.id}/edit`} className="flex-1">
+            <button className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+              <Edit3 className="w-4 h-4" />
+              수정
+            </button>
+          </Link>
+          <Link href={`/dashboard/analytics?content=${content.id}`} className="flex-1">
+            <button className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors">
+              <BarChart2 className="w-4 h-4" />
+              분석
+            </button>
+          </Link>
+        </div>
+
+        {/* Time */}
+        <p className="text-xs text-gray-400 text-center mt-3">
+          {formatRelativeTime(content.created_at)}
+        </p>
       </div>
     </div>
   );
@@ -384,7 +388,7 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
 
         {/* Content List */}
         {filteredContents.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredContents.map((content) => (
               <ContentCard key={content.id} content={content} />
             ))}
