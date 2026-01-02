@@ -20,12 +20,12 @@ import { Button, Card, CardContent, Badge, Tabs, TabsList, TabsTrigger, Spinner 
 
 interface Purchase {
   id: string;
-  product_id: string;
+  content_id: string;
   amount: number;
-  status: 'pending' | 'completed' | 'failed';
-  source: 'web' | 'toss';
+  status: 'pending_payment' | 'pending_confirm' | 'completed' | 'rejected';
+  payment_method: string;
   created_at: string;
-  product: {
+  content: {
     id: string;
     title: string;
     thumbnail_url: string | null;
@@ -51,20 +51,50 @@ const itemVariants = {
   },
 };
 
+function getStatusBadge(status: Purchase['status']) {
+  switch (status) {
+    case 'completed':
+      return <Badge className="flex-shrink-0 bg-green-100 text-green-700 border-0">구매완료</Badge>;
+    case 'pending_confirm':
+      return <Badge className="flex-shrink-0 bg-amber-100 text-amber-700 border-0">확인 대기</Badge>;
+    case 'pending_payment':
+      return <Badge className="flex-shrink-0 bg-blue-100 text-blue-700 border-0">결제 대기</Badge>;
+    case 'rejected':
+      return <Badge className="flex-shrink-0 bg-red-100 text-red-700 border-0">거절됨</Badge>;
+    default:
+      return <Badge className="flex-shrink-0 bg-gray-100 text-gray-700 border-0">{status}</Badge>;
+  }
+}
+
+function getPaymentMethodLabel(method: string) {
+  switch (method) {
+    case 'toss_id':
+      return '토스 송금';
+    case 'kakaopay':
+      return '카카오페이';
+    case 'bank_account':
+      return '계좌이체';
+    default:
+      return 'P2P 결제';
+  }
+}
+
 function PurchaseCard({ purchase }: { purchase: Purchase }) {
+  const isAccessible = purchase.status === 'completed';
+
   return (
     <motion.div variants={itemVariants}>
       <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-100">
         <CardContent className="p-0">
-          <Link href={`/content/${purchase.product.id}`}>
+          <Link href={isAccessible ? `/content/${purchase.content.id}` : `/purchase/${purchase.content.id}/pending`}>
             <div className="flex gap-4 p-4">
               {/* Thumbnail */}
               <div className="flex-shrink-0">
                 <div className="relative w-24 h-24 md:w-32 md:h-24 rounded-xl overflow-hidden bg-gray-100">
-                  {purchase.product.thumbnail_url ? (
+                  {purchase.content.thumbnail_url ? (
                     <Image
-                      src={purchase.product.thumbnail_url}
-                      alt={purchase.product.title}
+                      src={purchase.content.thumbnail_url}
+                      alt={purchase.content.title}
                       fill
                       className="object-cover"
                     />
@@ -82,18 +112,16 @@ function PurchaseCard({ purchase }: { purchase: Purchase }) {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 hover:text-orange-500 line-clamp-2 transition-colors">
-                      {purchase.product.title}
+                      {purchase.content.title}
                     </h3>
                   </div>
-                  <Badge className="flex-shrink-0 bg-green-100 text-green-700 border-0">
-                    구매완료
-                  </Badge>
+                  {getStatusBadge(purchase.status)}
                 </div>
 
-                {/* Source Badge */}
+                {/* Payment Method Badge */}
                 <div className="mb-2">
                   <Badge variant="outline" className="text-xs">
-                    {purchase.source === 'web' ? '웹 결제' : '토스 결제'}
+                    {getPaymentMethodLabel(purchase.payment_method)}
                   </Badge>
                 </div>
 
@@ -115,13 +143,23 @@ function PurchaseCard({ purchase }: { purchase: Purchase }) {
 
           {/* Actions */}
           <div className="flex border-t border-gray-100">
-            <Link
-              href={`/content/${purchase.product.id}`}
-              className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              <FileText className="w-4 h-4" />
-              콘텐츠 보기
-            </Link>
+            {isAccessible ? (
+              <Link
+                href={`/content/${purchase.content.id}`}
+                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                콘텐츠 보기
+              </Link>
+            ) : (
+              <Link
+                href={`/purchase/${purchase.content.id}/pending`}
+                className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                {purchase.status === 'rejected' ? '다시 구매하기' : '결제 상태 확인'}
+              </Link>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -182,12 +220,16 @@ export default function PurchasesPage() {
 
   const filteredPurchases = purchases.filter((purchase) => {
     if (activeTab === 'all') return true;
-    return purchase.source === activeTab;
+    if (activeTab === 'completed') return purchase.status === 'completed';
+    if (activeTab === 'pending') return purchase.status === 'pending_confirm' || purchase.status === 'pending_payment';
+    return true;
   });
 
+  const completedPurchases = purchases.filter(p => p.status === 'completed');
   const stats = {
-    total: purchases.length,
-    totalSpent: purchases.reduce((acc, p) => acc + p.amount, 0),
+    total: completedPurchases.length,
+    totalSpent: completedPurchases.reduce((acc, p) => acc + p.amount, 0),
+    pending: purchases.filter(p => p.status === 'pending_confirm' || p.status === 'pending_payment').length,
   };
 
   return (
@@ -267,13 +309,13 @@ export default function PurchasesPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList className="w-full bg-gray-100 p-1 rounded-xl">
               <TabsTrigger value="all" className="flex-1 rounded-lg">
-                전체
+                전체 ({purchases.length})
               </TabsTrigger>
-              <TabsTrigger value="web" className="flex-1 rounded-lg">
-                웹 결제
+              <TabsTrigger value="completed" className="flex-1 rounded-lg">
+                구매완료 ({stats.total})
               </TabsTrigger>
-              <TabsTrigger value="toss" className="flex-1 rounded-lg">
-                토스 결제
+              <TabsTrigger value="pending" className="flex-1 rounded-lg">
+                대기중 ({stats.pending})
               </TabsTrigger>
             </TabsList>
           </Tabs>

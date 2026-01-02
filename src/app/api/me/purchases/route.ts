@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-interface PurchaseWithProduct {
+interface ContentPurchase {
   id: string;
-  product_id: string;
+  content_id: string;
   amount: number;
   status: string;
-  source: string | null;
-  paid_at: string | null;
+  payment_method: string | null;
   created_at: string;
-  product: {
+  completed_at: string | null;
+  contents: {
     id: string;
     title: string;
     thumbnail_url: string | null;
@@ -19,7 +19,7 @@ interface PurchaseWithProduct {
 
 /**
  * GET /api/me/purchases
- * Get current user's purchases (MVP structure)
+ * Get current user's content purchases (P2P model)
  */
 export async function GET() {
   try {
@@ -41,26 +41,25 @@ export async function GET() {
       );
     }
 
-    // Get purchases with product info (MVP structure)
+    // Get content purchases (P2P model)
     const { data: purchases, error } = await supabase
-      .from('purchases')
+      .from('content_purchases')
       .select(`
         id,
-        product_id,
+        content_id,
         amount,
         status,
-        source,
-        paid_at,
+        payment_method,
         created_at,
-        product:products(
+        completed_at,
+        contents:content_id (
           id,
           title,
           thumbnail_url,
           price
         )
       `)
-      .eq('user_id', user.id)
-      .eq('status', 'completed')
+      .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -72,18 +71,18 @@ export async function GET() {
     }
 
     // Transform to match frontend expected format
-    const formattedPurchases = (purchases as PurchaseWithProduct[] || []).map((purchase) => ({
+    const formattedPurchases = (purchases as ContentPurchase[] || []).map((purchase) => ({
       id: purchase.id,
-      product_id: purchase.product_id,
+      content_id: purchase.content_id,
       amount: purchase.amount,
       status: purchase.status,
-      source: purchase.source || 'web',
-      created_at: purchase.paid_at || purchase.created_at,
-      product: purchase.product ? {
-        id: purchase.product.id,
-        title: purchase.product.title,
-        thumbnail_url: purchase.product.thumbnail_url,
-        price: purchase.product.price,
+      payment_method: purchase.payment_method || 'p2p',
+      created_at: purchase.completed_at || purchase.created_at,
+      content: purchase.contents ? {
+        id: purchase.contents.id,
+        title: purchase.contents.title,
+        thumbnail_url: purchase.contents.thumbnail_url,
+        price: purchase.contents.price,
       } : null,
     }));
 
