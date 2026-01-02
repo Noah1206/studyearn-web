@@ -41,9 +41,12 @@ interface Product {
 }
 
 interface DisplayProduct extends Product {
-  download_count?: number;
-  rating?: number;
-  review_count?: number;
+  download_count: number;
+  rating_sum: number;
+  rating_count: number;
+  view_count: number;
+  like_count: number;
+  rating: number; // Calculated from rating_sum / rating_count
   creator?: {
     name: string;
   };
@@ -164,7 +167,7 @@ function ProductCard({ product, index }: { product: DisplayProduct; index: numbe
 
                 {/* 통계 */}
                 <div className="flex items-center gap-4 text-sm">
-                  {product.rating && (
+                  {product.rating > 0 && (
                     <span className="flex items-center gap-1 text-amber-500">
                       <Star className="w-4 h-4 fill-amber-400" />
                       <span className="font-bold">{product.rating.toFixed(1)}</span>
@@ -172,7 +175,7 @@ function ProductCard({ product, index }: { product: DisplayProduct; index: numbe
                   )}
                   <span className="flex items-center gap-1 text-gray-400">
                     <Download className="w-4 h-4" />
-                    <span className="font-medium">{product.download_count || 0}</span>
+                    <span className="font-medium">{product.download_count}</span>
                   </span>
                 </div>
               </div>
@@ -292,7 +295,7 @@ function ProductGridCard({ product, index }: { product: DisplayProduct; index: n
           {/* 하단: 통계 + 가격 */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-200">
             <div className="flex items-center gap-3 text-sm">
-              {product.rating && (
+              {product.rating > 0 && (
                 <span className="flex items-center gap-1 text-amber-500">
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
                   <span className="font-bold">{product.rating.toFixed(1)}</span>
@@ -300,7 +303,7 @@ function ProductGridCard({ product, index }: { product: DisplayProduct; index: n
               )}
               <span className="flex items-center gap-1 text-gray-400">
                 <Download className="w-3.5 h-3.5" />
-                <span className="font-medium">{product.download_count || 0}</span>
+                <span className="font-medium">{product.download_count}</span>
               </span>
             </div>
             {product.price === 0 ? (
@@ -403,19 +406,35 @@ export default function ProductsPage() {
         const data = await response.json();
 
         // Use real data from API
-        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: Product & {
+        interface ApiProduct extends Product {
           creator?: { name: string };
           subject?: string;
           grade?: string;
-        }) => ({
-          ...p,
-          download_count: Math.floor(Math.random() * 500) + 10, // TODO: Add to DB later
-          rating: 4.0 + Math.random() * 1.0, // TODO: Add reviews/ratings to DB later
-          review_count: Math.floor(Math.random() * 100) + 5,
-          creator: p.creator || { name: '익명' },
-          subject: p.subject || null,
-          grade: p.grade || null,
-        }));
+          download_count?: number;
+          rating_sum?: number;
+          rating_count?: number;
+          view_count?: number;
+          like_count?: number;
+        }
+
+        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: ApiProduct) => {
+          const ratingSum = p.rating_sum || 0;
+          const ratingCount = p.rating_count || 0;
+          const calculatedRating = ratingCount > 0 ? ratingSum / ratingCount : 0;
+
+          return {
+            ...p,
+            download_count: p.download_count || 0,
+            rating_sum: ratingSum,
+            rating_count: ratingCount,
+            view_count: p.view_count || 0,
+            like_count: p.like_count || 0,
+            rating: parseFloat(calculatedRating.toFixed(1)),
+            creator: p.creator || { name: '익명' },
+            subject: p.subject || null,
+            grade: p.grade || null,
+          };
+        });
 
         setProducts(enhancedProducts);
       } catch (error) {

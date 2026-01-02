@@ -33,6 +33,9 @@ export async function GET() {
         type,
         view_count,
         like_count,
+        download_count,
+        rating_sum,
+        rating_count,
         creator_id
       `)
       .eq('is_published', true)
