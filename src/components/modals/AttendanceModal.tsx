@@ -186,8 +186,8 @@ export function AttendanceModal({
 
             {/* 7-Day Calendar Grid */}
             <div className="px-6 pb-4">
-              <div className="bg-orange-50 rounded-xl p-4">
-                <div className="grid grid-cols-7 gap-2">
+              <div className="bg-orange-50 rounded-xl p-5">
+                <div className="grid grid-cols-7 gap-3">
                   {WEEKDAYS.map((day, index) => {
                     const status = getStampStatus(index);
                     return (
@@ -214,15 +214,15 @@ export function AttendanceModal({
                           }
                           transition={{ duration: 0.3 }}
                           className={`
-                            w-10 h-10 rounded-lg flex items-center justify-center
+                            w-9 h-9 rounded-full flex items-center justify-center
                             transition-all duration-300
                             ${status === 'checked'
                               ? 'bg-orange-500 shadow-md shadow-orange-500/30'
                               : status === 'today'
                                 ? 'bg-white shadow-md ring-2 ring-orange-500'
                                 : status === 'future'
-                                  ? 'bg-gray-100 border-2 border-dashed border-gray-200'
-                                  : 'bg-gray-100 border border-gray-200'
+                                  ? 'bg-white/60 border-2 border-dashed border-orange-200'
+                                  : 'bg-white/60 border-2 border-orange-200'
                             }
                           `}
                         >
@@ -240,7 +240,11 @@ export function AttendanceModal({
                               transition={{ repeat: Infinity, duration: 1.5 }}
                               className="w-3 h-3 rounded-full bg-orange-500"
                             />
-                          ) : null}
+                          ) : (
+                            <span className="text-orange-300 text-xs font-medium">
+                              {index + 1}
+                            </span>
+                          )}
                         </motion.div>
                       </motion.div>
                     );
