@@ -435,24 +435,47 @@ export default function ProfilePage() {
             bestStreak = Math.max(bestStreak, currentStreak);
           }
 
+          // user_attendance 테이블에서 출석 스탬프 연속일 가져오기
+          let attendanceStreak = streak;
+          try {
+            const { data: attendanceData } = await supabase
+              .rpc('get_consecutive_attendance_days', { p_user_id: user.id });
+            if (typeof attendanceData === 'number' && attendanceData > attendanceStreak) {
+              attendanceStreak = attendanceData;
+            }
+          } catch {
+            // 출석 스탬프 데이터 가져오기 실패 시 기존 streak 유지
+          }
+
           setStudyStats({
             todayMinutes,
             weekMinutes,
             monthMinutes,
             totalMinutes,
-            streak,
-            bestStreak,
+            streak: attendanceStreak,
+            bestStreak: Math.max(bestStreak, attendanceStreak),
             joinedRooms: uniqueRooms.size,
           });
         } else {
-          // 참여 기록이 없으면 0으로 설정
+          // 참여 기록이 없어도 출석 스탬프 데이터는 확인
+          let attendanceStreak = 0;
+          try {
+            const { data: attendanceData } = await supabase
+              .rpc('get_consecutive_attendance_days', { p_user_id: user.id });
+            if (typeof attendanceData === 'number') {
+              attendanceStreak = attendanceData;
+            }
+          } catch {
+            // 출석 스탬프 데이터 가져오기 실패
+          }
+
           setStudyStats({
             todayMinutes: 0,
             weekMinutes: 0,
             monthMinutes: 0,
             totalMinutes: 0,
-            streak: 0,
-            bestStreak: 0,
+            streak: attendanceStreak,
+            bestStreak: attendanceStreak,
             joinedRooms: 0,
           });
         }
