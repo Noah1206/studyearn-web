@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Award, Sparkles, CheckCircle, Gift, Star, TrendingUp } from 'lucide-react';
+import { X, Calendar, Award, Sparkles, CheckCircle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { recordAttendance, dismissForToday, setAttendancePending } from '@/lib/attendance';
 
@@ -251,12 +251,12 @@ export function AttendanceModal({
                 )}
               </div>
 
-              {/* Benefits Section - Replaces Consecutive Days Display */}
+              {/* Motivation Section */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 mb-6"
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 mb-6"
               >
                 {isLoggedIn && stage === 'success' ? (
                   // Success state for logged-in users
@@ -272,26 +272,14 @@ export function AttendanceModal({
                     </p>
                   </div>
                 ) : (
-                  // Benefits display for all users
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Gift className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">매일 출석 포인트</p>
-                        <p className="text-xs text-gray-500">출석할 때마다 포인트 적립</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                        <Star className="w-4 h-4 text-yellow-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">연속 출석 보너스</p>
-                        <p className="text-xs text-gray-500">7일 연속 출석 시 추가 혜택</p>
-                      </div>
-                    </div>
+                  // Motivation message for all users
+                  <div className="text-center py-2">
+                    <p className="text-base font-medium text-gray-900 mb-1">
+                      스터플과 함께 꾸준한 공부를 시작해보세요!
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      매일 출석하며 학습 습관을 만들어가요
+                    </p>
                   </div>
                 )}
               </motion.div>
