@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Award, Sparkles, CheckCircle } from 'lucide-react';
+import { X, Calendar, Award, Sparkles, CheckCircle, Gift, Star, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { recordAttendance, dismissForToday } from '@/lib/attendance';
+import { recordAttendance, dismissForToday, setAttendancePending } from '@/lib/attendance';
 
 interface AttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: string;
-  userName: string;
+  userId: string | null;
+  userName: string | null;
   initialConsecutiveDays?: number;
+  isLoggedIn?: boolean;
 }
 
 // Stamp animation stages
@@ -23,7 +25,9 @@ export function AttendanceModal({
   userId,
   userName,
   initialConsecutiveDays = 0,
+  isLoggedIn = true,
 }: AttendanceModalProps) {
+  const router = useRouter();
   const [stage, setStage] = useState<StampStage>('ready');
   const [consecutiveDays, setConsecutiveDays] = useState(initialConsecutiveDays);
   const [error, setError] = useState('');
@@ -38,6 +42,14 @@ export function AttendanceModal({
   }, [isOpen, initialConsecutiveDays]);
 
   const handleStamp = async () => {
+    // If user is not logged in, redirect to login page
+    if (!isLoggedIn || !userId) {
+      setAttendancePending(); // Set pending flag
+      onClose();
+      router.push('/login?redirectTo=/');
+      return;
+    }
+
     setStage('stamping');
     setError('');
 
@@ -127,19 +139,28 @@ export function AttendanceModal({
                   <>
                     <h2 className="text-xl font-bold text-gray-900">출석 완료!</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      {consecutiveDays}일 연속 출석 중!
+                      오늘도 함께해요!
                     </p>
                   </>
-                ) : (
+                ) : isLoggedIn ? (
                   <>
                     <p className="text-sm text-blue-600 font-medium mb-1">
-                      {userName}님, 안녕하세요!
+                      {userName || '회원'}님, 안녕하세요!
                     </p>
                     <h2 className="text-xl font-bold text-gray-900">
                       오늘의 출석 스탬프
                     </h2>
                     <p className="text-sm text-gray-500 mt-2">
                       매일 출석하고 포인트를 모아보세요
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      오늘의 출석 스탬프
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-2">
+                      로그인하고 출석 포인트를 받아보세요!
                     </p>
                   </>
                 )}
@@ -230,31 +251,48 @@ export function AttendanceModal({
                 )}
               </div>
 
-              {/* Consecutive Days Display */}
+              {/* Benefits Section - Replaces Consecutive Days Display */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gray-50 rounded-xl p-4 mb-6"
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 mb-6"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">연속 출석</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {consecutiveDays}
-                    </span>
-                    <span className="text-sm text-gray-500">일</span>
+                {isLoggedIn && stage === 'success' ? (
+                  // Success state for logged-in users
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <TrendingUp className="w-5 h-5 text-green-500" />
+                      <span className="text-lg font-bold text-gray-900">
+                        {consecutiveDays}일 연속 출석!
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      꾸준한 학습이 성공의 비결이에요
+                    </p>
                   </div>
-                </div>
-                {consecutiveDays >= 7 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-2 text-xs text-blue-600 flex items-center gap-1"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    1주일 연속 출석 달성!
-                  </motion.div>
+                ) : (
+                  // Benefits display for all users
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Gift className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">매일 출석 포인트</p>
+                        <p className="text-xs text-gray-500">출석할 때마다 포인트 적립</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                        <Star className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">연속 출석 보너스</p>
+                        <p className="text-xs text-gray-500">7일 연속 출석 시 추가 혜택</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </motion.div>
 
@@ -296,7 +334,7 @@ export function AttendanceModal({
                     fullWidth
                     size="lg"
                   >
-                    출석 스탬프 찍기
+                    {isLoggedIn ? '출석 스탬프 찍기' : '로그인하고 출석하기'}
                   </Button>
                   <button
                     onClick={handleDismissToday}

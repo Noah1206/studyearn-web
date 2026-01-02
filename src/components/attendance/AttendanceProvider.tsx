@@ -8,9 +8,9 @@ import { AttendanceModal } from '@/components/modals/AttendanceModal';
  *
  * Add this component to your page or layout to enable the attendance modal.
  * It automatically handles:
- * - Checking if user is logged in
- * - Checking if user has checked attendance today
- * - Showing the modal if attendance hasn't been checked
+ * - Showing the modal for all users (logged in or not)
+ * - Checking if user has checked attendance today (for logged-in users)
+ * - Redirecting non-logged-in users to login page when they try to check attendance
  * - Dismissing for today functionality
  *
  * Usage:
@@ -35,10 +35,11 @@ export function AttendanceProvider() {
     userName,
     consecutiveDays,
     isLoading,
+    isLoggedIn,
   } = useAttendance();
 
-  // Don't render anything if still loading or no user
-  if (isLoading || !userId) {
+  // Don't render anything if still loading
+  if (isLoading) {
     return null;
   }
 
@@ -47,8 +48,9 @@ export function AttendanceProvider() {
       isOpen={isModalOpen}
       onClose={closeModal}
       userId={userId}
-      userName={userName || '회원'}
+      userName={userName}
       initialConsecutiveDays={consecutiveDays}
+      isLoggedIn={isLoggedIn}
     />
   );
 }

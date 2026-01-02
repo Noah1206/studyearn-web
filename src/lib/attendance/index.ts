@@ -164,3 +164,63 @@ export function clearDismissed(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(ATTENDANCE_DISMISSED_KEY);
 }
+
+// LocalStorage key for pending attendance after login
+const ATTENDANCE_PENDING_KEY = 'studyearn_attendance_pending';
+
+/**
+ * Set attendance as pending (to be processed after login)
+ */
+export function setAttendancePending(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(ATTENDANCE_PENDING_KEY, 'true');
+}
+
+/**
+ * Check if there's a pending attendance
+ */
+export function hasAttendancePending(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(ATTENDANCE_PENDING_KEY) === 'true';
+}
+
+/**
+ * Clear pending attendance flag
+ */
+export function clearAttendancePending(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ATTENDANCE_PENDING_KEY);
+}
+
+/**
+ * Process pending attendance for a user after login
+ * @param userId - The user's ID
+ * @returns Promise<AttendanceResult | null> - Result if processed, null if no pending or already checked
+ */
+export async function processPendingAttendance(userId: string): Promise<AttendanceResult | null> {
+  // Check if there's a pending attendance
+  if (!hasAttendancePending()) {
+    return null;
+  }
+
+  try {
+    // Check if user already checked today
+    const alreadyChecked = await checkTodayAttendance(userId);
+    if (alreadyChecked) {
+      clearAttendancePending();
+      return null;
+    }
+
+    // Record attendance
+    const result = await recordAttendance(userId);
+
+    // Clear pending flag regardless of result
+    clearAttendancePending();
+
+    return result;
+  } catch (error) {
+    console.error('Error processing pending attendance:', error);
+    clearAttendancePending();
+    return null;
+  }
+}
