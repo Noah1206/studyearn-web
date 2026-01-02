@@ -25,7 +25,7 @@ import {
   SlidersHorizontal,
   CalendarCheck,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 
@@ -137,7 +137,7 @@ function ProductCard({ product, index }: { product: DisplayProduct; index: numbe
                     {product.grade}
                   </span>
                 )}
-                <span className="text-xs text-gray-400">• 3일 전</span>
+                <span className="text-xs text-gray-400">• {formatRelativeTime(product.created_at)}</span>
               </div>
 
               {/* 제목 */}
@@ -279,7 +279,7 @@ function ProductGridCard({ product, index }: { product: DisplayProduct; index: n
           </h3>
 
           {/* 시간 */}
-          <span className="text-xs text-gray-400 mb-3">3일 전</span>
+          <span className="text-xs text-gray-400 mb-3">{formatRelativeTime(product.created_at)}</span>
 
           {/* 창작자 */}
           <div className="flex items-center gap-2 mb-4">
@@ -402,19 +402,19 @@ export default function ProductsPage() {
 
         const data = await response.json();
 
-        const subjects = ['국어', '수학', '영어', '과학', '사회', '한국사'];
-        const grades = ['고1', '고2', '고3', '대학교', '자격증'];
-
-        // Use real creator data from API, fallback to '익명' if not available
-        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: Product & { creator?: { name: string } }, i: number) => ({
+        // Use real data from API
+        const enhancedProducts: DisplayProduct[] = (data.products || []).map((p: Product & {
+          creator?: { name: string };
+          subject?: string;
+          grade?: string;
+        }) => ({
           ...p,
-          download_count: Math.floor(Math.random() * 500) + 10,
-          rating: 4.0 + Math.random() * 1.0,
+          download_count: Math.floor(Math.random() * 500) + 10, // TODO: Add to DB later
+          rating: 4.0 + Math.random() * 1.0, // TODO: Add reviews/ratings to DB later
           review_count: Math.floor(Math.random() * 100) + 5,
-          // Use creator from API if available
           creator: p.creator || { name: '익명' },
-          subject: subjects[i % subjects.length],
-          grade: grades[i % grades.length],
+          subject: p.subject || null,
+          grade: p.grade || null,
         }));
 
         setProducts(enhancedProducts);

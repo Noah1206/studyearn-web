@@ -334,6 +334,35 @@ export default function UploadPage() {
     return days;
   };
 
+  // subject 레이블 가져오기
+  const getSubjectLabel = () => {
+    // 선택된 과목 중 첫 번째 또는 직접 입력
+    if (selectedSubjects.length > 0) {
+      const firstSubject = SUBJECT_TAGS.find(s => s.id === selectedSubjects[0]);
+      if (firstSubject && firstSubject.id !== 'custom') {
+        return firstSubject.label;
+      }
+    }
+    if (customSubject.trim()) {
+      return customSubject.trim();
+    }
+    return null;
+  };
+
+  // grade 레이블 가져오기
+  const getGradeLabel = () => {
+    if (selectedGrade) {
+      const grade = GRADE_TAGS.find(g => g.id === selectedGrade);
+      if (grade && grade.id !== 'custom') {
+        return grade.label;
+      }
+    }
+    if (customGrade.trim()) {
+      return customGrade.trim();
+    }
+    return null;
+  };
+
   // 올리기
   const handleUpload = async () => {
     if (!canUpload) return;
@@ -350,12 +379,18 @@ export default function UploadPage() {
         return;
       }
 
+      // subject와 grade 값 계산
+      const subjectValue = getSubjectLabel();
+      const gradeValue = getGradeLabel();
+
       if (contentType === 'routine') {
         // 루틴 데이터
         const routineData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
+          subject: subjectValue,
+          grade: gradeValue,
           type: 'image' as const,
           content_type: 'routine',
           routine_type: routineType,
@@ -425,6 +460,8 @@ export default function UploadPage() {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
+          subject: subjectValue,
+          grade: gradeValue,
           type: fileType,
           content_type: fileType,
           url: publicUrl,

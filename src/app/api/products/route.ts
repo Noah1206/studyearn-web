@@ -20,11 +20,20 @@ export async function GET() {
     const { data: products, error } = await supabase
       .from('products')
       .select(`
-        *,
+        id,
+        title,
+        description,
+        price,
+        thumbnail_url,
+        is_active,
+        created_at,
+        subject,
+        grade,
         creator_settings!products_creator_id_fkey (
           id,
           display_name,
-          profile_image_url
+          profile_image_url,
+          subject
         )
       `)
       .eq('is_active', true)
@@ -40,10 +49,13 @@ export async function GET() {
 
     // Transform to include creator as a flat object
     const productsWithCreator = (products || []).map((product: {
-      creator_settings?: { display_name?: string; profile_image_url?: string } | null;
+      creator_settings?: { display_name?: string; profile_image_url?: string; subject?: string } | null;
+      subject?: string | null;
       [key: string]: unknown;
     }) => ({
       ...product,
+      // Use product's subject, fallback to creator's subject
+      subject: product.subject || product.creator_settings?.subject || null,
       creator: product.creator_settings ? {
         name: product.creator_settings.display_name || '익명',
         avatar_url: product.creator_settings.profile_image_url,
