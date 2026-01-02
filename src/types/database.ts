@@ -74,6 +74,13 @@ export interface Database {
           is_verified: boolean;
           total_subscribers: number;
           total_content_count: number;
+          // P2P Payment fields
+          payment_method: 'toss_id' | 'kakaopay' | 'bank_account' | null;
+          toss_id: string | null;
+          kakaopay_link: string | null;
+          bank_name: string | null;
+          bank_account: string | null;
+          account_holder: string | null;
           // Alias columns (generated, read-only)
           avatar_url: string | null;
           subscriber_count: number;
@@ -95,6 +102,13 @@ export interface Database {
           is_verified?: boolean;
           total_subscribers?: number;
           total_content_count?: number;
+          // P2P Payment fields
+          payment_method?: 'toss_id' | 'kakaopay' | 'bank_account' | null;
+          toss_id?: string | null;
+          kakaopay_link?: string | null;
+          bank_name?: string | null;
+          bank_account?: string | null;
+          account_holder?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -113,6 +127,13 @@ export interface Database {
           is_verified?: boolean;
           total_subscribers?: number;
           total_content_count?: number;
+          // P2P Payment fields
+          payment_method?: 'toss_id' | 'kakaopay' | 'bank_account' | null;
+          toss_id?: string | null;
+          kakaopay_link?: string | null;
+          bank_name?: string | null;
+          bank_account?: string | null;
+          account_holder?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -291,9 +312,16 @@ export interface Database {
           buyer_id: string;
           seller_id: string;
           amount: number;
-          status: 'pending' | 'completed' | 'failed' | 'refunded';
+          status: 'pending_payment' | 'pending_confirm' | 'completed' | 'rejected' | 'refunded' | 'pending' | 'failed';
           payment_id: string | null;
           purchased_at: string | null;
+          // P2P Payment fields
+          payment_confirmed_at: string | null;
+          seller_confirmed_at: string | null;
+          creator_revenue: number | null;
+          platform_fee: number | null;
+          rejection_reason: string | null;
+          buyer_note: string | null;
           created_at: string;
         };
         Insert: {
@@ -302,9 +330,16 @@ export interface Database {
           buyer_id: string;
           seller_id: string;
           amount: number;
-          status?: 'pending' | 'completed' | 'failed' | 'refunded';
+          status?: 'pending_payment' | 'pending_confirm' | 'completed' | 'rejected' | 'refunded' | 'pending' | 'failed';
           payment_id?: string | null;
           purchased_at?: string | null;
+          // P2P Payment fields
+          payment_confirmed_at?: string | null;
+          seller_confirmed_at?: string | null;
+          creator_revenue?: number | null;
+          platform_fee?: number | null;
+          rejection_reason?: string | null;
+          buyer_note?: string | null;
           created_at?: string;
         };
         Update: {
@@ -313,9 +348,16 @@ export interface Database {
           buyer_id?: string;
           seller_id?: string;
           amount?: number;
-          status?: 'pending' | 'completed' | 'failed' | 'refunded';
+          status?: 'pending_payment' | 'pending_confirm' | 'completed' | 'rejected' | 'refunded' | 'pending' | 'failed';
           payment_id?: string | null;
           purchased_at?: string | null;
+          // P2P Payment fields
+          payment_confirmed_at?: string | null;
+          seller_confirmed_at?: string | null;
+          creator_revenue?: number | null;
+          platform_fee?: number | null;
+          rejection_reason?: string | null;
+          buyer_note?: string | null;
           created_at?: string;
         };
       };

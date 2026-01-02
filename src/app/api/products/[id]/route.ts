@@ -62,7 +62,18 @@ export async function GET(
     if (content.creator_id) {
       const { data: creator } = await supabase
         .from('creator_settings')
-        .select('display_name, profile_image_url, bio, subject')
+        .select(`
+          display_name,
+          profile_image_url,
+          bio,
+          subject,
+          payment_method,
+          toss_id,
+          kakaopay_link,
+          bank_name,
+          bank_account,
+          account_holder
+        `)
         .eq('user_id', content.creator_id)
         .single();
       creatorInfo = creator;
@@ -126,6 +137,16 @@ export async function GET(
         avatar_url: creatorInfo.profile_image_url,
         bio: creatorInfo.bio,
       } : { name: '익명' },
+      creator_id: content.creator_id,
+      // P2P Payment info (only if creator has set up payment)
+      payment_info: creatorInfo?.payment_method ? {
+        method: creatorInfo.payment_method,
+        toss_id: creatorInfo.payment_method === 'toss_id' ? creatorInfo.toss_id : null,
+        kakaopay_link: creatorInfo.payment_method === 'kakaopay' ? creatorInfo.kakaopay_link : null,
+        bank_name: creatorInfo.payment_method === 'bank_account' ? creatorInfo.bank_name : null,
+        bank_account: creatorInfo.payment_method === 'bank_account' ? creatorInfo.bank_account : null,
+        account_holder: creatorInfo.payment_method === 'bank_account' ? creatorInfo.account_holder : null,
+      } : null,
     };
 
     // For routine content, the content itself contains the routine items
