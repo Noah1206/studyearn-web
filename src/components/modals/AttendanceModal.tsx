@@ -10,6 +10,7 @@ interface AttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  userName: string;
   initialConsecutiveDays?: number;
 }
 
@@ -20,6 +21,7 @@ export function AttendanceModal({
   isOpen,
   onClose,
   userId,
+  userName,
   initialConsecutiveDays = 0,
 }: AttendanceModalProps) {
   const [stage, setStage] = useState<StampStage>('ready');
@@ -121,14 +123,26 @@ export function AttendanceModal({
                 <X className="w-5 h-5 text-gray-500" />
               </button>
               <div className="text-center">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {stage === 'success' ? '출석 완료!' : '출석 스탬프'}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  {stage === 'success'
-                    ? `${consecutiveDays}일 연속 출석 중!`
-                    : '오늘의 출석 스탬프를 찍어보세요'}
-                </p>
+                {stage === 'success' ? (
+                  <>
+                    <h2 className="text-xl font-bold text-gray-900">출석 완료!</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {consecutiveDays}일 연속 출석 중!
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-blue-600 font-medium mb-1">
+                      {userName}님, 안녕하세요!
+                    </p>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      오늘의 출석 스탬프
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-2">
+                      매일 출석하고 포인트를 모아보세요
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 

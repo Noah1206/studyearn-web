@@ -32,6 +32,7 @@ export function AttendanceProvider() {
     isModalOpen,
     closeModal,
     userId,
+    userName,
     consecutiveDays,
     isLoading,
   } = useAttendance();
@@ -46,6 +47,7 @@ export function AttendanceProvider() {
       isOpen={isModalOpen}
       onClose={closeModal}
       userId={userId}
+      userName={userName || '회원'}
       initialConsecutiveDays={consecutiveDays}
     />
   );

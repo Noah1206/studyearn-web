@@ -13,6 +13,7 @@ interface UseAttendanceResult {
   openModal: () => void;
   closeModal: () => void;
   userId: string | null;
+  userName: string | null;
   consecutiveDays: number;
   hasCheckedToday: boolean;
   isLoading: boolean;
@@ -28,6 +29,7 @@ interface UseAttendanceResult {
 export function useAttendance(): UseAttendanceResult {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [consecutiveDays, setConsecutiveDays] = useState(0);
   const [hasCheckedToday, setHasCheckedToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +60,13 @@ export function useAttendance(): UseAttendanceResult {
         }
 
         setUserId(user.id);
+
+        // Get user name from metadata or email
+        const displayName = user.user_metadata?.name
+          || user.user_metadata?.full_name
+          || user.email?.split('@')[0]
+          || '회원';
+        setUserName(displayName);
 
         // Check if user already checked today
         const [hasChecked, days] = await Promise.all([
@@ -90,6 +99,7 @@ export function useAttendance(): UseAttendanceResult {
     openModal,
     closeModal,
     userId,
+    userName,
     consecutiveDays,
     hasCheckedToday,
     isLoading,
