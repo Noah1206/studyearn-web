@@ -136,7 +136,7 @@ export function AttendanceModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-gradient-to-b from-indigo-600 to-blue-700 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+            className="bg-gradient-to-b from-orange-500 to-orange-600 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
           >
             {/* Header */}
             <div className="relative px-6 pt-6 pb-4">
@@ -153,9 +153,9 @@ export function AttendanceModal({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-4 left-4 flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg"
+                  className="absolute top-4 left-4 flex items-center gap-1.5 bg-gray-900 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg"
                 >
-                  <Flame className="w-4 h-4" />
+                  <Flame className="w-4 h-4 text-orange-300" />
                   <span>{stage === 'success' ? consecutiveDays : consecutiveDays}일</span>
                 </motion.div>
               )}
@@ -200,7 +200,7 @@ export function AttendanceModal({
                       >
                         {/* 요일 레이블 */}
                         <span className={`text-xs font-medium mb-2 ${
-                          index === todayIndex ? 'text-yellow-300' : 'text-white/60'
+                          index === todayIndex ? 'text-white font-bold' : 'text-white/60'
                         }`}>
                           {day}
                         </span>
@@ -217,9 +217,9 @@ export function AttendanceModal({
                             w-10 h-10 rounded-xl flex items-center justify-center
                             transition-all duration-300
                             ${status === 'checked'
-                              ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30'
+                              ? 'bg-gray-900 shadow-lg shadow-black/30'
                               : status === 'today'
-                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-orange-500/30 ring-2 ring-white/50'
+                                ? 'bg-white shadow-lg shadow-white/30 ring-2 ring-gray-900/30'
                                 : status === 'future'
                                   ? 'bg-white/10 border-2 border-dashed border-white/20'
                                   : 'bg-white/5 border border-white/10'
@@ -238,7 +238,7 @@ export function AttendanceModal({
                             <motion.div
                               animate={{ scale: [1, 1.1, 1] }}
                               transition={{ repeat: Infinity, duration: 1.5 }}
-                              className="w-3 h-3 rounded-full bg-white"
+                              className="w-3 h-3 rounded-full bg-orange-500"
                             />
                           ) : null}
                         </motion.div>
@@ -284,7 +284,7 @@ export function AttendanceModal({
                 >
                   <button
                     onClick={handleClose}
-                    className="w-full py-4 bg-white text-indigo-600 font-bold rounded-2xl hover:bg-gray-50 transition-colors shadow-lg"
+                    className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-colors shadow-lg"
                   >
                     확인
                   </button>
@@ -299,14 +299,14 @@ export function AttendanceModal({
                   <button
                     onClick={handleStamp}
                     disabled={stage === 'stamping'}
-                    className="w-full py-4 bg-white text-indigo-600 font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {stage === 'stamping' ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                          className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full"
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                         />
                         <span>출석 중...</span>
                       </>
