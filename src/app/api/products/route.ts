@@ -33,12 +33,7 @@ export async function GET() {
         type,
         view_count,
         like_count,
-        creator_settings!contents_creator_id_fkey (
-          id,
-          display_name,
-          profile_image_url,
-          subject
-        )
+        creator_id
       `)
       .eq('is_published', true)
       .order('created_at', { ascending: false });
@@ -51,24 +46,53 @@ export async function GET() {
       );
     }
 
+    // Get unique creator IDs
+    const allCreatorIds = (contents || [])
+      .map((c: { creator_id?: string | null }) => c.creator_id)
+      .filter((id: string | null | undefined): id is string => id != null);
+    const creatorIds = Array.from(new Set(allCreatorIds));
+
+    // Fetch creator settings separately
+    interface CreatorInfo {
+      display_name?: string;
+      profile_image_url?: string;
+      subject?: string;
+      user_id: string;
+    }
+    let creatorsMap: Record<string, CreatorInfo> = {};
+    if (creatorIds.length > 0) {
+      const { data: creators } = await supabase
+        .from('creator_settings')
+        .select('user_id, display_name, profile_image_url, subject')
+        .in('user_id', creatorIds);
+
+      if (creators) {
+        creators.forEach((c: CreatorInfo) => {
+          creatorsMap[c.user_id] = c;
+        });
+      }
+    }
+
     // Transform to include creator as a flat object
     const productsWithCreator = (contents || []).map((content: {
-      creator_settings?: { display_name?: string; profile_image_url?: string; subject?: string } | null;
+      creator_id?: string | null;
       subject?: string | null;
       content_type?: string | null;
       [key: string]: unknown;
-    }) => ({
-      ...content,
-      // Use content's subject, fallback to creator's subject
-      subject: content.subject || content.creator_settings?.subject || null,
-      // Map content_type to display-friendly subject if it's a routine
-      ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
-      creator: content.creator_settings ? {
-        name: content.creator_settings.display_name || '익명',
-        avatar_url: content.creator_settings.profile_image_url,
-      } : { name: '익명' },
-      creator_settings: undefined, // Remove the nested object
-    }));
+    }) => {
+      const creatorSettings = content.creator_id ? creatorsMap[content.creator_id] : null;
+      return {
+        ...content,
+        // Use content's subject, fallback to creator's subject
+        subject: content.subject || creatorSettings?.subject || null,
+        // Map content_type to display-friendly subject if it's a routine
+        ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
+        creator: creatorSettings ? {
+          name: creatorSettings.display_name || '익명',
+          avatar_url: creatorSettings.profile_image_url,
+        } : { name: '익명' },
+      };
+    });
 
     return NextResponse.json({ products: productsWithCreator });
   } catch (error) {
