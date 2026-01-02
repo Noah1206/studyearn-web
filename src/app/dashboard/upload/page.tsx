@@ -1007,9 +1007,7 @@ export default function UploadPage() {
                   className={cn(
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
-                      ? subject.id === 'custom'
-                        ? 'bg-orange-500 text-white'
-                        : subject.color + ' ring-2 ring-offset-1 ring-gray-400'
+                      ? 'bg-orange-500 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
@@ -1048,9 +1046,7 @@ export default function UploadPage() {
                   className={cn(
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
-                      ? grade.id === 'custom'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-gray-900 text-white'
+                      ? 'bg-orange-500 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
@@ -1091,7 +1087,7 @@ export default function UploadPage() {
                     'px-4 py-2 rounded-full text-sm font-medium transition-all',
                     isSelected
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
                   {option.label}
