@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/products
- * Get all active products
+ * Get all published contents (including routines, materials, etc.)
  */
 export async function GET() {
   try {
@@ -16,49 +16,56 @@ export async function GET() {
       );
     }
 
-    // Join products with creator_settings to get creator info
-    const { data: products, error } = await supabase
-      .from('products')
+    // Query contents table (where uploads are saved)
+    const { data: contents, error } = await supabase
+      .from('contents')
       .select(`
         id,
         title,
         description,
         price,
         thumbnail_url,
-        is_active,
+        is_published,
         created_at,
         subject,
         grade,
-        creator_settings!products_creator_id_fkey (
+        content_type,
+        type,
+        view_count,
+        like_count,
+        creator_settings!contents_creator_id_fkey (
           id,
           display_name,
           profile_image_url,
           subject
         )
       `)
-      .eq('is_active', true)
+      .eq('is_published', true)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch products:', error);
+      console.error('Failed to fetch contents:', error);
       return NextResponse.json(
-        { message: 'Failed to fetch products' },
+        { message: 'Failed to fetch contents' },
         { status: 500 }
       );
     }
 
     // Transform to include creator as a flat object
-    const productsWithCreator = (products || []).map((product: {
+    const productsWithCreator = (contents || []).map((content: {
       creator_settings?: { display_name?: string; profile_image_url?: string; subject?: string } | null;
       subject?: string | null;
+      content_type?: string | null;
       [key: string]: unknown;
     }) => ({
-      ...product,
-      // Use product's subject, fallback to creator's subject
-      subject: product.subject || product.creator_settings?.subject || null,
-      creator: product.creator_settings ? {
-        name: product.creator_settings.display_name || '익명',
-        avatar_url: product.creator_settings.profile_image_url,
+      ...content,
+      // Use content's subject, fallback to creator's subject
+      subject: content.subject || content.creator_settings?.subject || null,
+      // Map content_type to display-friendly subject if it's a routine
+      ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
+      creator: content.creator_settings ? {
+        name: content.creator_settings.display_name || '익명',
+        avatar_url: content.creator_settings.profile_image_url,
       } : { name: '익명' },
       creator_settings: undefined, // Remove the nested object
     }));
