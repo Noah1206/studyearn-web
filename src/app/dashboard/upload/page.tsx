@@ -1008,7 +1008,7 @@ export default function UploadPage() {
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'text-gray-600 hover:bg-gray-100'
                   )}
                 >
                   {isSelected && subject.id !== 'custom' && <Check className="w-3 h-3 inline mr-1" />}
@@ -1047,7 +1047,7 @@ export default function UploadPage() {
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     isSelected
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'text-gray-600 hover:bg-gray-100'
                   )}
                 >
                   {grade.label}
@@ -1087,7 +1087,7 @@ export default function UploadPage() {
                     'px-4 py-2 rounded-full text-sm font-medium transition-all',
                     isSelected
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'text-gray-600 hover:bg-gray-100'
                   )}
                 >
                   {option.label}
