@@ -239,15 +239,17 @@ function StatCard({
   subValue,
   trend,
   trendValue,
+  href,
 }: {
   title: string;
   value: string;
   subValue?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
+  href?: string;
 }) {
-  return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100">
+  const content = (
+    <div className={`bg-white rounded-2xl p-6 border border-gray-100 ${href ? 'hover:border-orange-200 hover:shadow-sm transition-all cursor-pointer' : ''}`}>
       <p className="text-gray-500 text-sm font-medium">{title}</p>
       <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
       {trend && trendValue && (
@@ -261,6 +263,11 @@ function StatCard({
       {subValue && <p className="text-gray-400 text-sm mt-2">{subValue}</p>}
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+  return content;
 }
 
 // Quick Action Button
@@ -396,6 +403,7 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
           title="발행 콘텐츠"
           value={formatNumber(data.contentCount)}
           subValue={`총 ${formatNumber(data.totalViews)} 조회`}
+          href="/dashboard/contents"
         />
       </div>
 
