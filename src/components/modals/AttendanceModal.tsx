@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Award, Sparkles, CheckCircle, TrendingUp } from 'lucide-react';
+import { X, Check, Flame } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { recordAttendance, dismissForToday, setAttendancePending } from '@/lib/attendance';
 
@@ -16,8 +16,10 @@ interface AttendanceModalProps {
   isLoggedIn?: boolean;
 }
 
-// Stamp animation stages
 type StampStage = 'ready' | 'stamping' | 'stamped' | 'success';
+
+// 요일 레이블
+const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
 
 export function AttendanceModal({
   isOpen,
@@ -32,7 +34,10 @@ export function AttendanceModal({
   const [consecutiveDays, setConsecutiveDays] = useState(initialConsecutiveDays);
   const [error, setError] = useState('');
 
-  // Reset state when modal opens
+  // 오늘 요일 (0 = 월요일)
+  const today = new Date();
+  const todayIndex = (today.getDay() + 6) % 7; // 일요일(0) -> 6, 월요일(1) -> 0
+
   useEffect(() => {
     if (isOpen) {
       setStage('ready');
@@ -42,9 +47,8 @@ export function AttendanceModal({
   }, [isOpen, initialConsecutiveDays]);
 
   const handleStamp = async () => {
-    // If user is not logged in, redirect to login page
     if (!isLoggedIn || !userId) {
-      setAttendancePending(); // Set pending flag
+      setAttendancePending();
       onClose();
       router.push('/login?redirectTo=/');
       return;
@@ -68,14 +72,12 @@ export function AttendanceModal({
         return;
       }
 
-      // Success! Update consecutive days and show stamped state
       setConsecutiveDays(result.consecutive_days);
       setStage('stamped');
 
-      // After stamp animation, show success
       setTimeout(() => {
         setStage('success');
-      }, 800);
+      }, 600);
     } catch {
       setError('오류가 발생했습니다. 다시 시도해주세요.');
       setStage('ready');
@@ -91,20 +93,31 @@ export function AttendanceModal({
     onClose();
   };
 
-  // Stamp variants for animation
-  const stampVariants = {
-    ready: { scale: 1, rotate: 0, y: 0 },
-    stamping: { scale: 1.3, rotate: -15, y: -30 },
-    stamped: { scale: 1, rotate: 0, y: 0 },
-  };
+  // 각 요일의 스탬프 상태 계산
+  const getStampStatus = (dayIndex: number) => {
+    if (stage === 'success' || stage === 'stamped') {
+      // 출석 완료 후: 오늘까지 연속 출석일만큼 스탬프 표시
+      const daysFromToday = todayIndex - dayIndex;
+      if (daysFromToday >= 0 && daysFromToday < consecutiveDays) {
+        return 'checked';
+      }
+    } else {
+      // 출석 전: 어제까지 연속 출석일만큼 스탬프 표시
+      const daysFromToday = todayIndex - dayIndex;
+      if (daysFromToday > 0 && daysFromToday <= consecutiveDays) {
+        return 'checked';
+      }
+    }
 
-  const stampImpactVariants = {
-    hidden: { scale: 0, opacity: 0 },
-    visible: {
-      scale: [0, 1.5, 1],
-      opacity: [0, 1, 1],
-      transition: { duration: 0.4, ease: 'easeOut' as const },
-    },
+    if (dayIndex === todayIndex) {
+      return stage === 'success' || stage === 'stamped' ? 'checked' : 'today';
+    }
+
+    if (dayIndex > todayIndex) {
+      return 'future';
+    }
+
+    return 'missed';
   };
 
   return (
@@ -115,218 +128,195 @@ export function AttendanceModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && handleDismissToday()}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-            className="bg-white rounded-2xl w-full max-w-sm overflow-hidden"
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-gradient-to-b from-indigo-600 to-blue-700 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
           >
             {/* Header */}
-            <div className="relative p-6 pb-4">
+            <div className="relative px-6 pt-6 pb-4">
               <button
                 onClick={handleDismissToday}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
                 aria-label="닫기"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-white/80" />
               </button>
-              <div className="text-center">
+
+              {/* Streak Badge */}
+              {(consecutiveDays > 0 || stage === 'success') && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-4 left-4 flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg"
+                >
+                  <Flame className="w-4 h-4" />
+                  <span>{stage === 'success' ? consecutiveDays : consecutiveDays}일</span>
+                </motion.div>
+              )}
+
+              <div className="text-center pt-6">
                 {stage === 'success' ? (
-                  <>
-                    <h2 className="text-xl font-bold text-gray-900">출석 완료!</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      오늘도 함께해요!
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
+                    <h2 className="text-2xl font-bold text-white mb-1">출석 완료! 🎉</h2>
+                    <p className="text-white/80 text-sm">
+                      오늘도 스터플과 함께해요
                     </p>
-                  </>
-                ) : isLoggedIn ? (
-                  <>
-                    <p className="text-sm text-blue-600 font-medium mb-1">
-                      {userName || '회원'}님, 안녕하세요!
-                    </p>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      오늘의 출석 스탬프
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-2">
-                      매일 출석하고 포인트를 모아보세요
-                    </p>
-                  </>
+                  </motion.div>
                 ) : (
                   <>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      오늘의 출석 스탬프
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                      {isLoggedIn ? `${userName || '회원'}님` : '출석 체크'}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-2">
-                      로그인하고 출석 포인트를 받아보세요!
+                    <p className="text-white/80 text-sm">
+                      {isLoggedIn ? '오늘의 출석 스탬프를 찍어주세요!' : '로그인하고 출석해주세요!'}
                     </p>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Content */}
-            <div className="px-6 pb-6">
-              {/* Stamp Area */}
-              <div className="relative flex items-center justify-center h-48 mb-6">
-                {/* Background calendar grid */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full bg-gray-50 flex items-center justify-center">
-                    <Calendar className="w-16 h-16 text-gray-200" />
-                  </div>
-                </div>
-
-                {/* Stamp impact effect */}
-                <AnimatePresence>
-                  {(stage === 'stamped' || stage === 'success') && (
-                    <motion.div
-                      variants={stampImpactVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    >
-                      <div className="w-36 h-36 rounded-full bg-green-100 flex items-center justify-center">
-                        <CheckCircle className="w-20 h-20 text-green-500" />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Stamp icon */}
-                {stage !== 'success' && stage !== 'stamped' && (
-                  <motion.div
-                    variants={stampVariants}
-                    animate={stage}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 400,
-                      damping: 15,
-                    }}
-                    className="relative z-10"
-                  >
-                    <div
-                      className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                        stage === 'stamping'
-                          ? 'bg-green-500'
-                          : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                      }`}
-                    >
-                      <Award className="w-12 h-12 text-white" />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Success celebration */}
-                {stage === 'success' && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                  >
-                    {/* Confetti-like particles */}
-                    {[...Array(8)].map((_, i) => (
+            {/* 7-Day Calendar Grid */}
+            <div className="px-6 pb-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                <div className="grid grid-cols-7 gap-2">
+                  {WEEKDAYS.map((day, index) => {
+                    const status = getStampStatus(index);
+                    return (
                       <motion.div
-                        key={i}
-                        initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
-                        animate={{
-                          scale: [0, 1, 0.8],
-                          x: Math.cos((i * Math.PI * 2) / 8) * 60,
-                          y: Math.sin((i * Math.PI * 2) / 8) * 60,
-                          opacity: [1, 1, 0],
-                        }}
-                        transition={{ duration: 0.8, delay: 0.1 }}
-                        className="absolute"
+                        key={day}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex flex-col items-center"
                       >
-                        <Sparkles
-                          className={`w-5 h-5 ${
-                            i % 2 === 0 ? 'text-yellow-400' : 'text-blue-400'
-                          }`}
-                        />
+                        {/* 요일 레이블 */}
+                        <span className={`text-xs font-medium mb-2 ${
+                          index === todayIndex ? 'text-yellow-300' : 'text-white/60'
+                        }`}>
+                          {day}
+                        </span>
+
+                        {/* 스탬프 영역 */}
+                        <motion.div
+                          animate={
+                            status === 'today' && stage === 'stamping'
+                              ? { scale: [1, 1.2, 1], rotate: [0, -10, 0] }
+                              : {}
+                          }
+                          transition={{ duration: 0.3 }}
+                          className={`
+                            w-10 h-10 rounded-xl flex items-center justify-center
+                            transition-all duration-300
+                            ${status === 'checked'
+                              ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30'
+                              : status === 'today'
+                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-orange-500/30 ring-2 ring-white/50'
+                                : status === 'future'
+                                  ? 'bg-white/10 border-2 border-dashed border-white/20'
+                                  : 'bg-white/5 border border-white/10'
+                            }
+                          `}
+                        >
+                          {status === 'checked' ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                            >
+                              <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                            </motion.div>
+                          ) : status === 'today' ? (
+                            <motion.div
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ repeat: Infinity, duration: 1.5 }}
+                              className="w-3 h-3 rounded-full bg-white"
+                            />
+                          ) : null}
+                        </motion.div>
                       </motion.div>
-                    ))}
-                  </motion.div>
-                )}
+                    );
+                  })}
+                </div>
               </div>
+            </div>
 
-              {/* Motivation Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 mb-6"
-              >
-                {isLoggedIn && stage === 'success' ? (
-                  // Success state for logged-in users
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                      <span className="text-lg font-bold text-gray-900">
-                        {consecutiveDays}일 연속 출석!
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      꾸준한 학습이 성공의 비결이에요
-                    </p>
-                  </div>
-                ) : (
-                  // Motivation message for all users
-                  <div className="text-center py-2">
-                    <p className="text-base font-medium text-gray-900 mb-1">
-                      스터플과 함께 꾸준한 공부를 시작해보세요!
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      매일 출석하며 학습 습관을 만들어가요
-                    </p>
-                  </div>
-                )}
-              </motion.div>
+            {/* Motivation Message */}
+            <div className="px-6 pb-4">
+              <div className="bg-white/5 rounded-xl px-4 py-3 text-center">
+                <p className="text-white/90 text-sm font-medium">
+                  {stage === 'success'
+                    ? '꾸준한 출석이 실력을 만들어요 💪'
+                    : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
+                </p>
+              </div>
+            </div>
 
-              {/* Error */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 text-center"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mx-6 mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-xl text-sm text-red-200 text-center"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              {/* Actions */}
+            {/* Actions */}
+            <div className="px-6 pb-6">
               {stage === 'success' ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.2 }}
                 >
-                  <Button onClick={handleClose} fullWidth>
+                  <button
+                    onClick={handleClose}
+                    className="w-full py-4 bg-white text-indigo-600 font-bold rounded-2xl hover:bg-gray-50 transition-colors shadow-lg"
+                  >
                     확인
-                  </Button>
+                  </button>
                 </motion.div>
               ) : (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.1 }}
                   className="space-y-3"
                 >
-                  <Button
+                  <button
                     onClick={handleStamp}
-                    isLoading={stage === 'stamping'}
-                    fullWidth
-                    size="lg"
+                    disabled={stage === 'stamping'}
+                    className="w-full py-4 bg-white text-indigo-600 font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {isLoggedIn ? '출석 스탬프 찍기' : '로그인하고 출석하기'}
-                  </Button>
+                    {stage === 'stamping' ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                          className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full"
+                        />
+                        <span>출석 중...</span>
+                      </>
+                    ) : (
+                      <span>{isLoggedIn ? '오늘 출석하기' : '로그인하고 출석하기'}</span>
+                    )}
+                  </button>
                   <button
                     onClick={handleDismissToday}
-                    className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors py-2"
+                    className="w-full text-center text-sm text-white/50 hover:text-white/80 transition-colors py-2"
                   >
                     오늘 하루 보지 않기
                   </button>
