@@ -135,8 +135,9 @@ async function getPayoutData(creatorId: string) {
       .select(`
         id, creator_revenue, created_at,
         content:contents!content_id (title),
-        buyer:profiles!user_id (display_name)
+        buyer:profiles!buyer_id (display_name)
       `)
+      .eq('seller_id', creatorId)
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(10),

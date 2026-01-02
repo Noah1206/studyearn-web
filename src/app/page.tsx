@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
+import { AttendanceProvider } from '@/components/attendance';
 
 // Intersection Observer Hook for scroll animations
 function useScrollAnimation() {
@@ -1732,6 +1733,8 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      {/* Attendance Modal */}
+      <AttendanceProvider />
     </motion.div>
   );
 }

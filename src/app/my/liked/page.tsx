@@ -152,7 +152,7 @@ export default function LikedContentsPage() {
       if (error) throw error;
 
       // 콘텐츠 like_count 감소
-      await supabase.rpc('decrement_like_count', { p_content_id: contentId });
+      await supabase.rpc('decrement_content_likes', { p_content_id: contentId });
 
       // UI에서 제거
       setLikedContents(prev => prev.filter(c => c.id !== contentId));
@@ -188,7 +188,7 @@ export default function LikedContentsPage() {
             </Link>
             <div className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-              <h1 className="text-xl font-bold">좋아요한 콘텐츠</h1>
+              <h1 className="text-xl font-bold">찜한 콘텐츠</h1>
             </div>
             <span className="text-sm text-gray-500 ml-auto">
               {likedContents.length}개
@@ -204,10 +204,10 @@ export default function LikedContentsPage() {
             <CardContent className="py-16 text-center">
               <HeartCrack className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                좋아요한 콘텐츠가 없습니다
+                찜한 콘텐츠가 없습니다
               </h3>
               <p className="text-gray-500 mb-6">
-                마음에 드는 콘텐츠에 좋아요를 눌러보세요
+                마음에 드는 콘텐츠를 찜해보세요
               </p>
               <Link href="/content">
                 <Button>콘텐츠 둘러보기</Button>

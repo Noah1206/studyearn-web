@@ -136,8 +136,8 @@ const CONTENT_MENUS = [
   },
   {
     id: 'liked',
-    title: '좋아요한 콘텐츠',
-    description: '좋아요를 누른 콘텐츠 목록',
+    title: '찜한 콘텐츠',
+    description: '찜한 콘텐츠 목록',
     icon: Heart,
     href: '/my/liked',
   },
