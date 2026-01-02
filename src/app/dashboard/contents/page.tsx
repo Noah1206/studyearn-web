@@ -1,15 +1,10 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   ArrowLeft,
   Plus,
-  Video,
-  Mic,
-  Image as ImageIcon,
   FileText,
-  BookOpen,
   Eye,
   Heart,
   Edit3,
@@ -17,9 +12,7 @@ import {
   Clock,
   CheckCircle,
   Calendar,
-  MoreHorizontal,
   Download,
-  Trash2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber, formatRelativeTime } from '@/lib/utils';
@@ -28,32 +21,13 @@ import type { Content } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
-// Content Type Icons
-function getContentTypeIcon(type: string) {
-  switch (type) {
-    case 'video': return Video;
-    case 'audio': return Mic;
-    case 'image': return ImageIcon;
-    case 'document': return BookOpen;
-    default: return FileText;
-  }
-}
-
-// Content Type Labels
-const contentTypeLabels: Record<string, string> = {
-  video: '동영상',
-  audio: '오디오',
-  image: '이미지',
-  document: '문서',
-  post: '포스트',
-  pdf: 'PDF',
-};
-
 interface ContentWithStats extends Content {
   purchase_count?: number;
   revenue?: number;
   tags?: string[];
   download_count?: number;
+  subject?: string | null;
+  grade?: string | null;
 }
 
 async function getCreatorContents(userId: string) {
@@ -104,131 +78,151 @@ async function getCreatorContents(userId: string) {
   return { contents: contentsWithStats, stats };
 }
 
-// Content Card Component - Product Style
+// 과목 색상
+function getSubjectStyle(subject?: string | null) {
+  const styles: Record<string, { bg: string; text: string }> = {
+    '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
+    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
+    '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
+    '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '사회': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
+    '한국사': { bg: 'bg-orange-50', text: 'text-orange-600' },
+    '루틴': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+    '플래너': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  };
+  return styles[subject || ''] || { bg: 'bg-gray-50', text: 'text-gray-600' };
+}
+
+// Content Card Component - 탐색 페이지와 동일한 리스트 스타일
 function ContentCard({ content }: { content: ContentWithStats }) {
-  const Icon = getContentTypeIcon(content.content_type);
   const now = new Date();
   const publishedAt = content.published_at ? new Date(content.published_at) : null;
   const isScheduled = content.is_published && publishedAt && publishedAt > now;
   const isDraft = !content.is_published;
+  const subjectStyle = getSubjectStyle(content.subject);
+
+  const getStatusBadge = () => {
+    if (isDraft) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600">
+          <Clock className="w-3 h-3" />
+          임시저장
+        </span>
+      );
+    }
+    if (isScheduled) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-600">
+          <Calendar className="w-3 h-3" />
+          예약됨
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600">
+        <CheckCircle className="w-3 h-3" />
+        발행중
+      </span>
+    );
+  };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
-      {/* Thumbnail */}
-      <Link href={`/content/${content.id}`} className="block relative">
-        <div className="aspect-[4/3] bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden">
-          {content.thumbnail_url ? (
-            <Image
-              src={content.thumbnail_url}
-              alt={content.title}
-              width={400}
-              height={300}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-white/80 flex items-center justify-center mb-2 shadow-sm">
-                <Icon className="w-8 h-8 text-orange-400" />
+    <div className="group">
+      <Link href={`/content/${content.id}`} className="block">
+        <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:border-gray-300 transition-colors duration-200">
+          <div className="flex gap-5">
+            {/* 콘텐츠 정보 */}
+            <div className="flex-1 min-w-0">
+              {/* 태그 라인 */}
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold ${subjectStyle.bg} ${subjectStyle.text}`}>
+                  {content.subject || '학습자료'}
+                </span>
+                {content.grade && (
+                  <span className="px-2.5 py-1.5 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg">
+                    {content.grade}
+                  </span>
+                )}
+                {getStatusBadge()}
+                <span className="text-xs text-gray-400">• {formatRelativeTime(content.created_at)}</span>
               </div>
-              <span className="text-sm text-orange-400 font-medium">
-                {contentTypeLabels[content.content_type] || 'PDF'}
-              </span>
+
+              {/* 제목 */}
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-1.5 line-clamp-1">
+                {content.title}
+              </h3>
+
+              {/* 설명 */}
+              {content.description && (
+                <p className="text-sm text-gray-500 mb-4 line-clamp-1">
+                  {content.description}
+                </p>
+              )}
+
+              {/* 하단: 통계 + 판매 정보 */}
+              <div className="flex items-center justify-between">
+                {/* 통계 */}
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-1 text-gray-400">
+                    <Eye className="w-4 h-4" />
+                    <span className="font-medium">{formatNumber(content.view_count || 0)}</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-gray-400">
+                    <Heart className="w-4 h-4" />
+                    <span className="font-medium">{formatNumber(content.like_count || 0)}</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-gray-400">
+                    <Download className="w-4 h-4" />
+                    <span className="font-medium">{formatNumber(content.download_count || 0)}</span>
+                  </span>
+                </div>
+
+                {/* 판매 정보 */}
+                {(content.purchase_count || 0) > 0 && (
+                  <span className="text-sm text-orange-600 font-semibold">
+                    {formatNumber(content.purchase_count || 0)}건 판매 • {formatCurrency(content.revenue || 0)} 수익
+                  </span>
+                )}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Status Badge */}
-        <div className="absolute top-3 left-3">
-          {isDraft ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-900/70 text-white backdrop-blur-sm">
-              <Clock className="w-3 h-3" />
-              임시저장
-            </span>
-          ) : isScheduled ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white">
-              <Calendar className="w-3 h-3" />
-              예약됨
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-white">
-              <CheckCircle className="w-3 h-3" />
-              발행중
-            </span>
-          )}
-        </div>
+            {/* 우측: 가격 + 액션 */}
+            <div className="flex flex-col items-end justify-between pl-5 border-l border-gray-200 min-w-[120px]">
+              {/* 가격 */}
+              <div className="text-right">
+                {content.price === 0 ? (
+                  <span className="inline-block px-4 py-2 bg-blue-50 text-blue-600 text-lg font-bold rounded-xl">
+                    무료
+                  </span>
+                ) : (
+                  <div>
+                    <span className="block text-xs text-gray-400 mb-0.5">가격</span>
+                    <span className="text-xl font-bold text-gray-900">{formatCurrency(content.price || 0)}</span>
+                  </div>
+                )}
+              </div>
 
-        {/* Type Badge */}
-        <div className="absolute top-3 right-3">
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 backdrop-blur-sm shadow-sm">
-            {contentTypeLabels[content.content_type] || content.content_type}
-          </span>
+              {/* 액션 버튼 */}
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/dashboard/contents/${content.id}/edit`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </Link>
+                <Link
+                  href={`/dashboard/analytics?content=${content.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-2 rounded-lg text-gray-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                >
+                  <BarChart2 className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </Link>
-
-      {/* Content Info */}
-      <div className="p-4">
-        {/* Title */}
-        <Link href={`/content/${content.id}`}>
-          <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-orange-600 transition-colors">
-            {content.title}
-          </h3>
-        </Link>
-
-        {/* Description */}
-        <p className="text-sm text-gray-500 line-clamp-2 mb-3 min-h-[40px]">
-          {content.description || '설명이 없습니다'}
-        </p>
-
-        {/* Price & Stats */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-lg font-bold text-orange-600">
-            {content.price ? formatCurrency(content.price) : '무료'}
-          </span>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="flex items-center gap-0.5">
-              <Eye className="w-3.5 h-3.5" />
-              {formatNumber(content.view_count || 0)}
-            </span>
-            <span className="flex items-center gap-0.5">
-              <Heart className="w-3.5 h-3.5" />
-              {formatNumber(content.like_count || 0)}
-            </span>
-          </div>
-        </div>
-
-        {/* Revenue Info */}
-        {(content.purchase_count || 0) > 0 && (
-          <div className="flex items-center justify-between py-2 px-3 bg-orange-50 rounded-xl mb-3">
-            <span className="text-xs text-orange-600 font-medium">
-              {formatNumber(content.purchase_count || 0)}건 판매
-            </span>
-            <span className="text-sm font-bold text-orange-600">
-              {formatCurrency(content.revenue || 0)} 수익
-            </span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-          <Link href={`/dashboard/contents/${content.id}/edit`} className="flex-1">
-            <button className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
-              <Edit3 className="w-4 h-4" />
-              수정
-            </button>
-          </Link>
-          <Link href={`/dashboard/analytics?content=${content.id}`} className="flex-1">
-            <button className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors">
-              <BarChart2 className="w-4 h-4" />
-              분석
-            </button>
-          </Link>
-        </div>
-
-        {/* Time */}
-        <p className="text-xs text-gray-400 text-center mt-3">
-          {formatRelativeTime(content.created_at)}
-        </p>
-      </div>
     </div>
   );
 }
@@ -388,7 +382,7 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
 
         {/* Content List */}
         {filteredContents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {filteredContents.map((content) => (
               <ContentCard key={content.id} content={content} />
             ))}
