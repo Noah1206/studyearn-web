@@ -136,16 +136,16 @@ export function AttendanceModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-gradient-to-b from-orange-500 to-orange-600 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl"
           >
             {/* Header */}
             <div className="relative px-6 pt-6 pb-4">
               <button
                 onClick={handleDismissToday}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-orange-50 transition-colors"
                 aria-label="닫기"
               >
-                <X className="w-5 h-5 text-white/80" />
+                <X className="w-5 h-5 text-gray-400" />
               </button>
 
               {/* Streak Badge */}
@@ -153,9 +153,9 @@ export function AttendanceModal({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-4 left-4 flex items-center gap-1.5 bg-gray-900 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg"
+                  className="absolute top-4 left-4 flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg"
                 >
-                  <Flame className="w-4 h-4 text-orange-300" />
+                  <Flame className="w-4 h-4 text-white" />
                   <span>{stage === 'success' ? consecutiveDays : consecutiveDays}일</span>
                 </motion.div>
               )}
@@ -166,17 +166,17 @@ export function AttendanceModal({
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                   >
-                    <h2 className="text-2xl font-bold text-white mb-1">출석 완료! 🎉</h2>
-                    <p className="text-white/80 text-sm">
+                    <h2 className="text-2xl font-bold text-orange-500 mb-1">출석 완료! 🎉</h2>
+                    <p className="text-gray-500 text-sm">
                       오늘도 스터플과 함께해요
                     </p>
                   </motion.div>
                 ) : (
                   <>
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-orange-500 mb-1">
                       {isLoggedIn ? `${userName || '회원'}님` : '출석 체크'}
                     </h2>
-                    <p className="text-white/80 text-sm">
+                    <p className="text-gray-500 text-sm">
                       {isLoggedIn ? '오늘의 출석 스탬프를 찍어주세요!' : '로그인하고 출석해주세요!'}
                     </p>
                   </>
@@ -186,7 +186,7 @@ export function AttendanceModal({
 
             {/* 7-Day Calendar Grid */}
             <div className="px-6 pb-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-orange-50 rounded-xl p-4">
                 <div className="grid grid-cols-7 gap-2">
                   {WEEKDAYS.map((day, index) => {
                     const status = getStampStatus(index);
@@ -200,7 +200,7 @@ export function AttendanceModal({
                       >
                         {/* 요일 레이블 */}
                         <span className={`text-xs font-medium mb-2 ${
-                          index === todayIndex ? 'text-white font-bold' : 'text-white/60'
+                          index === todayIndex ? 'text-orange-500 font-bold' : 'text-gray-400'
                         }`}>
                           {day}
                         </span>
@@ -214,15 +214,15 @@ export function AttendanceModal({
                           }
                           transition={{ duration: 0.3 }}
                           className={`
-                            w-10 h-10 rounded-xl flex items-center justify-center
+                            w-10 h-10 rounded-lg flex items-center justify-center
                             transition-all duration-300
                             ${status === 'checked'
-                              ? 'bg-gray-900 shadow-lg shadow-black/30'
+                              ? 'bg-orange-500 shadow-md shadow-orange-500/30'
                               : status === 'today'
-                                ? 'bg-white shadow-lg shadow-white/30 ring-2 ring-gray-900/30'
+                                ? 'bg-white shadow-md ring-2 ring-orange-500'
                                 : status === 'future'
-                                  ? 'bg-white/10 border-2 border-dashed border-white/20'
-                                  : 'bg-white/5 border border-white/10'
+                                  ? 'bg-gray-100 border-2 border-dashed border-gray-200'
+                                  : 'bg-gray-100 border border-gray-200'
                             }
                           `}
                         >
@@ -251,8 +251,8 @@ export function AttendanceModal({
 
             {/* Motivation Message */}
             <div className="px-6 pb-4">
-              <div className="bg-white/5 rounded-xl px-4 py-3 text-center">
-                <p className="text-white/90 text-sm font-medium">
+              <div className="bg-orange-50 rounded-lg px-4 py-3 text-center">
+                <p className="text-orange-600 text-sm font-medium">
                   {stage === 'success'
                     ? '꾸준한 출석이 실력을 만들어요 💪'
                     : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
@@ -284,7 +284,7 @@ export function AttendanceModal({
                 >
                   <button
                     onClick={handleClose}
-                    className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-colors shadow-lg"
+                    className="w-full py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg"
                   >
                     확인
                   </button>
@@ -299,7 +299,7 @@ export function AttendanceModal({
                   <button
                     onClick={handleStamp}
                     disabled={stage === 'stamping'}
-                    className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {stage === 'stamping' ? (
                       <>
@@ -316,7 +316,7 @@ export function AttendanceModal({
                   </button>
                   <button
                     onClick={handleDismissToday}
-                    className="w-full text-center text-sm text-white/50 hover:text-white/80 transition-colors py-2"
+                    className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors py-2"
                   >
                     오늘 하루 보지 않기
                   </button>
