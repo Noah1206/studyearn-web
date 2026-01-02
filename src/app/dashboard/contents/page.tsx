@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Plus,
@@ -11,19 +12,18 @@ import {
   BookOpen,
   Eye,
   Heart,
-  MoreVertical,
-  Edit,
-  Trash2,
-  BarChart3,
-  Filter,
-  Search,
+  Edit3,
+  BarChart2,
   Clock,
-  CheckCircle2,
+  CheckCircle,
   Calendar,
+  MoreHorizontal,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { formatCurrency, formatNumber, formatDate, formatRelativeTime } from '@/lib/utils';
-import { Button, Card, CardContent, Badge, LoadingSection } from '@/components/ui';
+import { formatCurrency, formatNumber, formatRelativeTime } from '@/lib/utils';
+import { Button, LoadingSection } from '@/components/ui';
 import type { Content } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -46,23 +46,7 @@ const contentTypeLabels: Record<string, string> = {
   image: '이미지',
   document: '문서',
   post: '포스트',
-  live: '라이브',
-};
-
-// Access Level Labels
-const accessLevelLabels: Record<string, string> = {
-  public: '공개',
-  subscribers: '구독자',
-  tier: '티어',
-  paid: '유료',
-};
-
-// Access Level Colors
-const accessLevelColors: Record<string, string> = {
-  public: 'bg-green-100 text-green-700',
-  subscribers: 'bg-blue-100 text-blue-700',
-  tier: 'bg-purple-100 text-purple-700',
-  paid: 'bg-orange-100 text-orange-700',
+  pdf: 'PDF',
 };
 
 interface ContentWithStats extends Content {
@@ -74,7 +58,6 @@ interface ContentWithStats extends Content {
 async function getCreatorContents(userId: string) {
   const supabase = await createClient();
 
-  // Get all contents
   const { data: contents, error } = await supabase
     .from('contents')
     .select('*')
@@ -85,7 +68,6 @@ async function getCreatorContents(userId: string) {
     return { contents: [], stats: { total: 0, published: 0, draft: 0, scheduled: 0 } };
   }
 
-  // Get purchase stats for each content
   const contentsWithStats: ContentWithStats[] = [];
 
   for (const content of contents) {
@@ -110,7 +92,6 @@ async function getCreatorContents(userId: string) {
     });
   }
 
-  // Calculate stats
   const now = new Date();
   const stats = {
     total: contents.length,
@@ -130,117 +111,116 @@ function ContentCard({ content }: { content: ContentWithStats }) {
   const isScheduled = content.is_published && publishedAt && publishedAt > now;
   const isDraft = !content.is_published;
 
+  const getStatusBadge = () => {
+    if (isDraft) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
+          <Clock className="w-3 h-3" />
+          임시저장
+        </span>
+      );
+    }
+    if (isScheduled) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-600">
+          <Calendar className="w-3 h-3" />
+          예약됨
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-600">
+        <CheckCircle className="w-3 h-3" />
+        발행됨
+      </span>
+    );
+  };
+
   return (
-    <div className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all overflow-hidden">
+    <div className="group bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200">
       <div className="flex">
-        {/* Thumbnail Area */}
-        <div className="w-32 sm:w-40 flex-shrink-0 bg-gray-100 flex items-center justify-center">
+        {/* Thumbnail */}
+        <Link
+          href={`/content/${content.id}`}
+          className="w-36 sm:w-44 h-32 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-l-2xl overflow-hidden flex items-center justify-center"
+        >
           {content.thumbnail_url ? (
-            <img
+            <Image
               src={content.thumbnail_url}
               alt={content.title}
+              width={176}
+              height={128}
               className="w-full h-full object-cover"
             />
           ) : (
-            <Icon className="w-8 h-8 text-gray-400" />
+            <div className="w-14 h-14 rounded-xl bg-white/80 flex items-center justify-center">
+              <Icon className="w-7 h-7 text-gray-400" />
+            </div>
           )}
-        </div>
+        </Link>
 
         {/* Content Info */}
-        <div className="flex-1 p-4 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                {isDraft ? (
-                  <Badge variant="secondary" size="sm" className="bg-gray-100 text-gray-600">
-                    <Clock className="w-3 h-3 mr-1" />
-                    임시저장
-                  </Badge>
-                ) : isScheduled ? (
-                  <Badge variant="secondary" size="sm" className="bg-yellow-100 text-yellow-700">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    예약됨
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" size="sm" className="bg-green-100 text-green-700">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    발행됨
-                  </Badge>
-                )}
-                <span className={`text-xs px-2 py-0.5 rounded-full ${accessLevelColors[content.access_level || 'public']}`}>
-                  {accessLevelLabels[content.access_level || 'public']}
-                </span>
-              </div>
-
-              <Link href={`/content/${content.id}`} className="block">
-                <h3 className="font-semibold text-gray-900 truncate group-hover:text-gray-900 transition-colors">
-                  {content.title}
-                </h3>
-              </Link>
-
-              <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                {content.description || '설명이 없습니다'}
-              </p>
-
-              {/* Stats */}
-              <div className="flex items-center gap-4 mt-3">
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {formatNumber(content.view_count || 0)}
-                </span>
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                  <Heart className="w-3 h-3" />
-                  {formatNumber(content.like_count || 0)}
-                </span>
-                {content.access_level === 'paid' && content.revenue !== undefined && content.revenue > 0 && (
-                  <span className="text-xs font-medium text-green-600">
-                    {formatCurrency(content.revenue)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Link href={`/dashboard/contents/${content.id}/edit`}>
-                <Button variant="ghost" size="sm" className="p-2">
-                  <Edit className="w-4 h-4 text-gray-500" />
-                </Button>
-              </Link>
-              <Link href={`/dashboard/analytics?content=${content.id}`}>
-                <Button variant="ghost" size="sm" className="p-2">
-                  <BarChart3 className="w-4 h-4 text-gray-500" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Icon className="w-3.5 h-3.5" />
-              <span>{contentTypeLabels[content.content_type]}</span>
-              <span>·</span>
-              <span>
-                {isScheduled && publishedAt
-                  ? `${formatDate(publishedAt.toISOString())} 발행 예정`
-                  : formatRelativeTime(content.created_at)
-                }
+        <div className="flex-1 p-4 min-w-0 flex flex-col">
+          {/* Top Row: Status + Actions */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {getStatusBadge()}
+              <span className="text-xs text-gray-400">
+                {contentTypeLabels[content.content_type] || content.content_type}
               </span>
             </div>
 
-            {content.tags && content.tags.length > 0 && (
-              <div className="flex gap-1">
-                {content.tags.slice(0, 2).map((tag) => (
-                  <span key={tag} className="text-xs text-gray-400">
-                    #{tag}
-                  </span>
-                ))}
-                {content.tags.length > 2 && (
-                  <span className="text-xs text-gray-400">+{content.tags.length - 2}</span>
-                )}
-              </div>
-            )}
+            {/* Actions - Always visible on mobile, hover on desktop */}
+            <div className="flex items-center gap-1">
+              <Link href={`/dashboard/contents/${content.id}/edit`}>
+                <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link href={`/dashboard/analytics?content=${content.id}`}>
+                <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <BarChart2 className="w-4 h-4" />
+                </button>
+              </Link>
+              <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Title */}
+          <Link href={`/content/${content.id}`} className="block mb-1">
+            <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
+              {content.title}
+            </h3>
+          </Link>
+
+          {/* Description */}
+          <p className="text-sm text-gray-500 line-clamp-1 mb-auto">
+            {content.description || '설명이 없습니다'}
+          </p>
+
+          {/* Bottom Row: Stats + Time */}
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5" />
+                {formatNumber(content.view_count || 0)}
+              </span>
+              <span className="flex items-center gap-1">
+                <Heart className="w-3.5 h-3.5" />
+                {formatNumber(content.like_count || 0)}
+              </span>
+              {content.download_count !== undefined && content.download_count > 0 && (
+                <span className="flex items-center gap-1">
+                  <Download className="w-3.5 h-3.5" />
+                  {formatNumber(content.download_count)}
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-gray-400">
+              {formatRelativeTime(content.created_at)}
+            </span>
           </div>
         </div>
       </div>
@@ -248,12 +228,12 @@ function ContentCard({ content }: { content: ContentWithStats }) {
   );
 }
 
-// Empty State Component
+// Empty State
 function EmptyState({ filter }: { filter: string }) {
   const messages: Record<string, { title: string; description: string }> = {
     all: {
       title: '아직 콘텐츠가 없어요',
-      description: '첫 콘텐츠를 업로드하고 팬들과 소통을 시작하세요.',
+      description: '첫 번째 학습 자료를 업로드해보세요!',
     },
     published: {
       title: '발행된 콘텐츠가 없어요',
@@ -265,55 +245,52 @@ function EmptyState({ filter }: { filter: string }) {
     },
     scheduled: {
       title: '예약된 콘텐츠가 없어요',
-      description: '콘텐츠 발행을 예약할 수 있어요.',
+      description: '발행 예약 기능을 사용해보세요.',
     },
   };
 
   const message = messages[filter] || messages.all;
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-        <FileText className="w-10 h-10 text-gray-400" />
+    <div className="flex flex-col items-center justify-center py-20 px-4">
+      <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+        <FileText className="w-8 h-8 text-gray-300" />
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{message.title}</h3>
-      <p className="text-gray-500 text-center max-w-sm mb-6">{message.description}</p>
+      <h3 className="text-lg font-semibold text-gray-900 mb-1">{message.title}</h3>
+      <p className="text-gray-500 text-sm text-center max-w-xs mb-6">{message.description}</p>
       <Link href="/dashboard/upload">
-        <Button>
+        <Button className="bg-orange-500 hover:bg-orange-600">
           <Plus className="w-4 h-4 mr-2" />
-          콘텐츠 업로드
+          새 콘텐츠 만들기
         </Button>
       </Link>
     </div>
   );
 }
 
-// Stats Card
-function StatsCard({
+// Filter Tab
+function FilterTab({
   label,
-  value,
+  count,
   active,
-  onClick,
+  href,
 }: {
   label: string;
-  value: number;
+  count: number;
   active?: boolean;
-  onClick?: () => void;
+  href: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-3 rounded-xl text-center transition-all ${
+    <Link
+      href={href}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
         active
-          ? 'bg-gray-50 border-2 border-gray-900'
-          : 'bg-white border border-gray-200 hover:border-gray-300'
+          ? 'bg-gray-900 text-white'
+          : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
       }`}
     >
-      <p className={`text-2xl font-bold ${active ? 'text-gray-900' : 'text-gray-900'}`}>
-        {value}
-      </p>
-      <p className={`text-sm ${active ? 'text-gray-900' : 'text-gray-500'}`}>{label}</p>
-    </button>
+      {label} <span className={active ? 'text-gray-300' : 'text-gray-400'}>{count}</span>
+    </Link>
   );
 }
 
@@ -338,7 +315,6 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
   const { contents, stats } = await getCreatorContents(user.id);
   const filter = (searchParams?.filter as string) || 'all';
 
-  // Filter contents
   const now = new Date();
   const filteredContents = contents.filter((content) => {
     if (filter === 'all') return true;
@@ -355,62 +331,69 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">콘텐츠 관리</h1>
-                <p className="text-gray-500 text-sm mt-1">
-                  총 {stats.total}개의 콘텐츠
-                </p>
-              </div>
-            </div>
-            <Link href="/dashboard/upload">
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                새 콘텐츠
-              </Button>
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="p-1.5 -ml-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">내 콘텐츠</h1>
+            </div>
           </div>
+          <Link href="/dashboard/upload">
+            <Button size="sm" className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg h-9 px-4">
+              <Plus className="w-4 h-4 mr-1.5" />
+              새 콘텐츠
+            </Button>
+          </Link>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Filter */}
-        <div className="grid grid-cols-4 gap-3 mb-8">
-          <Link href="/dashboard/contents">
-            <StatsCard label="전체" value={stats.total} active={filter === 'all'} />
-          </Link>
-          <Link href="/dashboard/contents?filter=published">
-            <StatsCard label="발행됨" value={stats.published} active={filter === 'published'} />
-          </Link>
-          <Link href="/dashboard/contents?filter=draft">
-            <StatsCard label="임시저장" value={stats.draft} active={filter === 'draft'} />
-          </Link>
-          <Link href="/dashboard/contents?filter=scheduled">
-            <StatsCard label="예약됨" value={stats.scheduled} active={filter === 'scheduled'} />
-          </Link>
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
+          <FilterTab
+            label="전체"
+            count={stats.total}
+            active={filter === 'all'}
+            href="/dashboard/contents"
+          />
+          <FilterTab
+            label="발행됨"
+            count={stats.published}
+            active={filter === 'published'}
+            href="/dashboard/contents?filter=published"
+          />
+          <FilterTab
+            label="임시저장"
+            count={stats.draft}
+            active={filter === 'draft'}
+            href="/dashboard/contents?filter=draft"
+          />
+          <FilterTab
+            label="예약됨"
+            count={stats.scheduled}
+            active={filter === 'scheduled'}
+            href="/dashboard/contents?filter=scheduled"
+          />
         </div>
 
         {/* Content List */}
         {filteredContents.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredContents.map((content) => (
               <ContentCard key={content.id} content={content} />
             ))}
           </div>
         ) : (
-          <Card className="border-0 shadow-sm">
+          <div className="bg-gray-50 rounded-2xl">
             <EmptyState filter={filter} />
-          </Card>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
@@ -428,6 +411,6 @@ export default function ContentsPage({
 }
 
 export const metadata = {
-  title: '콘텐츠 관리 - 스터플',
+  title: '내 콘텐츠 - 스터플',
   description: '내 콘텐츠를 관리하세요.',
 };

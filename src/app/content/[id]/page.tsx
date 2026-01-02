@@ -248,7 +248,7 @@ export default function ProductDetailPage() {
             </h1>
 
             {/* Creator Info */}
-            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {product.creator?.avatar_url ? (
                   <Image
