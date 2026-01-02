@@ -160,20 +160,20 @@ export function AttendanceModal({
                 </motion.div>
               )}
 
-              <div className="text-center pt-6">
+              <div className="text-center pt-8 pb-2">
                 {stage === 'success' ? (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                   >
-                    <h2 className="text-2xl font-bold text-orange-500 mb-1">출석 완료! 🎉</h2>
+                    <h2 className="text-2xl font-bold text-orange-500 mb-2">출석 완료! 🎉</h2>
                     <p className="text-gray-500 text-sm">
                       오늘도 스터플과 함께해요
                     </p>
                   </motion.div>
                 ) : (
                   <>
-                    <h2 className="text-2xl font-bold text-orange-500 mb-1">
+                    <h2 className="text-2xl font-bold text-orange-500 mb-2">
                       {isLoggedIn ? `${userName || '회원'}님` : '출석 체크'}
                     </h2>
                     <p className="text-gray-500 text-sm">
@@ -185,7 +185,7 @@ export function AttendanceModal({
             </div>
 
             {/* 7-Day Calendar Grid */}
-            <div className="px-6 pb-4">
+            <div className="px-6 py-2">
               <div className="bg-orange-50 rounded-xl p-5">
                 <div className="grid grid-cols-7 gap-3">
                   {WEEKDAYS.map((day, index) => {
@@ -254,7 +254,7 @@ export function AttendanceModal({
             </div>
 
             {/* Motivation Message */}
-            <div className="px-6 pb-2 text-center">
+            <div className="px-6 py-4 text-center">
               <p className="text-orange-500 text-sm font-medium">
                 {stage === 'success'
                   ? '꾸준한 출석이 실력을 만들어요 💪'
