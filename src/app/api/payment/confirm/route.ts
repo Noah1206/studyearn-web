@@ -10,6 +10,7 @@ interface ConfirmPaymentRequest {
 /**
  * POST /api/payment/confirm
  * Confirm payment with TossPayments and update purchase status
+ * Uses content_purchases table
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,12 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the pending purchase by order_id
+    // Find the pending purchase by order_id (using content_purchases table)
     const { data: purchase, error: purchaseError } = await supabase
-      .from('purchases')
-      .select('*, product:products(*)')
+      .from('content_purchases')
+      .select('*')
       .eq('order_id', orderId)
-      .eq('user_id', user.id)
+      .eq('buyer_id', user.id)
       .eq('status', 'pending')
       .single();
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
 
       // Update purchase status to failed
       await supabase
-        .from('purchases')
+        .from('content_purchases')
         .update({
           status: 'failed',
           updated_at: new Date().toISOString(),
@@ -113,11 +114,11 @@ export async function POST(request: NextRequest) {
 
     // Update purchase to completed
     const { error: updateError } = await supabase
-      .from('purchases')
+      .from('content_purchases')
       .update({
         status: 'completed',
         payment_key: paymentKey,
-        paid_at: new Date().toISOString(),
+        purchased_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', purchase.id);
@@ -130,9 +131,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update creator's revenue stats if product has a creator
-    if (purchase.product?.creator_id) {
-      const creatorId = purchase.product.creator_id;
+    // Update creator's revenue stats
+    if (purchase.seller_id) {
+      const creatorId = purchase.seller_id;
       const platformFeePercent = parseFloat(process.env.PLATFORM_FEE_PERCENT || '20');
       const creatorRevenue = Math.floor(amount * (1 - platformFeePercent / 100));
       const currentMonth = new Date().toISOString().slice(0, 7) + '-01'; // YYYY-MM-01
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
       success: true,
       orderId,
       amount,
-      productId: purchase.product_id,
+      productId: purchase.content_id,  // Return content_id as productId for backward compatibility
     });
   } catch (error) {
     console.error('Payment confirm API error:', error);

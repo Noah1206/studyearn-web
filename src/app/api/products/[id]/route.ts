@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/products/[id]
- * Get single product with contents
+ * Get single content detail with purchase status
  */
 export async function GET(
   request: NextRequest,
@@ -20,75 +20,134 @@ export async function GET(
       );
     }
 
-    // Get product with creator info
-    const { data: product, error: productError } = await supabase
-      .from('products')
+    // Get content detail from contents table
+    const { data: content, error } = await supabase
+      .from('contents')
       .select(`
-        *,
-        creator_settings!products_creator_id_fkey (
-          id,
-          display_name,
-          profile_image_url,
-          bio
-        )
+        id,
+        title,
+        description,
+        price,
+        thumbnail_url,
+        is_published,
+        created_at,
+        subject,
+        grade,
+        content_type,
+        type,
+        url,
+        access_level,
+        view_count,
+        like_count,
+        routine_type,
+        routine_days,
+        routine_items,
+        creator_id
       `)
       .eq('id', id)
-      .eq('is_active', true)
       .single();
 
-    if (productError || !product) {
+    if (error || !content) {
       return NextResponse.json(
-        { message: 'Product not found' },
+        { message: 'Content not found' },
         { status: 404 }
       );
     }
 
-    // Transform product to include creator as flat object
-    const productWithCreator = {
-      ...product,
-      creator: product.creator_settings ? {
-        name: product.creator_settings.display_name || '익명',
-        avatar_url: product.creator_settings.profile_image_url,
-        bio: product.creator_settings.bio,
-      } : { name: '익명' },
-      creator_settings: undefined,
-    };
-
-    // Get contents (without URLs - URLs are only returned if purchased)
-    const { data: contents, error: contentsError } = await supabase
-      .from('contents')
-      .select('id, product_id, title, type, thumbnail_url, duration, sort_order')
-      .eq('product_id', id)
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true });
-
-    if (contentsError) {
-      console.error('Failed to fetch contents:', contentsError);
+    // Get creator info separately (foreign key might not exist for legacy data)
+    let creatorInfo = null;
+    if (content.creator_id) {
+      const { data: creator } = await supabase
+        .from('creator_settings')
+        .select('display_name, profile_image_url, bio, subject')
+        .eq('user_id', content.creator_id)
+        .single();
+      creatorInfo = creator;
     }
 
-    // Check if current user has purchased
-    let hasPurchased = false;
+    // Check if user is authenticated and has purchased
+    let isPurchased = false;
+    let isOwner = false;
+
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      const { data: purchase } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('product_id', id)
-        .eq('status', 'completed')
-        .single();
+      // Check if user is the creator (owner)
+      if (content.creator_id === user.id) {
+        isOwner = true;
+        isPurchased = true; // Owners have access
+      } else if (content.price && content.price > 0) {
+        // Check purchase status for paid content
+        const { data: purchase } = await supabase
+          .from('content_purchases')
+          .select('id')
+          .eq('content_id', id)
+          .eq('buyer_id', user.id)
+          .eq('status', 'completed')
+          .single();
 
-      hasPurchased = !!purchase;
+        isPurchased = !!purchase;
+      } else {
+        // Free content is accessible
+        isPurchased = true;
+      }
+    } else if (!content.price || content.price === 0) {
+      // Free content accessible without login
+      isPurchased = true;
     }
 
+    // Transform to product format for frontend compatibility
+    const product = {
+      id: content.id,
+      title: content.title,
+      description: content.description,
+      price: content.price || 0,
+      thumbnail_url: content.thumbnail_url,
+      is_active: content.is_published,
+      created_at: content.created_at,
+      subject: content.subject || creatorInfo?.subject || null,
+      grade: content.grade,
+      content_type: content.content_type,
+      type: content.type,
+      access_level: content.access_level,
+      view_count: content.view_count,
+      like_count: content.like_count,
+      routine_type: content.routine_type,
+      routine_days: content.routine_days,
+      routine_items: content.routine_items,
+      creator: creatorInfo ? {
+        name: creatorInfo.display_name || '익명',
+        avatar_url: creatorInfo.profile_image_url,
+        bio: creatorInfo.bio,
+      } : { name: '익명' },
+    };
+
+    // For routine content, the content itself contains the routine items
+    // For other content types, the URL is shown only if purchased
+    const contents = [{
+      id: content.id,
+      title: content.title,
+      type: content.type,
+      url: isPurchased ? content.url : null,
+      thumbnail_url: content.thumbnail_url,
+      duration: null,
+      sort_order: 0,
+    }];
+
+    // Increment view count
+    await supabase
+      .from('contents')
+      .update({ view_count: (content.view_count || 0) + 1 })
+      .eq('id', id);
+
     return NextResponse.json({
-      product: productWithCreator,
-      contents: contents || [],
-      hasPurchased,
+      product,
+      contents,
+      isPurchased,
+      isOwner,
     });
   } catch (error) {
-    console.error('Product API error:', error);
+    console.error('Product detail API error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
