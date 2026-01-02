@@ -160,7 +160,7 @@ export function AttendanceModal({
                 </motion.div>
               )}
 
-              <div className="text-center pt-8 pb-2">
+              <div className="text-center pt-10 pb-4">
                 {stage === 'success' ? (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -185,8 +185,8 @@ export function AttendanceModal({
             </div>
 
             {/* 7-Day Calendar Grid */}
-            <div className="px-6 py-2">
-              <div className="bg-orange-50 rounded-xl p-5">
+            <div className="px-6 py-4">
+              <div className="bg-orange-50 rounded-xl p-6">
                 <div className="grid grid-cols-7 gap-3">
                   {WEEKDAYS.map((day, index) => {
                     const status = getStampStatus(index);
@@ -254,7 +254,7 @@ export function AttendanceModal({
             </div>
 
             {/* Motivation Message */}
-            <div className="px-6 py-4 text-center">
+            <div className="px-6 py-6 text-center">
               <p className="text-orange-500 text-sm font-medium">
                 {stage === 'success'
                   ? '꾸준한 출석이 실력을 만들어요 💪'
@@ -277,7 +277,7 @@ export function AttendanceModal({
             </AnimatePresence>
 
             {/* Actions */}
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-8">
               {stage === 'success' ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
