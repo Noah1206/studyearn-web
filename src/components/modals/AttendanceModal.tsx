@@ -254,14 +254,12 @@ export function AttendanceModal({
             </div>
 
             {/* Motivation Message */}
-            <div className="px-6 pb-4">
-              <div className="bg-orange-50 rounded-lg px-4 py-3 text-center">
-                <p className="text-orange-600 text-sm font-medium">
-                  {stage === 'success'
-                    ? '꾸준한 출석이 실력을 만들어요 💪'
-                    : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
-                </p>
-              </div>
+            <div className="px-6 pb-2 text-center">
+              <p className="text-orange-500 text-sm font-medium">
+                {stage === 'success'
+                  ? '꾸준한 출석이 실력을 만들어요 💪'
+                  : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
+              </p>
             </div>
 
             {/* Error */}
