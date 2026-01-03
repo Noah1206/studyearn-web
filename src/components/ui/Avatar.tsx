@@ -40,6 +40,11 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         .slice(0, 2);
     };
 
+    // Check if URL is external (not from our domain or Supabase storage)
+    const isExternalUrl = (url: string) => {
+      return url.startsWith('http') && !url.includes('supabase.co');
+    };
+
     return (
       <div
         ref={ref}
@@ -50,14 +55,27 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         )}
       >
         {src ? (
-          <Image
-            src={src}
-            alt={alt}
-            width={sizeValues[size]}
-            height={sizeValues[size]}
-            className="object-cover w-full h-full"
-            {...props}
-          />
+          isExternalUrl(src) ? (
+            // Use regular img tag for external URLs (Kakao, etc.)
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src}
+              alt={alt}
+              width={sizeValues[size]}
+              height={sizeValues[size]}
+              className="object-cover w-full h-full"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <Image
+              src={src}
+              alt={alt}
+              width={sizeValues[size]}
+              height={sizeValues[size]}
+              className="object-cover w-full h-full"
+              {...props}
+            />
+          )
         ) : (
           <span className="font-medium text-gray-600">{getInitials()}</span>
         )}
