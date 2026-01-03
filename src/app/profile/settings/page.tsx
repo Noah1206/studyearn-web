@@ -37,7 +37,6 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 interface NotificationSettings {
   pushEnabled: boolean;
   emailEnabled: boolean;
-  studyReminder: boolean;
   newContent: boolean;
   marketing: boolean;
 }
@@ -66,7 +65,6 @@ export default function SettingsPage() {
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     pushEnabled: true,
     emailEnabled: true,
-    studyReminder: true,
     newContent: true,
     marketing: false,
   });
@@ -295,25 +293,6 @@ export default function SettingsPage() {
                         onChange={() => setNotificationSettings(prev => ({
                           ...prev,
                           emailEnabled: !prev.emailEnabled
-                        }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <Bell className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">공부 리마인더</p>
-                          <p className="text-xs text-gray-400">목표 시간에 알림 받기</p>
-                        </div>
-                      </div>
-                      <Toggle
-                        enabled={notificationSettings.studyReminder}
-                        onChange={() => setNotificationSettings(prev => ({
-                          ...prev,
-                          studyReminder: !prev.studyReminder
                         }))}
                       />
                     </div>
