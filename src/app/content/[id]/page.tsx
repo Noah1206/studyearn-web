@@ -524,22 +524,19 @@ export default function ProductDetailPage() {
                     <button
                       onClick={handleDownload}
                       disabled={isDownloading}
-                      className="w-full relative overflow-hidden group"
+                      className="w-full flex items-center justify-center gap-3 h-14 text-gray-900 font-semibold text-base rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 transition-transform group-hover:scale-[1.02]" />
-                      <div className="relative flex items-center justify-center gap-3 h-14 text-white font-semibold text-base rounded-2xl">
-                        {isDownloading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>다운로드 중...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
-                            <span>다운로드</span>
-                          </>
-                        )}
-                      </div>
+                      {isDownloading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>다운로드 중...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5" />
+                          <span>다운로드</span>
+                        </>
+                      )}
                     </button>
 
                     {/* Download Count */}
