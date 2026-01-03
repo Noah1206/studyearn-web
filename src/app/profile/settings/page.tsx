@@ -8,9 +8,6 @@ import {
   ArrowLeft,
   Bell,
   Shield,
-  Globe,
-  Moon,
-  Sun,
   Smartphone,
   Mail,
   Lock,
@@ -26,7 +23,6 @@ import {
   CreditCard,
   AlertTriangle,
   Settings,
-  Palette,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -47,7 +43,7 @@ interface PrivacySettings {
   showSchool: boolean;
 }
 
-type SettingsSection = 'notifications' | 'privacy' | 'general' | 'payment' | 'help' | 'account';
+type SettingsSection = 'notifications' | 'privacy' | 'payment' | 'help' | 'account';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -75,12 +71,6 @@ export default function SettingsPage() {
     showStudyStatus: true,
     showSchool: false,
   });
-
-  // 다크모드
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // 언어
-  const [language, setLanguage] = useState('ko');
 
   useEffect(() => {
     const fetchUserAndSettings = async () => {
@@ -234,7 +224,6 @@ export default function SettingsPage() {
   const menuItems = [
     { id: 'notifications' as const, icon: Bell, label: '알림', description: '푸시, 이메일 알림 설정' },
     { id: 'privacy' as const, icon: Shield, label: '개인정보 및 보안', description: '프로필 공개, 비밀번호' },
-    { id: 'general' as const, icon: Palette, label: '일반', description: '테마, 언어 설정' },
     ...(userType === 'creator' ? [{ id: 'payment' as const, icon: CreditCard, label: '결제 및 정산', description: '정산 계좌 관리' }] : []),
     { id: 'help' as const, icon: HelpCircle, label: '도움말', description: 'FAQ, 문의하기' },
     { id: 'account' as const, icon: AlertTriangle, label: '계정 관리', description: '로그아웃, 탈퇴' },
@@ -416,90 +405,6 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400">추가 보안 설정</p>
                       </div>
                       <ChevronRight className="w-5 h-5 text-gray-300" />
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.div>
-        );
-
-      case 'general':
-        return (
-          <motion.div
-            key="general"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900">일반 설정</h2>
-              <p className="text-sm text-gray-500 mt-1">테마와 언어를 설정합니다</p>
-            </div>
-            <div className="space-y-4">
-              <Card variant="outlined">
-                <CardContent className="p-0">
-                  <div className="divide-y divide-gray-100">
-                    <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          {isDarkMode ? (
-                            <Moon className="w-5 h-5 text-gray-600" />
-                          ) : (
-                            <Sun className="w-5 h-5 text-gray-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">다크 모드</p>
-                          <p className="text-xs text-gray-400">어두운 테마 사용</p>
-                        </div>
-                      </div>
-                      <Toggle
-                        enabled={isDarkMode}
-                        onChange={() => setIsDarkMode(prev => !prev)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <Globe className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">언어</p>
-                          <p className="text-xs text-gray-400">앱 표시 언어</p>
-                        </div>
-                      </div>
-                      <select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-700 border-none focus:ring-2 focus:ring-accent/20"
-                      >
-                        <option value="ko">한국어</option>
-                        <option value="en">English</option>
-                        <option value="ja">日本語</option>
-                      </select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 앱 정보 */}
-              <Card variant="outlined">
-                <CardContent className="py-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-cta-light flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">S</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-gray-900">StuPle</p>
-                      <p className="text-xs text-gray-400">버전 1.0.0</p>
-                    </div>
-                    <Link
-                      href="/changelog"
-                      className="text-xs text-accent font-medium hover:underline"
-                    >
-                      업데이트 내역
                     </Link>
                   </div>
                 </CardContent>
