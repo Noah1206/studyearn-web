@@ -602,7 +602,12 @@ export default function ProfilePage() {
         });
 
       if (updateError) {
-        setError('프로필 저장에 실패했습니다.');
+        if (updateError.code === '23505' && updateError.message.includes('username')) {
+          setError('이미 사용 중인 사용자 이름입니다. 다른 이름을 선택해주세요.');
+        } else {
+          setError('프로필 저장에 실패했습니다.');
+          console.error('Profile update error:', updateError);
+        }
         return;
       }
 
