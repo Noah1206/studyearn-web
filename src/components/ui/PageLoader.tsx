@@ -66,9 +66,9 @@ export function PageLoader() {
   if (!loading) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-gray-100">
+    <div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-orange-100">
       <div
-        className="h-full bg-primary transition-all duration-200 ease-out"
+        className="h-full bg-orange-500 transition-all duration-200 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>

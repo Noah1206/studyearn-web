@@ -23,7 +23,7 @@ const Spinner = ({ size = 'md', className }: SpinnerProps) => {
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-2 border-gray-200 border-t-gray-900',
+        'animate-spin rounded-full border-2 border-orange-200 border-t-orange-500',
         sizes[size],
         className
       )}
