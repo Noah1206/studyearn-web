@@ -49,7 +49,7 @@ interface PayoutInfo {
   id: string;
   amount: number;
   status: string;
-  requested_at: string;
+  created_at: string;
   processed_at: string | null;
 }
 
@@ -67,28 +67,55 @@ async function getStatsData(creatorId: string) {
   const supabase = await createClient();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}-01`;
+  const startDate = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth(), 1);
 
-  const [revenueStatsResult, contentsCountResult] = await Promise.all([
+  // Get balance from creator_balances table
+  const [balanceResult, contentsCountResult, purchasesResult] = await Promise.all([
     supabase
-      .from('creator_revenue_stats')
-      .select('*')
+      .from('creator_balances')
+      .select('total_earned')
       .eq('creator_id', creatorId)
-      .gte('month', startMonth)
-      .order('month', { ascending: false }),
+      .single(),
     supabase
       .from('contents')
       .select('id, view_count')
       .eq('creator_id', creatorId)
       .eq('is_published', true),
+    // Get monthly revenue from content_purchases
+    supabase
+      .from('content_purchases')
+      .select('creator_revenue, platform_confirmed_at')
+      .eq('seller_id', creatorId)
+      .eq('status', 'completed')
+      .gte('platform_confirmed_at', startDate.toISOString()),
   ]);
 
-  const revenueStats = revenueStatsResult.data || [];
   const contents = contentsCountResult.data || [];
-  const totalRevenue = revenueStats.reduce((sum: number, stat: { total_revenue: number | null }) => sum + (stat.total_revenue || 0), 0);
+  const purchases = purchasesResult.data || [];
+  const totalRevenue = balanceResult.data?.total_earned || 0;
   const totalViews = contents.reduce((sum: number, c: { view_count: number }) => sum + c.view_count, 0);
-  const currentMonthRevenue = revenueStats[0]?.total_revenue || 0;
-  const lastMonthRevenue = revenueStats[1]?.total_revenue || 0;
+
+  // Group purchases by month for revenue stats
+  const monthlyRevenue: Record<string, number> = {};
+  for (const purchase of purchases) {
+    if (purchase.platform_confirmed_at) {
+      const month = purchase.platform_confirmed_at.slice(0, 7) + '-01'; // YYYY-MM-01
+      monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (purchase.creator_revenue || 0);
+    }
+  }
+
+  // Create sorted revenue stats array
+  const revenueStats = Object.entries(monthlyRevenue)
+    .map(([month, revenue]) => ({
+      yearMonth: month,
+      totalRevenue: revenue,
+      subscriptionRevenue: 0,
+      contentRevenue: revenue,
+    }))
+    .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
+
+  const currentMonthRevenue = revenueStats[0]?.totalRevenue || 0;
+  const lastMonthRevenue = revenueStats[1]?.totalRevenue || 0;
 
   return {
     totalRevenue,
@@ -96,35 +123,29 @@ async function getStatsData(creatorId: string) {
     lastMonthRevenue,
     contentCount: contents.length,
     totalViews,
-    revenueStats: revenueStats.map((stat: { month: string; total_revenue: number; subscription_revenue: number; content_revenue: number }) => ({
-      yearMonth: stat.month,
-      totalRevenue: stat.total_revenue,
-      subscriptionRevenue: stat.subscription_revenue,
-      contentRevenue: stat.content_revenue,
-    })),
+    revenueStats,
   };
 }
 
 async function getPayoutData(creatorId: string) {
   const supabase = await createClient();
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  const startMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}-01`;
 
-  const [revenueStatsResult, pendingPayoutsResult, completedPayoutsResult, recentPurchasesResult] = await Promise.all([
+  const [balanceResult, pendingPayoutsResult, completedPayoutsResult, recentPurchasesResult] = await Promise.all([
+    // Use creator_balances table for balance
     supabase
-      .from('creator_revenue_stats')
-      .select('total_revenue')
+      .from('creator_balances')
+      .select('available_balance, pending_balance')
       .eq('creator_id', creatorId)
-      .gte('month', startMonth),
+      .single(),
+    // Use payout_requests table instead of creator_payouts
     supabase
-      .from('creator_payouts')
+      .from('payout_requests')
       .select('*')
       .eq('creator_id', creatorId)
       .in('status', ['pending', 'processing'])
-      .order('requested_at', { ascending: false }),
+      .order('created_at', { ascending: false }),
     supabase
-      .from('creator_payouts')
+      .from('payout_requests')
       .select('*')
       .eq('creator_id', creatorId)
       .eq('status', 'completed')
@@ -142,12 +163,9 @@ async function getPayoutData(creatorId: string) {
       .limit(10),
   ]);
 
-  const totalRevenue = revenueStatsResult.data?.reduce((sum: number, stat: { total_revenue: number | null }) => sum + (stat.total_revenue || 0), 0) || 0;
+  const availableBalance = balanceResult.data?.available_balance || 0;
   const pendingPayouts = pendingPayoutsResult.data || [];
   const completedPayouts = completedPayoutsResult.data || [];
-  const totalPaidOut = completedPayouts.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0);
-  const totalPending = pendingPayouts.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0);
-  const availableBalance = totalRevenue - totalPaidOut - totalPending;
 
   const recentSales: SaleItem[] = recentPurchasesResult.data?.map((purchase: {
     id: string;
@@ -605,7 +623,7 @@ async function RecentPayoutsSection({ creatorId }: { creatorId: string }) {
                       {formatCurrency(payout.amount)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {formatDate(payout.processed_at || payout.requested_at)}
+                      {formatDate(payout.processed_at || payout.created_at)}
                     </p>
                   </div>
                 </div>
