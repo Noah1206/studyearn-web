@@ -535,13 +535,7 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
     <div className="grid grid-cols-1 gap-6 mb-6">
       <Card className="border-gray-100 shadow-none flex flex-col">
         <CardHeader className="p-6 pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">콘텐츠 성과</CardTitle>
-            <Link href="/dashboard/contents" className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-0.5">
-              전체 보기
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <CardTitle className="text-base font-semibold">콘텐츠 성과</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 flex-1">
           {contentStats.length > 0 ? (
