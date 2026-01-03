@@ -91,6 +91,7 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -160,6 +161,45 @@ export default function ProductDetailPage() {
   const getAverageRating = (): number => {
     if (!product || !product.rating_count) return 0;
     return parseFloat((product.rating_sum / product.rating_count).toFixed(1));
+  };
+
+  const handleClaimFree = async () => {
+    if (!product || isClaiming) return;
+
+    setIsClaiming(true);
+    try {
+      const response = await fetch('/api/purchase/free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok && response.status === 401) {
+        // Not logged in, redirect to login
+        router.push(`/login?redirectTo=/content/${id}`);
+        return;
+      }
+
+      if (response.ok || data.alreadyClaimed) {
+        // Successfully claimed or already claimed
+        setIsPurchased(true);
+        // Refetch content to get updated URL access
+        const contentResponse = await fetch(`/api/products/${id}`);
+        if (contentResponse.ok) {
+          const contentData = await contentResponse.json();
+          setContents(contentData.contents || []);
+        }
+      } else {
+        alert(data.message || '처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Claim free failed:', error);
+      alert('처리에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
   // Loading state
@@ -509,31 +549,55 @@ export default function ProductDetailPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <Link href={`/purchase/${id}`} className="block">
+                      {product.price === 0 ? (
                         <Button
                           fullWidth
                           size="lg"
+                          onClick={handleClaimFree}
+                          disabled={isClaiming}
                           className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-14 text-base font-semibold"
                         >
-                          {product.price === 0 ? '무료로 받기' : '구매하기'}
-                          <ChevronRight className="w-5 h-5 ml-1" />
+                          {isClaiming ? (
+                            <>
+                              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                              처리 중...
+                            </>
+                          ) : (
+                            <>
+                              무료로 받기
+                              <ChevronRight className="w-5 h-5 ml-1" />
+                            </>
+                          )}
                         </Button>
-                      </Link>
+                      ) : (
+                        <Link href={`/purchase/${id}`} className="block">
+                          <Button
+                            fullWidth
+                            size="lg"
+                            className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-14 text-base font-semibold"
+                          >
+                            구매하기
+                            <ChevronRight className="w-5 h-5 ml-1" />
+                          </Button>
+                        </Link>
+                      )}
 
                       {/* Trust Signals */}
                       <div className="space-y-2.5 pt-2">
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                           <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span>한 번 구매하면 평생 소장</span>
+                          <span>한 번 {product.price === 0 ? '받으면' : '구매하면'} 평생 소장</span>
                         </div>
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                           <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span>결제 후 바로 다운로드 가능</span>
+                          <span>{product.price === 0 ? '바로' : '결제 후 바로'} 다운로드 가능</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span>안전한 결제 시스템</span>
-                        </div>
+                        {product.price > 0 && (
+                          <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span>안전한 결제 시스템</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
