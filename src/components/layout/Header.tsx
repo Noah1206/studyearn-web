@@ -24,6 +24,7 @@ export function Header() {
     userType,
     isCreatorOnboarded,
     hasBeenCreator,
+    profile,
     revertToRunner,
     switchToCreator,
     syncCreatorStatus,
@@ -163,8 +164,8 @@ export function Header() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <Avatar
-                    src={user.user_metadata?.avatar_url}
-                    alt={user.user_metadata?.full_name || user.email || 'User'}
+                    src={profile?.avatar_url || user.user_metadata?.avatar_url}
+                    alt={profile?.nickname || user.user_metadata?.full_name || user.email || 'User'}
                     size="sm"
                   />
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -175,7 +176,7 @@ export function Header() {
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold text-gray-900 truncate">
-                          {user.user_metadata?.full_name || '사용자'}
+                          {profile?.nickname || user.user_metadata?.full_name || '사용자'}
                         </p>
                         {isCreatorMode && (
                           <Badge variant="primary" size="sm">크리에이터</Badge>
@@ -313,7 +314,7 @@ export function Header() {
                 <div className="space-y-1">
                   <div className="px-4 py-2 mb-2">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900">{user.user_metadata?.full_name || '사용자'}</p>
+                      <p className="font-semibold text-gray-900">{profile?.nickname || user.user_metadata?.full_name || '사용자'}</p>
                       {isCreatorMode && (
                         <Badge variant="primary" size="sm">크리에이터</Badge>
                       )}

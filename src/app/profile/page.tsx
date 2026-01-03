@@ -9,7 +9,6 @@ import {
   X,
   ArrowLeft,
   Camera,
-  Bookmark,
   Heart,
   Bell,
   Shield,
@@ -127,13 +126,6 @@ interface StudyStats {
 
 // 설정 메뉴 아이템
 const CONTENT_MENUS = [
-  {
-    id: 'saved',
-    title: '저장한 콘텐츠',
-    description: '나중에 볼 콘텐츠 목록',
-    icon: Bookmark,
-    href: '/my/saved',
-  },
   {
     id: 'liked',
     title: '찜한 콘텐츠',
@@ -698,6 +690,18 @@ export default function ProfilePage() {
       }
 
       setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      // Update userStore to sync avatar across the app (e.g., Header)
+      if (profile && user) {
+        setStoreProfile({
+          id: profile.id,
+          email: user.email || '',
+          nickname: profile.nickname,
+          username: profile.username,
+          avatar_url: publicUrl,
+          bio: profile.bio,
+          school: profile.school,
+        });
+      }
       setSuccess('프로필 사진이 변경되었습니다.');
     } catch {
       setError('이미지 업로드 중 오류가 발생했습니다.');
