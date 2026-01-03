@@ -658,8 +658,9 @@ export default function ProfilePage() {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      // Path: {user_id}/{filename} - matches RLS policy
+      const filePath = `${user.id}/${fileName}`;
 
       // 스토리지에 업로드
       const { error: uploadError } = await supabase.storage
