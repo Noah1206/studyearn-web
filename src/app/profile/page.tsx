@@ -271,6 +271,27 @@ export default function ProfilePage() {
   const [editSchool, setEditSchool] = useState('');
 
   useEffect(() => {
+    // Immediately show cached profile if available
+    if (storeProfile && !profile) {
+      setProfile({
+        id: storeProfile.id,
+        nickname: storeProfile.nickname,
+        username: storeProfile.username,
+        avatar_url: storeProfile.avatar_url,
+        bio: storeProfile.bio,
+        school: storeProfile.school,
+        is_creator: isCreatorOnboarded,
+      });
+      setEditNickname(storeProfile.nickname || '');
+      setEditUsername(storeProfile.username || '');
+      setEditBio(storeProfile.bio || '');
+      setEditSchool(storeProfile.school || '');
+      // Show UI immediately with cached data
+      setIsLoading(false);
+    }
+  }, [storeProfile, profile, isCreatorOnboarded]);
+
+  useEffect(() => {
     const fetchUserAndProfile = async () => {
       if (!supabase) return;
 
@@ -283,17 +304,26 @@ export default function ProfilePage() {
 
       setUser(user);
 
-      // 프로필 가져오기
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Run essential queries in parallel
+      const [profileResult, creatorResult, sessionResult] = await Promise.all([
+        // 프로필 가져오기
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        // 크리에이터 설정 확인
+        supabase.from('creator_settings')
+          .select('display_name, bio, profile_image_url, is_verified, subject')
+          .eq('user_id', user.id)
+          .single(),
+        // 현재 스터디 세션
+        supabase.from('study_with_me_participants')
+          .select(`room_id, seat_number, status, joined_at, current_session_minutes, study_with_me_rooms!inner(name)`)
+          .eq('user_id', user.id)
+          .is('left_at', null)
+          .single(),
+      ]);
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-      } else {
-        // Use user_metadata avatar_url as fallback (for Kakao login)
+      // Process profile data
+      if (!profileResult.error && profileResult.data) {
+        const profileData = profileResult.data;
         const avatarUrl = profileData.avatar_url || user.user_metadata?.avatar_url;
         const profileWithAvatar = { ...profileData, avatar_url: avatarUrl };
 
@@ -303,7 +333,6 @@ export default function ProfilePage() {
         setEditBio(profileData.bio || '');
         setEditSchool(profileData.school || '');
 
-        // Sync with user store
         setStoreProfile({
           id: profileData.id,
           email: user.email || '',
@@ -313,266 +342,157 @@ export default function ProfilePage() {
           bio: profileData.bio,
           school: profileData.school,
         });
-
-        // Check creator_settings table to verify creator status
-        const { data: creatorSettings } = await supabase
-          .from('creator_settings')
-          .select('display_name, bio, profile_image_url, is_verified, subject')
-          .eq('user_id', user.id)
-          .single();
-
-        // Sync creator status with database
-        if (creatorSettings) {
-          // User has completed creator onboarding
-          syncCreatorStatus(true, {
-            display_name: creatorSettings.display_name || '',
-            bio: creatorSettings.bio,
-            profile_image_url: creatorSettings.profile_image_url,
-            is_verified: creatorSettings.is_verified || false,
-            total_subscribers: 0,
-          });
-          if (!userType) {
-            setUserType('creator');
-          }
-        } else {
-          // User has never completed creator onboarding
-          syncCreatorStatus(false);
-          if (!userType) {
-            setUserType('runner');
-          }
-        }
       }
 
-      // 현재 스터디 세션 가져오기
-      const { data: sessionData } = await supabase
-        .from('study_with_me_participants')
-        .select(`
-          room_id,
-          seat_number,
-          status,
-          joined_at,
-          current_session_minutes,
-          study_with_me_rooms!inner(name)
-        `)
-        .eq('user_id', user.id)
-        .is('left_at', null)
-        .single();
+      // Process creator settings
+      if (creatorResult.data) {
+        syncCreatorStatus(true, {
+          display_name: creatorResult.data.display_name || '',
+          bio: creatorResult.data.bio,
+          profile_image_url: creatorResult.data.profile_image_url,
+          is_verified: creatorResult.data.is_verified || false,
+          total_subscribers: 0,
+        });
+        if (!userType) setUserType('creator');
+      } else {
+        syncCreatorStatus(false);
+        if (!userType) setUserType('runner');
+      }
 
-      if (sessionData) {
+      // Process session data
+      if (sessionResult.data) {
         setCurrentStudySession({
-          room_id: sessionData.room_id,
-          room_name: (sessionData.study_with_me_rooms as any)?.name || '스터디룸',
-          seat_number: sessionData.seat_number,
-          status: sessionData.status,
-          joined_at: sessionData.joined_at,
-          current_session_minutes: sessionData.current_session_minutes || 0,
+          room_id: sessionResult.data.room_id,
+          room_name: (sessionResult.data.study_with_me_rooms as any)?.name || '스터디룸',
+          seat_number: sessionResult.data.seat_number,
+          status: sessionResult.data.status,
+          joined_at: sessionResult.data.joined_at,
+          current_session_minutes: sessionResult.data.current_session_minutes || 0,
         });
       }
 
-      // 공부 통계 - 실제 데이터 가져오기
-      try {
+      setIsLoading(false);
+
+      // Load secondary data in parallel (deferred)
+      loadSecondaryData(user.id);
+    };
+
+    const loadSecondaryData = async (userId: string) => {
+      if (!supabase) return;
+
+      // Run all secondary queries in parallel
+      const [participationsResult, purchasesResult, routinesResult] = await Promise.all([
+        // 스터디 참여 기록
+        supabase.from('study_with_me_participants')
+          .select('room_id, current_session_minutes, joined_at')
+          .eq('user_id', userId),
+        // 구매 내역
+        fetch('/api/me/purchases').then(res => res.ok ? res.json() : null).catch(() => null),
+        // 루틴
+        supabase.from('routines')
+          .select('id, title, description, routine_type, routine_days, routine_items, is_public, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
+      ]);
+
+      // Process study stats
+      if (participationsResult.data) {
+        const allParticipations = participationsResult.data;
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-        // 전체 스터디 참여 기록 가져오기
-        const { data: allParticipations } = await supabase
-          .from('study_with_me_participants')
-          .select('room_id, current_session_minutes, joined_at')
-          .eq('user_id', user.id);
-
         type Participation = { room_id: string; current_session_minutes: number | null; joined_at: string };
-        if (allParticipations && allParticipations.length > 0) {
-          // 오늘 분
+
+        if (allParticipations.length > 0) {
           const todayMinutes = allParticipations
             .filter((p: Participation) => p.joined_at >= todayStart)
             .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-
-          // 이번 주 분
           const weekMinutes = allParticipations
             .filter((p: Participation) => p.joined_at >= weekStart)
             .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-
-          // 이번 달 분
           const monthMinutes = allParticipations
             .filter((p: Participation) => p.joined_at >= monthStart)
             .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-
-          // 전체 분
           const totalMinutes = allParticipations
             .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-
-          // 고유 방 수
           const uniqueRooms = new Set(allParticipations.map((p: Participation) => p.room_id));
 
-          // 연속 출석 계산 (최근 날짜부터 확인)
           const studyDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
             new Date(p.joined_at).toISOString().split('T')[0]
-          ))).sort((a, b) => b.localeCompare(a)); // 최신순 정렬
+          ))).sort((a, b) => b.localeCompare(a));
 
           let streak = 0;
           let checkDate = new Date();
           checkDate.setHours(0, 0, 0, 0);
-
           for (const dateStr of studyDates) {
             const studyDate = new Date(dateStr);
             studyDate.setHours(0, 0, 0, 0);
-
             const diffDays = Math.floor((checkDate.getTime() - studyDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 0 || diffDays === 1) {
-              streak++;
-              checkDate = studyDate;
-            } else {
-              break;
-            }
+            if (diffDays === 0 || diffDays === 1) { streak++; checkDate = studyDate; } else break;
           }
 
-          // 최고 연속 출석 (전체 기간에서 계산)
-          let bestStreak = 0;
-          let currentStreak = 0;
+          let bestStreak = 0, currentStreak = 0;
           const sortedDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
             new Date(p.joined_at).toISOString().split('T')[0]
           ))).sort();
-
           for (let i = 0; i < sortedDates.length; i++) {
-            if (i === 0) {
-              currentStreak = 1;
-            } else {
-              const prevDate = new Date(sortedDates[i - 1]);
-              const currDate = new Date(sortedDates[i]);
-              const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-              if (diffDays === 1) {
-                currentStreak++;
-              } else {
-                currentStreak = 1;
-              }
+            if (i === 0) { currentStreak = 1; } else {
+              const diffDays = Math.floor((new Date(sortedDates[i]).getTime() - new Date(sortedDates[i - 1]).getTime()) / (1000 * 60 * 60 * 24));
+              currentStreak = diffDays === 1 ? currentStreak + 1 : 1;
             }
             bestStreak = Math.max(bestStreak, currentStreak);
           }
 
-          // user_attendance 테이블에서 총 출석일 가져오기
+          // Get attendance count
           let totalAttendance = studyDates.length;
           try {
-            const { count: attendanceCount } = await supabase
-              .from('user_attendance')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', user.id);
-            if (typeof attendanceCount === 'number' && attendanceCount > totalAttendance) {
-              totalAttendance = attendanceCount;
-            }
-          } catch {
-            // 출석 데이터 가져오기 실패 시 기존 값 유지
-          }
+            const { count } = await supabase.from('user_attendance').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+            if (typeof count === 'number' && count > totalAttendance) totalAttendance = count;
+          } catch {}
 
-          setStudyStats({
-            todayMinutes,
-            weekMinutes,
-            monthMinutes,
-            totalMinutes,
-            totalAttendance,
-            bestStreak: Math.max(bestStreak, streak),
-            joinedRooms: uniqueRooms.size,
-          });
+          setStudyStats({ todayMinutes, weekMinutes, monthMinutes, totalMinutes, totalAttendance, bestStreak: Math.max(bestStreak, streak), joinedRooms: uniqueRooms.size });
         } else {
-          // 참여 기록이 없어도 출석 데이터는 확인
           let totalAttendance = 0;
           try {
-            const { count: attendanceCount } = await supabase
-              .from('user_attendance')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', user.id);
-            if (typeof attendanceCount === 'number') {
-              totalAttendance = attendanceCount;
-            }
-          } catch {
-            // 출석 데이터 가져오기 실패
-          }
-
-          setStudyStats({
-            todayMinutes: 0,
-            weekMinutes: 0,
-            monthMinutes: 0,
-            totalMinutes: 0,
-            totalAttendance,
-            bestStreak: 0,
-            joinedRooms: 0,
-          });
+            const { count } = await supabase.from('user_attendance').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+            if (typeof count === 'number') totalAttendance = count;
+          } catch {}
+          setStudyStats({ todayMinutes: 0, weekMinutes: 0, monthMinutes: 0, totalMinutes: 0, totalAttendance, bestStreak: 0, joinedRooms: 0 });
         }
-      } catch (statsError) {
-        console.error('Failed to fetch study stats:', statsError);
-        // 에러 시 기본값 유지
       }
 
-      // 구매한 콘텐츠 가져오기 (실제 API 호출)
-      try {
-        const purchaseRes = await fetch('/api/me/purchases');
-        if (purchaseRes.ok) {
-          const purchaseData = await purchaseRes.json();
-          const mappedPurchases: PurchasedContent[] = (purchaseData.purchases || []).map((purchase: {
-            id: string;
-            product_id: string;
-            created_at: string;
-            product: {
-              id: string;
-              title: string;
-              thumbnail_url: string | null;
-              price: number;
-            } | null;
-          }) => ({
-            id: purchase.id,
-            title: purchase.product?.title || '삭제된 상품',
-            thumbnail_url: purchase.product?.thumbnail_url || undefined,
-            creator_name: 'StudyEarn', // TODO: products 테이블에 creator 정보 추가 필요
-            purchased_at: purchase.created_at.split('T')[0],
-            type: 'document' as const, // TODO: products 테이블에 type 정보 추가 필요
-          }));
-          setPurchasedContents(mappedPurchases);
-        }
-      } catch (error) {
-        console.error('Failed to fetch purchases:', error);
+      // Process purchases
+      if (purchasesResult?.purchases) {
+        const mappedPurchases: PurchasedContent[] = purchasesResult.purchases.map((purchase: {
+          id: string; product_id: string; created_at: string;
+          product: { id: string; title: string; thumbnail_url: string | null; price: number; } | null;
+        }) => ({
+          id: purchase.id,
+          title: purchase.product?.title || '삭제된 상품',
+          thumbnail_url: purchase.product?.thumbnail_url || undefined,
+          creator_name: 'StudyEarn',
+          purchased_at: purchase.created_at.split('T')[0],
+          type: 'document' as const,
+        }));
+        setPurchasedContents(mappedPurchases);
       }
 
-      // 내 루틴 가져오기
-      try {
-        const { data: routineData, error: routineError } = await supabase
-          .from('routines')
-          .select('id, title, description, routine_type, routine_days, routine_items, is_public, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (!routineError && routineData) {
-          const mappedRoutines: UserRoutine[] = routineData.map((r: {
-            id: string;
-            title: string;
-            description?: string;
-            routine_type: string;
-            routine_days?: number;
-            routine_items: RoutineItem[] | null;
-            is_public?: boolean;
-            created_at: string;
-          }) => ({
-            id: r.id,
-            title: r.title,
-            description: r.description,
-            routine_type: (r.routine_type || 'week') as UserRoutine['routine_type'],
-            routine_days: r.routine_days,
-            routine_items: r.routine_items || [],
-            is_public: r.is_public !== false, // 기본값 true
-            created_at: r.created_at,
-          }));
-          setUserRoutines(mappedRoutines);
-          if (routineData.length > 0) {
-            setSelectedRoutineIndex(0);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch routines:', error);
+      // Process routines
+      if (!routinesResult.error && routinesResult.data) {
+        const mappedRoutines: UserRoutine[] = routinesResult.data.map((r: {
+          id: string; title: string; description?: string; routine_type: string;
+          routine_days?: number; routine_items: RoutineItem[] | null; is_public?: boolean; created_at: string;
+        }) => ({
+          id: r.id, title: r.title, description: r.description,
+          routine_type: (r.routine_type || 'week') as UserRoutine['routine_type'],
+          routine_days: r.routine_days, routine_items: r.routine_items || [],
+          is_public: r.is_public !== false, created_at: r.created_at,
+        }));
+        setUserRoutines(mappedRoutines);
+        if (routinesResult.data.length > 0) setSelectedRoutineIndex(0);
       }
-
-      setIsLoading(false);
     };
 
     fetchUserAndProfile();
