@@ -444,7 +444,7 @@ export interface Database {
           creator_id: string | null;
           title: string;
           type: 'video' | 'pdf' | 'image';
-          content_type: 'video' | 'pdf' | 'image';
+          content_type: 'video' | 'pdf' | 'image' | 'routine' | null;
           url: string;
           thumbnail_url: string | null;
           duration: number | null;
@@ -459,6 +459,16 @@ export interface Database {
           description: string | null;
           created_at: string;
           updated_at: string;
+          // Additional fields
+          subject: string | null;
+          grade: string | null;
+          download_count: number | null;
+          routine_type: string | null;
+          routine_days: number | null;
+          routine_items: Record<string, unknown>[] | null;
+          rating_sum: number | null;
+          rating_count: number | null;
+          allow_preview: boolean | null;
         };
         Insert: {
           id?: string;
@@ -466,7 +476,7 @@ export interface Database {
           creator_id?: string | null;
           title: string;
           type: 'video' | 'pdf' | 'image';
-          content_type?: 'video' | 'pdf' | 'image';
+          content_type?: 'video' | 'pdf' | 'image' | 'routine' | null;
           url: string;
           thumbnail_url?: string | null;
           duration?: number | null;
@@ -481,6 +491,16 @@ export interface Database {
           description?: string | null;
           created_at?: string;
           updated_at?: string;
+          // Additional fields
+          subject?: string | null;
+          grade?: string | null;
+          download_count?: number | null;
+          routine_type?: string | null;
+          routine_days?: number | null;
+          routine_items?: Record<string, unknown>[] | null;
+          rating_sum?: number | null;
+          rating_count?: number | null;
+          allow_preview?: boolean | null;
         };
         Update: {
           id?: string;
@@ -488,7 +508,7 @@ export interface Database {
           creator_id?: string | null;
           title?: string;
           type?: 'video' | 'pdf' | 'image';
-          content_type?: 'video' | 'pdf' | 'image';
+          content_type?: 'video' | 'pdf' | 'image' | 'routine' | null;
           url?: string;
           thumbnail_url?: string | null;
           duration?: number | null;
@@ -503,6 +523,16 @@ export interface Database {
           description?: string | null;
           created_at?: string;
           updated_at?: string;
+          // Additional fields
+          subject?: string | null;
+          grade?: string | null;
+          download_count?: number | null;
+          routine_type?: string | null;
+          routine_days?: number | null;
+          routine_items?: Record<string, unknown>[] | null;
+          rating_sum?: number | null;
+          rating_count?: number | null;
+          allow_preview?: boolean | null;
         };
       };
       // DM/Messages

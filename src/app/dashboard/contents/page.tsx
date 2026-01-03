@@ -25,13 +25,14 @@ interface ContentWithStats extends Content {
   purchase_count?: number;
   revenue?: number;
   tags?: string[];
-  download_count?: number;
-  subject?: string | null;
-  grade?: string | null;
 }
 
 async function getCreatorContents(userId: string) {
   const supabase = await createClient();
+
+  if (!supabase) {
+    return { contents: [], stats: { total: 0, published: 0, draft: 0, scheduled: 0 } };
+  }
 
   const { data: contents, error } = await supabase
     .from('contents')
@@ -295,6 +296,11 @@ function FilterTab({
 
 async function ContentsContent({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const supabase = await createClient();
+
+  if (!supabase) {
+    redirect('/login?redirectTo=/dashboard/contents');
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
