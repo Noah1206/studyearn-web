@@ -45,7 +45,8 @@ export async function GET(
         routine_type,
         routine_days,
         routine_items,
-        creator_id
+        creator_id,
+        allow_preview
       `)
       .eq('id', id)
       .single();
@@ -132,6 +133,7 @@ export async function GET(
       routine_type: content.routine_type,
       routine_days: content.routine_days,
       routine_items: content.routine_items,
+      allow_preview: content.allow_preview ?? true,
       creator: creatorInfo ? {
         name: creatorInfo.display_name || '익명',
         avatar_url: creatorInfo.profile_image_url,
@@ -150,15 +152,17 @@ export async function GET(
     };
 
     // For routine content, the content itself contains the routine items
-    // For other content types, the URL is shown only if purchased
+    // For other content types, the URL is shown if purchased OR if preview is allowed
+    const canShowUrl = isPurchased || content.allow_preview === true;
     const contents = [{
       id: content.id,
       title: content.title,
       type: content.type,
-      url: isPurchased ? content.url : null,
+      url: canShowUrl ? content.url : null,
       thumbnail_url: content.thumbnail_url,
       duration: null,
       sort_order: 0,
+      allow_preview: content.allow_preview ?? true, // 기본값 true
     }];
 
     // Increment view count
@@ -172,6 +176,7 @@ export async function GET(
       contents,
       isPurchased,
       isOwner,
+      isPreviewAllowed: content.allow_preview ?? true,
     });
   } catch (error) {
     console.error('Product detail API error:', error);

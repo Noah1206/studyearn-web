@@ -26,6 +26,7 @@ export function Header() {
     hasBeenCreator,
     revertToRunner,
     switchToCreator,
+    syncCreatorStatus,
     clearUser,
   } = useUserStore();
 
@@ -54,6 +55,28 @@ export function Header() {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      // Sync creator status from database to prevent stale localStorage values
+      if (user) {
+        const { data: creatorSettings } = await supabase
+          .from('creator_settings')
+          .select('display_name, bio, profile_image_url, is_verified')
+          .eq('user_id', user.id)
+          .single();
+
+        if (creatorSettings) {
+          syncCreatorStatus(true, {
+            display_name: creatorSettings.display_name || '',
+            bio: creatorSettings.bio,
+            profile_image_url: creatorSettings.profile_image_url,
+            is_verified: creatorSettings.is_verified || false,
+            total_subscribers: 0,
+          });
+        } else {
+          // No creator settings - user has never completed creator onboarding
+          syncCreatorStatus(false);
+        }
+      }
     };
     getUser();
 
@@ -62,7 +85,7 @@ export function Header() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, syncCreatorStatus]);
 
   const handleLogout = async () => {
     if (!supabase) return;

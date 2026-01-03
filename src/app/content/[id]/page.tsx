@@ -48,6 +48,14 @@ interface Product {
   };
 }
 
+interface ContentItem {
+  id: string;
+  title: string;
+  type: string | null;
+  url: string | null;
+  thumbnail_url: string | null;
+}
+
 const contentTypeIcons: Record<string, React.ElementType> = {
   video: Play,
   pdf: FileText,
@@ -77,7 +85,9 @@ export default function ProductDetailPage() {
   const router = useRouter();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [contents, setContents] = useState<ContentItem[]>([]);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isPreviewAllowed, setIsPreviewAllowed] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -98,7 +108,9 @@ export default function ProductDetailPage() {
 
         const data = await response.json();
         setProduct(data.product);
+        setContents(data.contents || []);
         setIsPurchased(data.isPurchased || false);
+        setIsPreviewAllowed(data.isPreviewAllowed ?? true);
       } catch (error) {
         console.error('Failed to fetch product:', error);
       } finally {
@@ -300,36 +312,106 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Thumbnail */}
+            {/* File Preview */}
             <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50 mb-8">
-              {product.thumbnail_url ? (
-                <div className="aspect-[4/3]">
-                  <Image
-                    src={product.thumbnail_url}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className="aspect-[4/3] flex flex-col items-center justify-center">
-                  <div className="w-20 h-20 rounded-2xl bg-white/60 flex items-center justify-center mb-3">
-                    <TypeIcon className="w-10 h-10 text-orange-400" />
-                  </div>
-                  <span className="text-sm font-medium text-orange-500">
-                    {contentTypeLabels[product.type || 'pdf']} 파일
-                  </span>
-                </div>
-              )}
-
               {/* File type badge */}
-              <div className="absolute top-4 left-4">
+              <div className="absolute top-4 left-4 z-10">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700">
                   <TypeIcon className="w-4 h-4" />
                   {contentTypeLabels[product.type || 'pdf']}
                 </div>
               </div>
+
+              {/* Content Preview */}
+              {(() => {
+                const contentUrl = contents[0]?.url;
+                const fileType = product.type || 'pdf';
+
+                // Image preview
+                if (fileType === 'image' && contentUrl) {
+                  return (
+                    <div className="aspect-[4/3] relative">
+                      <Image
+                        src={contentUrl}
+                        alt={product.title}
+                        fill
+                        className="object-contain bg-white"
+                        priority
+                      />
+                    </div>
+                  );
+                }
+
+                // PDF preview
+                if (fileType === 'pdf' && contentUrl) {
+                  return (
+                    <div className="aspect-[4/3] relative bg-white">
+                      <iframe
+                        src={`${contentUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                        className="w-full h-full border-0"
+                        title={product.title}
+                      />
+                      {/* Overlay to prevent interaction if not purchased */}
+                      {!isPurchased && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent flex flex-col items-center justify-end pb-8">
+                          <div className="text-center">
+                            <p className="text-gray-600 font-medium mb-2">미리보기</p>
+                            <p className="text-sm text-gray-400">구매 후 전체 내용을 확인하세요</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Video preview
+                if (fileType === 'video' && contentUrl) {
+                  return (
+                    <div className="aspect-video relative bg-black">
+                      <video
+                        src={contentUrl}
+                        className="w-full h-full object-contain"
+                        controls={isPurchased}
+                        poster={product.thumbnail_url || undefined}
+                      />
+                      {!isPurchased && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">
+                            <Play className="w-8 h-8 text-orange-500 ml-1" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Thumbnail fallback
+                if (product.thumbnail_url) {
+                  return (
+                    <div className="aspect-[4/3] relative">
+                      <Image
+                        src={product.thumbnail_url}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
+                  );
+                }
+
+                // Default placeholder
+                return (
+                  <div className="aspect-[4/3] flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-white/60 flex items-center justify-center mb-3">
+                      <TypeIcon className="w-10 h-10 text-orange-400" />
+                    </div>
+                    <span className="text-sm font-medium text-orange-500">
+                      {contentTypeLabels[product.type || 'pdf']} 파일
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Description Section */}

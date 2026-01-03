@@ -68,6 +68,9 @@ interface UserState {
   revertToRunner: () => void;
   switchToCreator: () => void;
 
+  // Sync creator status from database
+  syncCreatorStatus: (hasCreatorSettings: boolean, creatorProfile?: CreatorProfile) => void;
+
   // Computed - Creator
   canAccessCreatorFeatures: () => boolean;
 }
@@ -166,6 +169,17 @@ export const useUserStore = create<UserState>()(
       switchToCreator: () =>
         set({
           userType: 'creator',
+        }),
+
+      /**
+       * Sync creator status from database
+       * Called on app load to ensure localStorage matches database state
+       */
+      syncCreatorStatus: (hasCreatorSettings, creatorProfile) =>
+        set({
+          isCreatorOnboarded: hasCreatorSettings,
+          hasBeenCreator: hasCreatorSettings,
+          creatorProfile: creatorProfile || null,
         }),
 
       // Computed values

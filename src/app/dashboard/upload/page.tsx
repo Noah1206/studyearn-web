@@ -140,6 +140,7 @@ export default function UploadPage() {
   const [price, setPrice] = useState<number>(0);
   const [customPrice, setCustomPrice] = useState('');
   const [showCustomPrice, setShowCustomPrice] = useState(false);
+  const [allowPreview, setAllowPreview] = useState(true); // 미리보기 기본 활성화
 
   // UI 상태
   const [isLoading, setIsLoading] = useState(false);
@@ -401,6 +402,7 @@ export default function UploadPage() {
           price: price > 0 ? price : null,
           is_published: true,
           published_at: new Date().toISOString(),
+          allow_preview: allowPreview,
         };
 
         const { error: insertError } = await supabase
@@ -470,6 +472,7 @@ export default function UploadPage() {
           price: price > 0 ? price : null,
           is_published: true,
           published_at: new Date().toISOString(),
+          allow_preview: allowPreview,
         };
 
         const { error: insertError } = await supabase
@@ -1115,6 +1118,33 @@ export default function UploadPage() {
               판매 수익의 80%가 정산됩니다
             </p>
           )}
+        </div>
+
+        {/* 미리보기 설정 */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">미리보기 허용</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                구매 전에도 콘텐츠 미리보기를 허용합니다
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAllowPreview(!allowPreview)}
+              className={cn(
+                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                allowPreview ? 'bg-orange-500' : 'bg-gray-200'
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm',
+                  allowPreview ? 'translate-x-6' : 'translate-x-1'
+                )}
+              />
+            </button>
+          </div>
         </div>
 
         {/* 선택된 태그 미리보기 */}

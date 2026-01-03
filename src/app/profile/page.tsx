@@ -214,6 +214,7 @@ export default function ProfilePage() {
     revertToRunner,
     switchToCreator,
     completeCreatorOnboarding,
+    syncCreatorStatus,
     clearUser,
     profile: storeProfile,
   } = useUserStore();
@@ -317,11 +318,32 @@ export default function ProfilePage() {
           school: profileData.school,
         });
 
-        // Set user type based on is_creator flag
-        if (profileData.is_creator && !userType) {
-          setUserType('creator');
-        } else if (!userType) {
-          setUserType('runner');
+        // Check creator_settings table to verify creator status
+        const { data: creatorSettings } = await supabase
+          .from('creator_settings')
+          .select('display_name, bio, profile_image_url, is_verified, subject')
+          .eq('user_id', user.id)
+          .single();
+
+        // Sync creator status with database
+        if (creatorSettings) {
+          // User has completed creator onboarding
+          syncCreatorStatus(true, {
+            display_name: creatorSettings.display_name || '',
+            bio: creatorSettings.bio,
+            profile_image_url: creatorSettings.profile_image_url,
+            is_verified: creatorSettings.is_verified || false,
+            total_subscribers: 0,
+          });
+          if (!userType) {
+            setUserType('creator');
+          }
+        } else {
+          // User has never completed creator onboarding
+          syncCreatorStatus(false);
+          if (!userType) {
+            setUserType('runner');
+          }
         }
       }
 
@@ -554,7 +576,7 @@ export default function ProfilePage() {
     };
 
     fetchUserAndProfile();
-  }, [supabase, router, setStoreProfile, setUserType, userType]);
+  }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType]);
 
   const handleSaveProfile = async () => {
     if (!user || !supabase) return;
