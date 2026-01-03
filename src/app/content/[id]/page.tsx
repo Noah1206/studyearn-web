@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-500 mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">불러오는 중...</p>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function ProductDetailPage() {
 
   const TypeIcon = contentTypeIcons[product.type || 'pdf'] || FileText;
   const rating = getAverageRating();
-  const hasStats = (product.view_count > 0) || (product.download_count > 0) || (rating > 0);
+  const hasStats = (product.like_count > 0) || (product.view_count > 0) || (product.download_count > 0) || (rating > 0);
 
   return (
     <motion.div
@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
               {product.subject && (
-                <span className="text-sm font-medium text-teal-600">
+                <span className="text-sm font-medium text-orange-500">
                   {subjectLabels[product.subject] || product.subject}
                 </span>
               )}
@@ -301,7 +301,7 @@ export default function ProductDetailPage() {
 
             {/* Creator Info */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {product.creator?.avatar_url ? (
                   <Image
                     src={product.creator.avatar_url}
@@ -311,7 +311,7 @@ export default function ProductDetailPage() {
                     className="object-cover"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-teal-600" />
+                  <User className="w-5 h-5 text-orange-500" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -322,38 +322,43 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-500 truncate">{product.creator.bio}</p>
                 )}
               </div>
-              <button className="px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
-                팔로우
-              </button>
             </div>
 
             {/* Stats */}
-            {hasStats && (
-              <div className="flex items-center gap-4 mb-6 text-sm text-gray-500">
-                {rating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    <span className="font-semibold text-gray-900">{rating}</span>
-                    <span>({product.rating_count})</span>
-                  </div>
-                )}
-                {product.view_count > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    <span>{product.view_count.toLocaleString()}</span>
-                  </div>
-                )}
-                {product.download_count > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Download className="w-4 h-4" />
-                    <span>{product.download_count.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-4 mb-6 text-sm text-gray-500">
+              {/* Like/Wishlist Button */}
+              <button
+                onClick={() => setIsLiked(!isLiked)}
+                className={`flex items-center gap-1 transition-colors ${
+                  isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500' : ''}`} />
+                <span>{(product.like_count + (isLiked ? 1 : 0)).toLocaleString()}</span>
+              </button>
+              {product.view_count > 0 && (
+                <div className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  <span>{product.view_count.toLocaleString()}</span>
+                </div>
+              )}
+              {product.download_count > 0 && (
+                <div className="flex items-center gap-1">
+                  <Download className="w-4 h-4" />
+                  <span>{product.download_count.toLocaleString()}</span>
+                </div>
+              )}
+              {rating > 0 && (
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span className="font-semibold text-gray-900">{rating}</span>
+                  <span>({product.rating_count})</span>
+                </div>
+              )}
+            </div>
 
             {/* File Preview */}
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-teal-50 to-cyan-50 mb-8">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50 mb-8">
               {/* File type badge */}
               <div className="absolute top-4 left-4 z-10">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700">
@@ -449,9 +454,9 @@ export default function ProductDetailPage() {
                 return (
                   <div className="aspect-[4/3] flex flex-col items-center justify-center">
                     <div className="w-20 h-20 rounded-2xl bg-white/60 flex items-center justify-center mb-3">
-                      <TypeIcon className="w-10 h-10 text-teal-500" />
+                      <TypeIcon className="w-10 h-10 text-orange-500" />
                     </div>
-                    <span className="text-sm font-medium text-teal-600">
+                    <span className="text-sm font-medium text-orange-600">
                       {contentTypeLabels[product.type || 'pdf']} 파일
                     </span>
                   </div>
