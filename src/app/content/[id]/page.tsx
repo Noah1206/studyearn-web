@@ -21,9 +21,19 @@ import {
   Heart,
   Share2,
   ChevronRight,
+  Calendar,
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { Button } from '@/components/ui';
+
+interface RoutineItem {
+  id: string;
+  day: number;
+  startHour?: number;
+  endHour?: number;
+  title: string;
+  color: string;
+}
 
 interface Product {
   id: string;
@@ -36,6 +46,10 @@ interface Product {
   subject: string | null;
   grade: string | null;
   type: string | null;
+  content_type?: string | null;
+  routine_type?: string | null;
+  routine_days?: number | null;
+  routine_items?: RoutineItem[] | null;
   view_count: number;
   download_count: number;
   like_count: number;
@@ -60,12 +74,14 @@ const contentTypeIcons: Record<string, React.ElementType> = {
   video: Play,
   pdf: FileText,
   image: ImageIcon,
+  routine: Calendar,
 };
 
 const contentTypeLabels: Record<string, string> = {
   video: '동영상',
   pdf: 'PDF',
   image: '이미지',
+  routine: '루틴',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -236,7 +252,9 @@ export default function ProductDetailPage() {
     );
   }
 
-  const TypeIcon = contentTypeIcons[product.type || 'pdf'] || FileText;
+  // Determine the display type - use 'routine' for routine content
+  const displayType = product.content_type === 'routine' ? 'routine' : (product.type || 'pdf');
+  const TypeIcon = contentTypeIcons[displayType] || FileText;
   const rating = getAverageRating();
   const hasStats = (product.like_count > 0) || (product.view_count > 0) || (product.download_count > 0) || (rating > 0);
 
@@ -363,7 +381,7 @@ export default function ProductDetailPage() {
               <div className="absolute top-4 left-4 z-10">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700">
                   <TypeIcon className="w-4 h-4" />
-                  {contentTypeLabels[product.type || 'pdf']}
+                  {contentTypeLabels[displayType]}
                 </div>
               </div>
 
@@ -374,6 +392,64 @@ export default function ProductDetailPage() {
 
                 // Check if URL is valid (starts with http or https)
                 const isValidUrl = contentUrl && (contentUrl.startsWith('http://') || contentUrl.startsWith('https://'));
+
+                // Routine preview - check content_type first
+                if (product.content_type === 'routine' && product.routine_items && product.routine_items.length > 0) {
+                  const routineType = product.routine_type || 'weekly';
+                  const routineDays = product.routine_days || 7;
+
+                  // Get day labels based on routine type
+                  const getDayLabel = (day: number) => {
+                    if (routineType === 'weekly') {
+                      const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
+                      return weekDays[day] || `Day ${day + 1}`;
+                    } else if (routineType === 'monthly') {
+                      return `${day + 1}일`;
+                    }
+                    return `Day ${day + 1}`;
+                  };
+
+                  // Group items by day
+                  const itemsByDay: Record<number, RoutineItem[]> = {};
+                  product.routine_items.forEach((item) => {
+                    if (!itemsByDay[item.day]) {
+                      itemsByDay[item.day] = [];
+                    }
+                    itemsByDay[item.day].push(item);
+                  });
+
+                  return (
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Calendar className="w-5 h-5 text-orange-500" />
+                        <span className="font-semibold text-gray-900">
+                          {routineType === 'weekly' ? '주간 루틴' : routineType === 'monthly' ? '월간 루틴' : `${routineDays}일 루틴`}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-7 gap-2">
+                        {Array.from({ length: Math.min(routineDays, routineType === 'weekly' ? 7 : 14) }, (_, day) => (
+                          <div key={day} className="text-center">
+                            <div className="text-xs font-medium text-gray-500 mb-2">
+                              {getDayLabel(day)}
+                            </div>
+                            <div className="space-y-1 min-h-[80px]">
+                              {(itemsByDay[day] || []).map((item) => (
+                                <div
+                                  key={item.id}
+                                  className="px-2 py-1.5 rounded-lg text-xs font-medium text-white truncate"
+                                  style={{ backgroundColor: item.color || '#3B82F6' }}
+                                  title={item.title}
+                                >
+                                  {item.title}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
 
                 // Image preview
                 if (fileType === 'image' && isValidUrl) {
@@ -457,7 +533,7 @@ export default function ProductDetailPage() {
                       <TypeIcon className="w-10 h-10 text-orange-500" />
                     </div>
                     <span className="text-sm font-medium text-orange-600">
-                      {contentTypeLabels[product.type || 'pdf']} 파일
+                      {contentTypeLabels[displayType]} {displayType !== 'routine' ? '파일' : ''}
                     </span>
                   </div>
                 );
@@ -483,9 +559,12 @@ export default function ProductDetailPage() {
               <h3 className="font-semibold text-gray-900 mb-4">자료 정보</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">파일 형식</span>
+                  <span className="text-gray-500">{product.content_type === 'routine' ? '유형' : '파일 형식'}</span>
                   <span className="font-medium text-gray-900">
-                    {(product.type || 'pdf').toUpperCase()}
+                    {product.content_type === 'routine'
+                      ? (product.routine_type === 'weekly' ? '주간 루틴' : product.routine_type === 'monthly' ? '월간 루틴' : `${product.routine_days}일 루틴`)
+                      : (product.type || 'pdf').toUpperCase()
+                    }
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
