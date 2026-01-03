@@ -82,16 +82,7 @@ export async function GET(
       );
     }
 
-    // Increment download count
-    await supabase.rpc('increment_download_count', { content_id: id }).catch(() => {
-      // Fallback to direct update if RPC doesn't exist
-      supabase
-        .from('contents')
-        .update({ download_count: supabase.rpc('coalesce', { val: 'download_count', default_val: 0 }) })
-        .eq('id', id);
-    });
-
-    // Simple increment
+    // Increment download count (simple approach)
     const { data: currentContent } = await supabase
       .from('contents')
       .select('download_count')
