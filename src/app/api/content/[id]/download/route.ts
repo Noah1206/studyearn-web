@@ -30,12 +30,11 @@ export async function GET(
       );
     }
 
-    // Get content details
+    // Get content details (without is_published filter for owner check)
     const { data: content, error: contentError } = await supabase
       .from('contents')
-      .select('id, title, url, price, creator_id, type')
+      .select('id, title, url, price, creator_id, type, is_published')
       .eq('id', id)
-      .eq('is_published', true)
       .single();
 
     if (contentError || !content) {
@@ -48,6 +47,15 @@ export async function GET(
     // Check access: owner, free content, or purchased
     const isOwner = content.creator_id === user.id;
     const isFree = !content.price || content.price === 0;
+
+    // Owner can always download their own content (even unpublished)
+    // Others can only download published content
+    if (!isOwner && !content.is_published) {
+      return NextResponse.json(
+        { message: 'Content not available' },
+        { status: 404 }
+      );
+    }
 
     if (!isOwner && !isFree) {
       // Check if user has purchased
