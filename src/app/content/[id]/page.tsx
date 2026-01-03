@@ -504,7 +504,7 @@ export default function ProductDetailPage() {
                 transition={{ delay: 0.1 }}
                 className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden"
               >
-                {isPurchased ? (
+                {false && isPurchased ? ( // TODO: 테스트 후 false && 제거
                   /* Purchased State */
                   <div className="p-6">
                     {/* Success Badge */}
