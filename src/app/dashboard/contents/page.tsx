@@ -294,7 +294,7 @@ function FilterTab({
   );
 }
 
-async function ContentsContent({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
+async function ContentsContent({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const supabase = await createClient();
 
   if (!supabase) {
@@ -318,7 +318,8 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
   }
 
   const { contents, stats } = await getCreatorContents(user.id);
-  const filter = (searchParams?.filter as string) || 'all';
+  const resolvedSearchParams = await searchParams;
+  const filter = (resolvedSearchParams?.filter as string) || 'all';
 
   const now = new Date();
   const filteredContents = contents.filter((content) => {
@@ -403,10 +404,10 @@ async function ContentsContent({ searchParams }: { searchParams: Record<string, 
   );
 }
 
-export default function ContentsPage({
+export default async function ContentsPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   return (
     <Suspense fallback={<LoadingSection fullHeight />}>
