@@ -120,7 +120,7 @@ interface StudyStats {
   weekMinutes: number;
   monthMinutes: number;
   totalMinutes: number;
-  streak: number;
+  totalAttendance: number;
   bestStreak: number;
   joinedRooms: number;
 }
@@ -238,7 +238,7 @@ export default function ProfilePage() {
     weekMinutes: 0,
     monthMinutes: 0,
     totalMinutes: 0,
-    streak: 0,
+    totalAttendance: 0,
     bestStreak: 0,
     joinedRooms: 0,
   });
@@ -461,16 +461,18 @@ export default function ProfilePage() {
             bestStreak = Math.max(bestStreak, currentStreak);
           }
 
-          // user_attendance 테이블에서 출석 스탬프 연속일 가져오기
-          let attendanceStreak = streak;
+          // user_attendance 테이블에서 총 출석일 가져오기
+          let totalAttendance = studyDates.length;
           try {
-            const { data: attendanceData } = await supabase
-              .rpc('get_consecutive_attendance_days', { p_user_id: user.id });
-            if (typeof attendanceData === 'number' && attendanceData > attendanceStreak) {
-              attendanceStreak = attendanceData;
+            const { count: attendanceCount } = await supabase
+              .from('user_attendance')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', user.id);
+            if (typeof attendanceCount === 'number' && attendanceCount > totalAttendance) {
+              totalAttendance = attendanceCount;
             }
           } catch {
-            // 출석 스탬프 데이터 가져오기 실패 시 기존 streak 유지
+            // 출석 데이터 가져오기 실패 시 기존 값 유지
           }
 
           setStudyStats({
@@ -478,21 +480,23 @@ export default function ProfilePage() {
             weekMinutes,
             monthMinutes,
             totalMinutes,
-            streak: attendanceStreak,
-            bestStreak: Math.max(bestStreak, attendanceStreak),
+            totalAttendance,
+            bestStreak: Math.max(bestStreak, streak),
             joinedRooms: uniqueRooms.size,
           });
         } else {
-          // 참여 기록이 없어도 출석 스탬프 데이터는 확인
-          let attendanceStreak = 0;
+          // 참여 기록이 없어도 출석 데이터는 확인
+          let totalAttendance = 0;
           try {
-            const { data: attendanceData } = await supabase
-              .rpc('get_consecutive_attendance_days', { p_user_id: user.id });
-            if (typeof attendanceData === 'number') {
-              attendanceStreak = attendanceData;
+            const { count: attendanceCount } = await supabase
+              .from('user_attendance')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', user.id);
+            if (typeof attendanceCount === 'number') {
+              totalAttendance = attendanceCount;
             }
           } catch {
-            // 출석 스탬프 데이터 가져오기 실패
+            // 출석 데이터 가져오기 실패
           }
 
           setStudyStats({
@@ -500,8 +504,8 @@ export default function ProfilePage() {
             weekMinutes: 0,
             monthMinutes: 0,
             totalMinutes: 0,
-            streak: attendanceStreak,
-            bestStreak: attendanceStreak,
+            totalAttendance,
+            bestStreak: 0,
             joinedRooms: 0,
           });
         }
@@ -1856,8 +1860,8 @@ export default function ProfilePage() {
               {/* 통계 */}
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{studyStats.streak}</p>
-                  <p className="text-xs text-gray-500">연속 출석</p>
+                  <p className="text-2xl font-bold text-gray-900">{studyStats.totalAttendance}</p>
+                  <p className="text-xs text-gray-500">출석</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">{purchasedContents.length}</p>
