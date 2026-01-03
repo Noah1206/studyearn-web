@@ -41,6 +41,7 @@ interface ContentStats {
   viewCount: number;
   likeCount: number;
   purchaseCount: number;
+  price: number;
   revenue: number;
   createdAt: string;
 }
@@ -197,6 +198,7 @@ interface ContentRecord {
   access_level: string;
   view_count: number;
   like_count: number;
+  price: number;
   created_at: string;
 }
 
@@ -205,7 +207,7 @@ async function getContentStatsData(creatorId: string) {
 
   const { data: contents } = await supabase
     .from('contents')
-    .select('id, title, content_type, access_level, view_count, like_count, created_at')
+    .select('id, title, content_type, access_level, view_count, like_count, price, created_at')
     .eq('creator_id', creatorId)
     .eq('is_published', true)
     .order('created_at', { ascending: false })
@@ -241,6 +243,7 @@ async function getContentStatsData(creatorId: string) {
         viewCount: content.view_count,
         likeCount: content.like_count,
         purchaseCount: purchaseInfo.count,
+        price: content.price || 0,
         revenue: purchaseInfo.revenue,
         createdAt: content.created_at,
       };
@@ -574,11 +577,18 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-gray-900">
-                        {formatCurrency(content.revenue)}
+                        {content.price > 0 ? formatCurrency(content.price) : '무료'}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {content.purchaseCount}건
-                      </p>
+                      {content.purchaseCount > 0 && (
+                        <p className="text-sm text-green-600">
+                          수익 {formatCurrency(content.revenue)} · {content.purchaseCount}건
+                        </p>
+                      )}
+                      {content.purchaseCount === 0 && content.price > 0 && (
+                        <p className="text-sm text-gray-400">
+                          아직 판매 없음
+                        </p>
+                      )}
                     </div>
                   </Link>
                 );
