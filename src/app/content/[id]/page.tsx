@@ -618,21 +618,21 @@ export default function ProductDetailPage() {
                       {/* Trust Signals */}
                       <div className="mt-5 space-y-3">
                         <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
                           </div>
                           <span>한 번 {product.price === 0 ? '받으면' : '구매하면'} 평생 소장</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
                           </div>
                           <span>{product.price === 0 ? '바로' : '결제 후 바로'} 다운로드 가능</span>
                         </div>
                         {product.price > 0 && (
                           <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                              <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
                             </div>
                             <span>안전한 결제 시스템</span>
                           </div>
@@ -655,7 +655,7 @@ export default function ProductDetailPage() {
                   <div className="flex items-center gap-4">
                     {/* Avatar */}
                     <div className="relative">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 p-0.5 shadow-lg shadow-teal-200/50">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 p-0.5 shadow-lg shadow-orange-200/50">
                         <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
                           {product.creator?.avatar_url ? (
                             <Image
@@ -666,14 +666,14 @@ export default function ProductDetailPage() {
                               className="object-cover rounded-[14px]"
                             />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center">
-                              <User className="w-7 h-7 text-teal-500" />
+                            <div className="w-full h-full bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+                              <User className="w-7 h-7 text-orange-500" />
                             </div>
                           )}
                         </div>
                       </div>
                       {/* Online indicator (optional decorative) */}
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white shadow-sm" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-orange-400 rounded-full border-2 border-white shadow-sm" />
                     </div>
 
                     {/* Info */}
@@ -682,8 +682,8 @@ export default function ProductDetailPage() {
                         {product.creator?.name || '익명'}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
-                          <Star className="w-3 h-3 fill-teal-500 text-teal-500" />
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                          <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                           크리에이터
                         </span>
                       </div>
