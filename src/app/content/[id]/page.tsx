@@ -84,6 +84,42 @@ const contentTypeLabels: Record<string, string> = {
   routine: '루틴',
 };
 
+// Routine type labels
+const routineTypeLabels: Record<string, string> = {
+  week: '주간 루틴',
+  weekly: '주간 루틴',
+  day: '하루 루틴',
+  daily: '하루 루틴',
+  monthly: '월간 루틴',
+};
+
+// Tailwind color class to hex mapping
+const tailwindColorMap: Record<string, string> = {
+  'bg-red-500': '#EF4444',
+  'bg-orange-500': '#F97316',
+  'bg-amber-500': '#F59E0B',
+  'bg-yellow-500': '#EAB308',
+  'bg-lime-500': '#84CC16',
+  'bg-green-500': '#22C55E',
+  'bg-emerald-500': '#10B981',
+  'bg-teal-500': '#14B8A6',
+  'bg-cyan-500': '#06B6D4',
+  'bg-sky-500': '#0EA5E9',
+  'bg-blue-500': '#3B82F6',
+  'bg-indigo-500': '#6366F1',
+  'bg-violet-500': '#8B5CF6',
+  'bg-purple-500': '#A855F7',
+  'bg-fuchsia-500': '#D946EF',
+  'bg-pink-500': '#EC4899',
+  'bg-rose-500': '#F43F5E',
+};
+
+// Get hex color from tailwind class or return as-is if already hex
+const getHexColor = (color: string): string => {
+  if (color.startsWith('#')) return color;
+  return tailwindColorMap[color] || '#3B82F6';
+};
+
 const subjectLabels: Record<string, string> = {
   korean: '국어',
   math: '수학',
@@ -408,58 +444,183 @@ export default function ProductDetailPage() {
                 const isValidUrl = contentUrl && (contentUrl.startsWith('http://') || contentUrl.startsWith('https://'));
 
                 // Routine preview - check content_type first
-                if (product.content_type === 'routine' && product.routine_items && product.routine_items.length > 0) {
-                  const routineType = product.routine_type || 'weekly';
-                  const routineDays = product.routine_days || 7;
+                if (product.content_type === 'routine') {
+                  const routineType = product.routine_type || 'week';
+                  const routineItems = product.routine_items || [];
+                  const isWeekly = routineType === 'week' || routineType === 'weekly';
+                  const isDaily = routineType === 'day' || routineType === 'daily';
 
-                  // Get day labels based on routine type
-                  const getDayLabel = (day: number) => {
-                    if (routineType === 'weekly') {
-                      const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
-                      return weekDays[day] || `Day ${day + 1}`;
-                    } else if (routineType === 'monthly') {
-                      return `${day + 1}일`;
-                    }
-                    return `Day ${day + 1}`;
-                  };
+                  // Time slots for schedule display (6am to 11pm)
+                  const timeSlots = Array.from({ length: 18 }, (_, i) => i + 6);
 
-                  // Group items by day
-                  const itemsByDay: Record<number, RoutineItem[]> = {};
-                  product.routine_items.forEach((item) => {
-                    if (!itemsByDay[item.day]) {
-                      itemsByDay[item.day] = [];
-                    }
-                    itemsByDay[item.day].push(item);
-                  });
+                  // Weekly routine view
+                  if (isWeekly) {
+                    const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
 
-                  return (
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Calendar className="w-5 h-5 text-orange-500" />
-                        <span className="font-semibold text-gray-900">
-                          {routineType === 'weekly' ? '주간 루틴' : routineType === 'monthly' ? '월간 루틴' : `${routineDays}일 루틴`}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-7 gap-2">
-                        {Array.from({ length: Math.min(routineDays, routineType === 'weekly' ? 7 : 14) }, (_, day) => (
-                          <div key={day} className="text-center">
-                            <div className="text-xs font-medium text-gray-500 mb-2">
-                              {getDayLabel(day)}
-                            </div>
-                            <div className="space-y-1 min-h-[80px]">
-                              {(itemsByDay[day] || []).map((item) => (
+                    // Group items by day
+                    const itemsByDay: Record<number, RoutineItem[]> = {};
+                    routineItems.forEach((item) => {
+                      if (!itemsByDay[item.day]) {
+                        itemsByDay[item.day] = [];
+                      }
+                      itemsByDay[item.day].push(item);
+                    });
+
+                    return (
+                      <div className="p-6 bg-white rounded-xl">
+                        <div className="flex items-center gap-2 mb-5">
+                          <Calendar className="w-5 h-5 text-orange-500" />
+                          <span className="font-bold text-gray-900 text-lg">주간 루틴</span>
+                        </div>
+
+                        {/* Weekly Grid */}
+                        <div className="overflow-x-auto">
+                          <div className="min-w-[600px]">
+                            {/* Day Headers */}
+                            <div className="grid grid-cols-7 gap-2 mb-3">
+                              {weekDays.map((day, index) => (
                                 <div
-                                  key={item.id}
-                                  className="px-2 py-1.5 rounded-lg text-xs font-medium text-white truncate"
-                                  style={{ backgroundColor: item.color || '#3B82F6' }}
-                                  title={item.title}
+                                  key={day}
+                                  className={`text-center py-2 rounded-lg font-semibold text-sm ${
+                                    index >= 5
+                                      ? 'bg-orange-50 text-orange-600'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
                                 >
-                                  {item.title}
+                                  {day}
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Schedule Grid */}
+                            <div className="grid grid-cols-7 gap-2">
+                              {weekDays.map((_, dayIndex) => (
+                                <div key={dayIndex} className="min-h-[200px] bg-gray-50 rounded-lg p-2 space-y-2">
+                                  {(itemsByDay[dayIndex] || [])
+                                    .sort((a, b) => (a.startHour || 0) - (b.startHour || 0))
+                                    .map((item) => (
+                                      <div
+                                        key={item.id}
+                                        className="p-2.5 rounded-lg text-white shadow-sm"
+                                        style={{ backgroundColor: getHexColor(item.color) }}
+                                      >
+                                        <div className="text-xs opacity-80 mb-0.5">
+                                          {item.startHour !== undefined ? `${item.startHour}:00` : ''}
+                                          {item.endHour !== undefined ? ` - ${item.endHour}:00` : ''}
+                                        </div>
+                                        <div className="font-medium text-sm truncate">
+                                          {item.title}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  {(!itemsByDay[dayIndex] || itemsByDay[dayIndex].length === 0) && (
+                                    <div className="h-full flex items-center justify-center text-gray-300 text-xs">
+                                      일정 없음
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Summary */}
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>총 {routineItems.length}개 일정</span>
+                            <span>•</span>
+                            <span>{Object.keys(itemsByDay).length}일 설정됨</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Daily routine view (time-based)
+                  if (isDaily) {
+                    // Sort items by start hour
+                    const sortedItems = [...routineItems].sort((a, b) => (a.startHour || 0) - (b.startHour || 0));
+
+                    return (
+                      <div className="p-6 bg-white rounded-xl">
+                        <div className="flex items-center gap-2 mb-5">
+                          <Clock className="w-5 h-5 text-orange-500" />
+                          <span className="font-bold text-gray-900 text-lg">하루 루틴</span>
+                        </div>
+
+                        {/* Time-based Schedule */}
+                        <div className="relative">
+                          {/* Time line */}
+                          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+                          <div className="space-y-3">
+                            {sortedItems.length > 0 ? sortedItems.map((item) => (
+                              <div key={item.id} className="flex items-start gap-4 relative">
+                                {/* Time */}
+                                <div className="w-16 text-right text-sm font-medium text-gray-500 pt-2 flex-shrink-0">
+                                  {item.startHour !== undefined ? `${item.startHour}:00` : '--:--'}
+                                </div>
+
+                                {/* Dot on timeline */}
+                                <div
+                                  className="w-3 h-3 rounded-full mt-2.5 flex-shrink-0 ring-4 ring-white z-10"
+                                  style={{ backgroundColor: getHexColor(item.color) }}
+                                />
+
+                                {/* Content Card */}
+                                <div
+                                  className="flex-1 p-4 rounded-xl text-white shadow-md"
+                                  style={{ backgroundColor: getHexColor(item.color) }}
+                                >
+                                  <div className="font-semibold">{item.title}</div>
+                                  {item.endHour !== undefined && (
+                                    <div className="text-sm opacity-80 mt-1">
+                                      {item.startHour}:00 - {item.endHour}:00
+                                      <span className="ml-2">({(item.endHour || 0) - (item.startHour || 0)}시간)</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )) : (
+                              <div className="text-center py-8 text-gray-400">
+                                등록된 일정이 없습니다
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Summary */}
+                        {sortedItems.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>총 {sortedItems.length}개 일정</span>
+                              {sortedItems[0]?.startHour !== undefined && sortedItems[sortedItems.length - 1]?.endHour !== undefined && (
+                                <>
+                                  <span>•</span>
+                                  <span>{sortedItems[0].startHour}:00 ~ {sortedItems[sortedItems.length - 1].endHour}:00</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Fallback for other routine types
+                  return (
+                    <div className="p-6 bg-white rounded-xl">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Calendar className="w-5 h-5 text-orange-500" />
+                        <span className="font-bold text-gray-900 text-lg">
+                          {routineTypeLabels[routineType] || '루틴'}
+                        </span>
+                      </div>
+                      <div className="text-center py-8 text-gray-400">
+                        {routineItems.length > 0
+                          ? `${routineItems.length}개의 일정이 등록되어 있습니다`
+                          : '등록된 일정이 없습니다'
+                        }
                       </div>
                     </div>
                   );
@@ -576,11 +737,19 @@ export default function ProductDetailPage() {
                   <span className="text-gray-500">{product.content_type === 'routine' ? '유형' : '파일 형식'}</span>
                   <span className="font-medium text-gray-900">
                     {product.content_type === 'routine'
-                      ? (product.routine_type === 'weekly' ? '주간 루틴' : product.routine_type === 'monthly' ? '월간 루틴' : `${product.routine_days}일 루틴`)
+                      ? (routineTypeLabels[product.routine_type || ''] || '루틴')
                       : (product.type || 'pdf').toUpperCase()
                     }
                   </span>
                 </div>
+                {product.content_type === 'routine' && product.routine_items && product.routine_items.length > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">일정 수</span>
+                    <span className="font-medium text-gray-900">
+                      {product.routine_items.length}개
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">등록일</span>
                   <span className="font-medium text-gray-900 flex items-center gap-1.5">
