@@ -118,8 +118,7 @@ export default function UploadPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // 루틴 추가 모달 상태
-  const [showAddModal, setShowAddModal] = useState(false);
+  // 인라인 편집 상태
   const [editingItem, setEditingItem] = useState<{
     day: number;
     startHour?: number;
@@ -250,7 +249,6 @@ export default function UploadPage() {
     };
 
     setRoutineItems(prev => [...prev, newItem]);
-    setShowAddModal(false);
     setEditingItem(null);
     setNewItemTitle('');
   };
@@ -260,16 +258,32 @@ export default function UploadPage() {
     setRoutineItems(prev => prev.filter(item => item.id !== id));
   };
 
-  // 시간표 셀 클릭 (Day/Week)
+  // 시간표 셀 클릭 (Day/Week) - 인라인 입력 시작
   const handleTimeSlotClick = (day: number, hour: number) => {
     setEditingItem({ day, startHour: hour, endHour: hour + 1 });
-    setShowAddModal(true);
+    setNewItemTitle('');
   };
 
-  // 월간 캘린더 날짜 클릭
+  // 월간 캘린더 날짜 클릭 - 인라인 입력 시작
   const handleDateClick = (day: number) => {
     setEditingItem({ day });
-    setShowAddModal(true);
+    setNewItemTitle('');
+  };
+
+  // 인라인 입력 저장
+  const saveInlineItem = () => {
+    if (editingItem && newItemTitle.trim()) {
+      addRoutineItem();
+    } else {
+      setEditingItem(null);
+      setNewItemTitle('');
+    }
+  };
+
+  // 인라인 입력 취소
+  const cancelInlineEdit = () => {
+    setEditingItem(null);
+    setNewItemTitle('');
   };
 
   // 업로드 가능 여부
@@ -510,6 +524,7 @@ export default function UploadPage() {
             const item = routineItems.find(
               i => i.day === 0 && i.startHour === hour
             );
+            const isEditing = editingItem?.day === 0 && editingItem?.startHour === hour && !item;
             return (
               <div
                 key={hour}
@@ -519,10 +534,10 @@ export default function UploadPage() {
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 <div
-                  onClick={() => !item && handleTimeSlotClick(0, hour)}
+                  onClick={() => !item && !isEditing && handleTimeSlotClick(0, hour)}
                   className={cn(
                     'flex-1 py-2 px-3 min-h-[44px] transition-colors',
-                    item ? '' : 'hover:bg-orange-50 cursor-pointer'
+                    item || isEditing ? '' : 'hover:bg-orange-50 cursor-pointer'
                   )}
                 >
                   {item ? (
@@ -538,6 +553,23 @@ export default function UploadPage() {
                         <X className="w-3 h-3" />
                       </button>
                     </div>
+                  ) : isEditing ? (
+                    <input
+                      type="text"
+                      value={newItemTitle}
+                      onChange={(e) => setNewItemTitle(e.target.value)}
+                      placeholder="무엇을 공부하나요?"
+                      className="w-full px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveInlineItem();
+                        } else if (e.key === 'Escape') {
+                          cancelInlineEdit();
+                        }
+                      }}
+                      onBlur={saveInlineItem}
+                    />
                   ) : (
                     <div className="text-gray-300 text-sm">+ 추가</div>
                   )}
@@ -583,16 +615,17 @@ export default function UploadPage() {
                 const item = routineItems.find(
                   i => i.day === dayIdx && i.startHour === hour
                 );
+                const isEditing = editingItem?.day === dayIdx && editingItem?.startHour === hour && !item;
                 return (
                   <div
                     key={dayIdx}
-                    onClick={() => !item && handleTimeSlotClick(dayIdx, hour)}
+                    onClick={() => !item && !isEditing && handleTimeSlotClick(dayIdx, hour)}
                     className={cn(
                       'flex-1 min-h-[40px] border-l border-gray-100 p-1 transition-colors',
-                      item ? '' : 'hover:bg-orange-50 cursor-pointer'
+                      item || isEditing ? '' : 'hover:bg-orange-50 cursor-pointer'
                     )}
                   >
-                    {item && (
+                    {item ? (
                       <div className={cn('px-1.5 py-0.5 rounded text-white text-xs flex items-center gap-1', item.color)}>
                         <span className="truncate flex-1">{item.title}</span>
                         <button
@@ -605,7 +638,24 @@ export default function UploadPage() {
                           <X className="w-3 h-3" />
                         </button>
                       </div>
-                    )}
+                    ) : isEditing ? (
+                      <input
+                        type="text"
+                        value={newItemTitle}
+                        onChange={(e) => setNewItemTitle(e.target.value)}
+                        placeholder="공부 내용"
+                        className="w-full px-1 py-0.5 text-xs border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveInlineItem();
+                          } else if (e.key === 'Escape') {
+                            cancelInlineEdit();
+                          }
+                        }}
+                        onBlur={saveInlineItem}
+                      />
+                    ) : null}
                   </div>
                 );
               })}
@@ -675,13 +725,14 @@ export default function UploadPage() {
         <div className="grid grid-cols-7">
           {days.map((day, idx) => {
             const dayItems = day ? routineItems.filter(i => i.day === day) : [];
+            const isEditing = editingItem?.day === day && editingItem?.startHour === undefined;
             return (
               <div
                 key={idx}
-                onClick={() => day && handleDateClick(day)}
+                onClick={() => day && !isEditing && handleDateClick(day)}
                 className={cn(
                   'min-h-[80px] border-b border-r border-gray-100 p-1',
-                  day ? 'hover:bg-orange-50 cursor-pointer' : 'bg-gray-50',
+                  day && !isEditing ? 'hover:bg-orange-50 cursor-pointer' : 'bg-gray-50',
                   (idx + 1) % 7 === 0 && 'border-r-0'
                 )}
               >
@@ -715,6 +766,25 @@ export default function UploadPage() {
                       {dayItems.length > 3 && (
                         <div className="text-xs text-gray-500">+{dayItems.length - 3}개</div>
                       )}
+                      {isEditing && (
+                        <input
+                          type="text"
+                          value={newItemTitle}
+                          onChange={(e) => setNewItemTitle(e.target.value)}
+                          placeholder="공부 내용"
+                          className="w-full px-1 py-0.5 text-xs border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              saveInlineItem();
+                            } else if (e.key === 'Escape') {
+                              cancelInlineEdit();
+                            }
+                          }}
+                          onBlur={saveInlineItem}
+                        />
+                      )}
                     </div>
                   </>
                 )}
@@ -747,6 +817,7 @@ export default function UploadPage() {
       <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
         {Array.from({ length: Math.min(customDays, 30) }, (_, i) => i + 1).map(day => {
           const dayItems = routineItems.filter(i => i.day === day);
+          const isEditing = editingItem?.day === day && editingItem?.startHour === undefined;
           return (
             <div
               key={day}
@@ -756,10 +827,13 @@ export default function UploadPage() {
                 Day {day}
               </div>
               <div
-                onClick={() => handleDateClick(day)}
-                className="flex-1 py-2 px-3 min-h-[50px] hover:bg-orange-50 cursor-pointer"
+                onClick={() => !isEditing && handleDateClick(day)}
+                className={cn(
+                  'flex-1 py-2 px-3 min-h-[50px] transition-colors',
+                  isEditing ? '' : 'hover:bg-orange-50 cursor-pointer'
+                )}
               >
-                {dayItems.length > 0 ? (
+                {dayItems.length > 0 || isEditing ? (
                   <div className="flex flex-wrap gap-1">
                     {dayItems.map(item => (
                       <div
@@ -779,6 +853,25 @@ export default function UploadPage() {
                         </button>
                       </div>
                     ))}
+                    {isEditing && (
+                      <input
+                        type="text"
+                        value={newItemTitle}
+                        onChange={(e) => setNewItemTitle(e.target.value)}
+                        placeholder="무엇을 공부하나요?"
+                        className="flex-1 min-w-[150px] px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveInlineItem();
+                          } else if (e.key === 'Escape') {
+                            cancelInlineEdit();
+                          }
+                        }}
+                        onBlur={saveInlineItem}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="text-gray-300 text-sm">+ 일정 추가</div>
@@ -1185,80 +1278,6 @@ export default function UploadPage() {
         </button>
       </div>
 
-      {/* 루틴 추가 모달 */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">일정 추가</h3>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setEditingItem(null);
-                  setNewItemTitle('');
-                }}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* 일정 정보 */}
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-              {routineType === 'day' && editingItem?.startHour !== undefined && (
-                <p>{editingItem.startHour}:00 ~ {(editingItem.endHour || editingItem.startHour + 1)}:00</p>
-              )}
-              {routineType === 'week' && editingItem && (
-                <p>{WEEKDAYS_FULL[editingItem.day]} {editingItem.startHour}:00 ~ {(editingItem.endHour || editingItem.startHour! + 1)}:00</p>
-              )}
-              {(routineType === 'month' || routineType === 'custom') && editingItem && (
-                <p>{routineType === 'month' ? `${editingItem.day}일` : `Day ${editingItem.day}`}</p>
-              )}
-            </div>
-
-            {/* 제목 입력 */}
-            <input
-              type="text"
-              value={newItemTitle}
-              onChange={(e) => setNewItemTitle(e.target.value)}
-              placeholder="무엇을 공부하나요?"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newItemTitle.trim()) {
-                  addRoutineItem();
-                }
-              }}
-            />
-
-            {/* 버튼 */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setEditingItem(null);
-                  setNewItemTitle('');
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={addRoutineItem}
-                disabled={!newItemTitle.trim()}
-                className={cn(
-                  'flex-1 py-2.5 rounded-xl font-medium transition-colors',
-                  newItemTitle.trim()
-                    ? 'bg-orange-500 text-white hover:bg-orange-600'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                )}
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
