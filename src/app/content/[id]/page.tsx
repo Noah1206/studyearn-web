@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-900 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">불러오는 중...</p>
         </div>
       </div>
@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
               {product.subject && (
-                <span className="text-sm font-medium text-orange-600">
+                <span className="text-sm font-medium text-gray-900">
                   {subjectLabels[product.subject] || product.subject}
                 </span>
               )}
@@ -301,7 +301,7 @@ export default function ProductDetailPage() {
 
             {/* Creator Info */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {product.creator?.avatar_url ? (
                   <Image
                     src={product.creator.avatar_url}
@@ -311,7 +311,7 @@ export default function ProductDetailPage() {
                     className="object-cover"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-orange-400" />
+                  <User className="w-5 h-5 text-white" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -322,7 +322,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-500 truncate">{product.creator.bio}</p>
                 )}
               </div>
-              <button className="px-3 py-1.5 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
+              <button className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors">
                 팔로우
               </button>
             </div>
@@ -353,7 +353,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* File Preview */}
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50 mb-8">
+            <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-8">
               {/* File type badge */}
               <div className="absolute top-4 left-4 z-10">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700">
@@ -415,9 +415,9 @@ export default function ProductDetailPage() {
                         poster={product.thumbnail_url || undefined}
                       />
                       {!isPurchased && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                          <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">
-                            <Play className="w-8 h-8 text-orange-500 ml-1" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                            <Play className="w-8 h-8 text-gray-900 ml-1" />
                           </div>
                         </div>
                       )}
@@ -443,10 +443,10 @@ export default function ProductDetailPage() {
                 // Default placeholder
                 return (
                   <div className="aspect-[4/3] flex flex-col items-center justify-center">
-                    <div className="w-20 h-20 rounded-2xl bg-white/60 flex items-center justify-center mb-3">
-                      <TypeIcon className="w-10 h-10 text-orange-400" />
+                    <div className="w-20 h-20 rounded-2xl bg-gray-900 flex items-center justify-center mb-3">
+                      <TypeIcon className="w-10 h-10 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-orange-500">
+                    <span className="text-sm font-medium text-gray-900">
                       {contentTypeLabels[product.type || 'pdf']} 파일
                     </span>
                   </div>
@@ -525,7 +525,7 @@ export default function ProductDetailPage() {
                         size="lg"
                         onClick={handleDownload}
                         disabled={isDownloading}
-                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-14 text-base font-semibold"
+                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
                       >
                         {isDownloading ? (
                           <>
@@ -555,7 +555,7 @@ export default function ProductDetailPage() {
                           size="lg"
                           onClick={handleClaimFree}
                           disabled={isClaiming}
-                          className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-14 text-base font-semibold"
+                          className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
                         >
                           {isClaiming ? (
                             <>
@@ -574,7 +574,7 @@ export default function ProductDetailPage() {
                           <Button
                             fullWidth
                             size="lg"
-                            className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-14 text-base font-semibold"
+                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
                           >
                             구매하기
                             <ChevronRight className="w-5 h-5 ml-1" />
@@ -612,7 +612,7 @@ export default function ProductDetailPage() {
                 className="mt-4 bg-gray-50 rounded-2xl p-5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {product.creator?.avatar_url ? (
                       <Image
                         src={product.creator.avatar_url}
@@ -622,7 +622,7 @@ export default function ProductDetailPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <User className="w-6 h-6 text-orange-400" />
+                      <User className="w-6 h-6 text-white" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
