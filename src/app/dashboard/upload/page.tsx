@@ -17,6 +17,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Copy,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,16 @@ interface RoutineItem {
   color: string;
 }
 
+// 내 루틴 타입
+interface MyRoutine {
+  id: string;
+  title: string;
+  routine_type: string;
+  routine_items: RoutineItem[];
+  routine_days?: number;
+  created_at: string;
+}
+
 // 파일 타입 아이콘
 function getFileIcon(fileName: string) {
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -144,6 +155,11 @@ export default function UploadPage() {
   // UI 상태
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 내 루틴 복사 상태
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [myRoutines, setMyRoutines] = useState<MyRoutine[]>([]);
+  const [isLoadingRoutines, setIsLoadingRoutines] = useState(false);
 
   // Textarea 자동 높이 조절
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -230,6 +246,64 @@ export default function UploadPage() {
     const value = e.target.value.replace(/[^0-9]/g, '');
     setCustomPrice(value);
     setPrice(parseInt(value) || 0);
+  };
+
+  // 내 루틴 목록 가져오기
+  const loadMyRoutines = async () => {
+    setIsLoadingRoutines(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('contents')
+        .select('id, title, routine_type, routine_items, routine_days, created_at')
+        .eq('creator_id', user.id)
+        .eq('content_type', 'routine')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setMyRoutines((data || []).filter((r: MyRoutine) => r.routine_items && r.routine_items.length > 0));
+    } catch (err) {
+      console.error('Failed to load routines:', err);
+    } finally {
+      setIsLoadingRoutines(false);
+    }
+  };
+
+  // 루틴 복사하기
+  const copyRoutine = (routine: MyRoutine) => {
+    // 루틴 타입 설정
+    if (routine.routine_type === 'day' || routine.routine_type === 'daily') {
+      setRoutineType('day');
+    } else if (routine.routine_type === 'week' || routine.routine_type === 'weekly') {
+      setRoutineType('week');
+    } else if (routine.routine_type === 'month' || routine.routine_type === 'monthly') {
+      setRoutineType('month');
+    } else if (routine.routine_type === 'custom') {
+      setRoutineType('custom');
+      if (routine.routine_days) {
+        setCustomDays(routine.routine_days);
+      }
+    }
+
+    // 루틴 아이템 복사 (새 ID 부여)
+    const copiedItems = routine.routine_items.map(item => ({
+      ...item,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+
+    setRoutineItems(copiedItems);
+    setShowCopyModal(false);
+  };
+
+  // 복사 모달 열기
+  const openCopyModal = async () => {
+    setShowCopyModal(true);
+    await loadMyRoutines();
   };
 
   // 루틴 아이템 추가
@@ -991,7 +1065,16 @@ export default function UploadPage() {
         {/* 루틴 타입 선택 (루틴일 때만) */}
         {contentType === 'routine' && (
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-3">루틴 형식</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-gray-700">루틴 형식</p>
+              <button
+                onClick={openCopyModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+                내 루틴 복사
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {ROUTINE_TYPES.map((type) => {
                 const isSelected = routineType === type.id;
@@ -1277,6 +1360,93 @@ export default function UploadPage() {
           )}
         </button>
       </div>
+
+      {/* 내 루틴 복사 모달 */}
+      {showCopyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-xl">
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900">내 루틴 복사</h3>
+              <button
+                onClick={() => setShowCopyModal(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* 모달 본문 */}
+            <div className="max-h-[60vh] overflow-y-auto">
+              {isLoadingRoutines ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-orange-500 animate-spin mb-3" />
+                  <p className="text-sm text-gray-500">루틴 불러오는 중...</p>
+                </div>
+              ) : myRoutines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <Calendar className="w-12 h-12 text-gray-300 mb-3" />
+                  <p className="text-gray-600 font-medium mb-1">복사할 루틴이 없어요</p>
+                  <p className="text-sm text-gray-500 text-center">
+                    먼저 루틴을 만들어보세요!
+                  </p>
+                </div>
+              ) : (
+                <div className="p-2">
+                  {myRoutines.map((routine) => {
+                    const typeLabel =
+                      routine.routine_type === 'day' || routine.routine_type === 'daily'
+                        ? '하루'
+                        : routine.routine_type === 'week' || routine.routine_type === 'weekly'
+                        ? '일주일'
+                        : routine.routine_type === 'month' || routine.routine_type === 'monthly'
+                        ? '한 달'
+                        : routine.routine_type === 'custom'
+                        ? `${routine.routine_days || 30}일`
+                        : '루틴';
+
+                    return (
+                      <button
+                        key={routine.id}
+                        onClick={() => copyRoutine(routine)}
+                        className="w-full p-4 rounded-xl hover:bg-orange-50 transition-colors text-left border border-transparent hover:border-orange-200 mb-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate mb-1">
+                              {routine.title}
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                                <Clock className="w-3 h-3" />
+                                {typeLabel}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {routine.routine_items.length}개 일정
+                              </span>
+                            </div>
+                          </div>
+                          <Copy className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
+              <button
+                onClick={() => setShowCopyModal(false)}
+                className="w-full py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

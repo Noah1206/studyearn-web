@@ -90,8 +90,13 @@ const routineTypeLabels: Record<string, string> = {
   weekly: '주간 루틴',
   day: '하루 루틴',
   daily: '하루 루틴',
+  month: '월간 루틴',
   monthly: '월간 루틴',
+  custom: '커스텀 루틴',
 };
+
+// Weekdays for calendar
+const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
 
 // Tailwind color class to hex mapping
 const tailwindColorMap: Record<string, string> = {
@@ -603,6 +608,189 @@ export default function ProductDetailPage() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    );
+                  }
+
+                  // Monthly routine view (calendar)
+                  const isMonthly = routineType === 'month' || routineType === 'monthly';
+                  if (isMonthly) {
+                    // Group items by day (1-31)
+                    const itemsByDay: Record<number, RoutineItem[]> = {};
+                    routineItems.forEach((item) => {
+                      if (!itemsByDay[item.day]) {
+                        itemsByDay[item.day] = [];
+                      }
+                      itemsByDay[item.day].push(item);
+                    });
+
+                    // Get days in current month (assuming current month for display)
+                    const now = new Date();
+                    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+                    const totalDays = lastDay.getDate();
+
+                    const days: (number | null)[] = [];
+                    for (let i = 0; i < startDay; i++) days.push(null);
+                    for (let i = 1; i <= totalDays; i++) days.push(i);
+
+                    const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+                    return (
+                      <div className="p-6 bg-white rounded-xl">
+                        <div className="flex items-center gap-2 mb-5">
+                          <Calendar className="w-5 h-5 text-orange-500" />
+                          <span className="font-bold text-gray-900 text-lg">월간 루틴</span>
+                          <span className="text-sm text-gray-500 ml-2">
+                            {now.getFullYear()}년 {monthNames[now.getMonth()]}
+                          </span>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                          {/* Day Headers */}
+                          <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                            {WEEKDAYS.map((day, idx) => (
+                              <div
+                                key={day}
+                                className={`py-2 text-center text-sm font-medium ${
+                                  idx >= 5 ? 'text-red-500' : 'text-gray-700'
+                                }`}
+                              >
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Date Grid */}
+                          <div className="grid grid-cols-7">
+                            {days.map((day, idx) => {
+                              const dayItems = day ? (itemsByDay[day] || []) : [];
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`min-h-[80px] border-b border-r border-gray-100 p-1 ${
+                                    day ? 'bg-white' : 'bg-gray-50'
+                                  } ${(idx + 1) % 7 === 0 ? 'border-r-0' : ''}`}
+                                >
+                                  {day && (
+                                    <>
+                                      <div className={`text-sm mb-1 font-medium ${
+                                        (idx % 7) >= 5 ? 'text-red-500' : 'text-gray-700'
+                                      }`}>
+                                        {day}
+                                      </div>
+                                      <div className="space-y-0.5">
+                                        {dayItems.slice(0, 3).map((item) => (
+                                          <div
+                                            key={item.id}
+                                            className="px-1.5 py-0.5 rounded text-white text-xs truncate"
+                                            style={{ backgroundColor: getHexColor(item.color) }}
+                                          >
+                                            {item.title}
+                                          </div>
+                                        ))}
+                                        {dayItems.length > 3 && (
+                                          <div className="text-xs text-gray-500 pl-1">
+                                            +{dayItems.length - 3}개
+                                          </div>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Summary */}
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>총 {routineItems.length}개 일정</span>
+                            <span>•</span>
+                            <span>{Object.keys(itemsByDay).length}일에 일정 있음</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Custom routine view (N-day planner)
+                  const isCustom = routineType === 'custom';
+                  if (isCustom) {
+                    // Group items by day
+                    const itemsByDay: Record<number, RoutineItem[]> = {};
+                    routineItems.forEach((item) => {
+                      if (!itemsByDay[item.day]) {
+                        itemsByDay[item.day] = [];
+                      }
+                      itemsByDay[item.day].push(item);
+                    });
+
+                    // Find max day
+                    const maxDay = Math.max(...routineItems.map(item => item.day), product.routine_days || 30);
+                    const displayDays = Math.min(maxDay, 30); // Show first 30 days max
+
+                    return (
+                      <div className="p-6 bg-white rounded-xl">
+                        <div className="flex items-center gap-2 mb-5">
+                          <Calendar className="w-5 h-5 text-orange-500" />
+                          <span className="font-bold text-gray-900 text-lg">
+                            {product.routine_days || maxDay}일 루틴
+                          </span>
+                        </div>
+
+                        {/* Day List */}
+                        <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+                          {Array.from({ length: displayDays }, (_, i) => i + 1).map((day) => {
+                            const dayItems = itemsByDay[day] || [];
+                            return (
+                              <div
+                                key={day}
+                                className="flex border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="w-20 py-3 px-3 text-sm font-medium text-gray-700 bg-gray-50 flex-shrink-0 border-r border-gray-100">
+                                  Day {day}
+                                </div>
+                                <div className="flex-1 py-2 px-3 min-h-[50px]">
+                                  {dayItems.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {dayItems.map((item) => (
+                                        <div
+                                          key={item.id}
+                                          className="px-2.5 py-1 rounded-lg text-white text-sm"
+                                          style={{ backgroundColor: getHexColor(item.color) }}
+                                        >
+                                          {item.title}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-gray-300 text-sm py-1">-</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {maxDay > 30 && (
+                            <div className="p-3 text-center text-sm text-gray-500 bg-gray-50">
+                              +{maxDay - 30}일 더 있음
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary */}
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>총 {routineItems.length}개 일정</span>
+                            <span>•</span>
+                            <span>{Object.keys(itemsByDay).length}일에 일정 있음</span>
+                            <span>•</span>
+                            <span>전체 {product.routine_days || maxDay}일</span>
+                          </div>
+                        </div>
                       </div>
                     );
                   }
