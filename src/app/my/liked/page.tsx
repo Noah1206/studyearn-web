@@ -217,7 +217,7 @@ export default function LikedContentsPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {likedContents.map((content) => {
-              const TypeIcon = contentTypeIcons[content.content_type] || FileText;
+              const TypeIcon = content.content_type ? contentTypeIcons[content.content_type] || FileText : FileText;
 
               return (
                 <Card key={content.id} className="overflow-hidden hover:shadow-md transition-shadow">
