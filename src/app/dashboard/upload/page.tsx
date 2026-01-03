@@ -559,7 +559,7 @@ export default function UploadPage() {
                       value={newItemTitle}
                       onChange={(e) => setNewItemTitle(e.target.value)}
                       placeholder="무엇을 공부하나요?"
-                      className="w-full px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      className="w-full px-2 py-1 text-sm bg-transparent rounded focus:outline-none"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -644,7 +644,7 @@ export default function UploadPage() {
                         value={newItemTitle}
                         onChange={(e) => setNewItemTitle(e.target.value)}
                         placeholder="공부 내용"
-                        className="w-full px-1 py-0.5 text-xs border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                        className="w-full px-1 py-0.5 text-xs bg-transparent rounded focus:outline-none"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -772,7 +772,7 @@ export default function UploadPage() {
                           value={newItemTitle}
                           onChange={(e) => setNewItemTitle(e.target.value)}
                           placeholder="공부 내용"
-                          className="w-full px-1 py-0.5 text-xs border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                          className="w-full px-1 py-0.5 text-xs bg-transparent rounded focus:outline-none"
                           autoFocus
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => {
@@ -859,7 +859,7 @@ export default function UploadPage() {
                         value={newItemTitle}
                         onChange={(e) => setNewItemTitle(e.target.value)}
                         placeholder="무엇을 공부하나요?"
-                        className="flex-1 min-w-[150px] px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        className="flex-1 min-w-[150px] px-2 py-1 text-sm bg-transparent rounded focus:outline-none"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => {
