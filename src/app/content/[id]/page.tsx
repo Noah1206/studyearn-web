@@ -110,7 +110,7 @@ export default function ProductDetailPage() {
         const data = await response.json();
         setProduct(data.product);
         setContents(data.contents || []);
-        setIsPurchased(data.isPurchased || false);
+        // setIsPurchased(data.isPurchased || false); // TODO: 테스트 후 주석 해제
         setIsPreviewAllowed(data.isPreviewAllowed ?? true);
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -504,7 +504,7 @@ export default function ProductDetailPage() {
                 transition={{ delay: 0.1 }}
                 className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden"
               >
-                {false && isPurchased ? ( // TODO: 테스트 후 false && 제거
+                {isPurchased ? (
                   /* Purchased State */
                   <div className="p-6">
                     {/* Success Badge */}
