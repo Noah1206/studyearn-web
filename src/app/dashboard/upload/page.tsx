@@ -890,7 +890,7 @@ export default function UploadPage() {
 시험 전에 보기 좋게 요약함 📝
 
 #수학 #고2 #미적분`}
-            className="w-full min-h-[120px] text-lg text-gray-900 placeholder-gray-400 resize-none border-0 focus:outline-none focus:ring-0"
+            className="w-full min-h-[120px] text-lg text-gray-900 placeholder-gray-400 resize-none border-0 focus:outline-none focus:ring-0 scrollbar-hide"
             style={{ lineHeight: '1.6' }}
           />
         </div>
