@@ -301,7 +301,11 @@ export default function ProfilePage() {
       if (profileError) {
         console.error('Profile fetch error:', profileError);
       } else {
-        setProfile(profileData);
+        // Use user_metadata avatar_url as fallback (for Kakao login)
+        const avatarUrl = profileData.avatar_url || user.user_metadata?.avatar_url;
+        const profileWithAvatar = { ...profileData, avatar_url: avatarUrl };
+
+        setProfile(profileWithAvatar);
         setEditNickname(profileData.nickname || '');
         setEditUsername(profileData.username || '');
         setEditBio(profileData.bio || '');
@@ -313,7 +317,7 @@ export default function ProfilePage() {
           email: user.email || '',
           nickname: profileData.nickname || '',
           username: profileData.username,
-          avatar_url: profileData.avatar_url,
+          avatar_url: avatarUrl,
           bio: profileData.bio,
           school: profileData.school,
         });
