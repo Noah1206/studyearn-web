@@ -81,16 +81,16 @@ const generateChartData = async (
       .gte('created_at', dateStr)
       .lt('created_at', nextDateStr);
 
-    // Get revenue for this date (from purchases)
+    // Get revenue for this date (from content_purchases)
     const { data: purchases } = await supabase
-      .from('purchases')
-      .select('amount')
+      .from('content_purchases')
+      .select('creator_revenue, amount')
       .eq('seller_id', creatorId)
       .eq('status', 'completed')
       .gte('created_at', dateStr)
       .lt('created_at', nextDateStr);
 
-    const dailyRevenue = purchases?.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0) || 0;
+    const dailyRevenue = purchases?.reduce((sum: number, p: { creator_revenue: number | null; amount: number | null }) => sum + (p.creator_revenue || p.amount || 0), 0) || 0;
 
     data.push({
       date: dateStr,
@@ -237,51 +237,42 @@ export default function AnalyticsPage() {
         ? (((currentSubs || 0) - (prevSubs || 0)) / (prevSubs || 1)) * 100
         : (currentSubs || 0) > 0 ? 100 : 0;
 
-      // Get revenue data
+      // Get revenue data from content_purchases
       const { data: currentPurchases } = await supabase
-        .from('purchases')
-        .select('amount, purchase_type')
+        .from('content_purchases')
+        .select('creator_revenue, amount')
         .eq('seller_id', user.id)
         .eq('status', 'completed')
         .gte('created_at', periodStart.toISOString());
       const { data: prevPurchases } = await supabase
-        .from('purchases')
-        .select('amount')
+        .from('content_purchases')
+        .select('creator_revenue, amount')
         .eq('seller_id', user.id)
         .eq('status', 'completed')
         .gte('created_at', prevPeriodStart.toISOString())
         .lt('created_at', periodStart.toISOString());
 
-      const currentRevenue = currentPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
-      const prevRevenue = prevPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
+      const currentRevenue = currentPurchases?.reduce((sum: number, p: { creator_revenue: number | null; amount: number | null }) => sum + (p.creator_revenue || p.amount || 0), 0) || 0;
+      const prevRevenue = prevPurchases?.reduce((sum: number, p: { creator_revenue: number | null; amount: number | null }) => sum + (p.creator_revenue || p.amount || 0), 0) || 0;
       const revenueChange = prevRevenue > 0
         ? ((currentRevenue - prevRevenue) / prevRevenue) * 100
         : currentRevenue > 0 ? 100 : 0;
 
-      // Get total revenue
+      // Get total revenue from content_purchases
       const { data: allPurchases } = await supabase
-        .from('purchases')
-        .select('amount, purchase_type')
+        .from('content_purchases')
+        .select('creator_revenue, amount')
         .eq('seller_id', user.id)
         .eq('status', 'completed');
-      type PurchaseItem = { amount: number | null; purchase_type: string | null };
-      const totalRevenue = allPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
+      type PurchaseItem = { creator_revenue: number | null; amount: number | null };
+      const totalRevenue = allPurchases?.reduce((sum: number, p: PurchaseItem) => sum + (p.creator_revenue || p.amount || 0), 0) || 0;
 
-      // Calculate revenue by source from purchases
-      const subscriptionRevenue = allPurchases
-        ?.filter((p: PurchaseItem) => p.purchase_type === 'subscription')
-        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
-      const contentSalesRevenue = allPurchases
-        ?.filter((p: PurchaseItem) => p.purchase_type === 'content')
-        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
-      const tipsRevenue = allPurchases
-        ?.filter((p: PurchaseItem) => p.purchase_type === 'tip')
-        .reduce((sum: number, p: PurchaseItem) => sum + (p.amount || 0), 0) || 0;
-
+      // For now, all revenue is from content sales (P2P model)
+      // TODO: Add subscription and tip tracking when implemented
       const revenueBySource = {
-        subscriptions: subscriptionRevenue,
-        contentSales: contentSalesRevenue,
-        tips: tipsRevenue,
+        subscriptions: 0,
+        contentSales: totalRevenue,
+        tips: 0,
       };
 
       // Content type distribution
@@ -302,13 +293,13 @@ export default function AnalyticsPage() {
       type TopContentItem = { id: string; title: string; content_type: string; view_count: number | null; like_count: number | null };
       const topContents = await Promise.all(
         (topContentsData || []).map(async (c: TopContentItem) => {
-          // Get revenue for this content
+          // Get revenue for this content from content_purchases
           const { data: contentPurchases } = await supabase
-            .from('purchases')
-            .select('amount')
+            .from('content_purchases')
+            .select('creator_revenue, amount')
             .eq('content_id', c.id)
             .eq('status', 'completed');
-          const contentRevenue = contentPurchases?.reduce((sum: number, p: { amount: number | null }) => sum + (p.amount || 0), 0) || 0;
+          const contentRevenue = contentPurchases?.reduce((sum: number, p: { creator_revenue: number | null; amount: number | null }) => sum + (p.creator_revenue || p.amount || 0), 0) || 0;
 
           return {
             id: c.id,

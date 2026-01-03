@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Platform fee rate (20%)
+const PLATFORM_FEE_RATE = 0.20;
+
 /**
  * POST /api/purchase/p2p
- * Create a P2P purchase record when buyer confirms payment
+ * Create a purchase record when buyer confirms payment to platform account
+ * Flow: buyer pays to platform -> admin confirms -> creator gets 80%
  */
 export async function POST(request: NextRequest) {
   try {
@@ -108,9 +112,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate platform fee (0% for now - P2P model)
-    const platformFeeRate = 0; // 0% fee
-    const platformFee = Math.floor(content.price * platformFeeRate);
+    // Calculate platform fee (20%) and creator revenue (80%)
+    const platformFee = Math.floor(content.price * PLATFORM_FEE_RATE);
     const creatorRevenue = content.price - platformFee;
 
     // Create new purchase record with pending_confirm status

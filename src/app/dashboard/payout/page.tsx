@@ -26,12 +26,28 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, formatRelativeTime, cn } from '@/lib/utils';
 import { Button, Card, CardContent, Badge, Input, Spinner } from '@/components/ui';
-import type { CreatorRevenueStats, CreatorPayout } from '@/types/database';
 
-// Extended type with computed fields
-interface RevenueStatsWithBalance extends CreatorRevenueStats {
+// Balance data from API
+interface BalanceData {
   available_balance: number;
-  current_month_revenue: number;
+  pending_balance: number;
+  total_earned: number;
+  total_paid_out: number;
+}
+
+// Payout request from API
+interface PayoutRequest {
+  id: string;
+  creator_id: string;
+  amount: number;
+  bank_name: string;
+  bank_account: string;
+  account_holder: string;
+  status: string;
+  admin_note: string | null;
+  requested_at: string;
+  processed_at: string | null;
+  created_at: string;
 }
 
 // Korean Bank Codes
@@ -60,8 +76,7 @@ const payoutStatusConfig: Record<string, { label: string; color: string; icon: R
   pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
   processing: { label: '처리중', color: 'bg-blue-100 text-blue-700', icon: Loader2 },
   completed: { label: '완료', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-  failed: { label: '실패', color: 'bg-red-100 text-red-700', icon: XCircle },
-  cancelled: { label: '취소됨', color: 'bg-gray-100 text-gray-700', icon: XCircle },
+  rejected: { label: '거절됨', color: 'bg-red-100 text-red-700', icon: XCircle },
 };
 
 // Bank Account Interface
@@ -80,8 +95,8 @@ const PAYOUT_FEE_RATE = 0.20; // platform fee
 export default function PayoutPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [revenueStats, setRevenueStats] = useState<RevenueStatsWithBalance | null>(null);
-  const [payouts, setPayouts] = useState<CreatorPayout[]>([]);
+  const [balanceData, setBalanceData] = useState<BalanceData | null>(null);
+  const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [payoutAmount, setPayoutAmount] = useState<string>('');
@@ -108,34 +123,12 @@ export default function PayoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load revenue stats
-      const { data: stats } = await supabase
-        .from('creator_revenue_stats')
-        .select('*')
-        .eq('creator_id', user.id)
-        .single();
-
-      // Load payout history
-      const { data: payoutData } = await supabase
-        .from('creator_payouts')
-        .select('*')
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (payoutData) {
-        setPayouts(payoutData);
-      }
-
-      if (stats) {
-        // Calculate available balance = total revenue - completed/pending payouts
-        const paidOut = payoutData?.filter((p: CreatorPayout) => p.status === 'completed' || p.status === 'pending')
-          .reduce((sum: number, p: CreatorPayout) => sum + p.amount, 0) || 0;
-        setRevenueStats({
-          ...stats,
-          available_balance: stats.total_revenue - paidOut,
-          current_month_revenue: stats.subscription_revenue + stats.content_revenue + stats.tip_revenue,
-        });
+      // Load balance and payout data from API
+      const response = await fetch('/api/creator/balance');
+      if (response.ok) {
+        const data = await response.json();
+        setBalanceData(data.balance);
+        setPayouts(data.recentPayouts || []);
       }
 
       // Load bank accounts from user_preferences table
@@ -267,7 +260,7 @@ export default function PayoutPage() {
   };
 
   const handleRequestPayout = async () => {
-    if (!revenueStats || !selectedAccountId) return;
+    if (!balanceData || !selectedAccountId) return;
 
     const amount = parseInt(payoutAmount);
     const selectedAccount = bankAccounts.find((a) => a.id === selectedAccountId);
@@ -282,7 +275,7 @@ export default function PayoutPage() {
       return;
     }
 
-    if (amount > revenueStats.available_balance) {
+    if (amount > balanceData.available_balance) {
       setErrors({ payout: '정산 가능 금액을 초과했습니다' });
       return;
     }
@@ -290,27 +283,24 @@ export default function PayoutPage() {
     setIsSaving(true);
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase.from('creator_payouts').insert({
-        creator_id: user.id,
-        amount,
-        status: 'pending',
-        bank_name: BANK_CODES[selectedAccount.bank_code] || selectedAccount.bank_code,
-        account_number: selectedAccount.account_number,
-        account_holder: selectedAccount.account_holder,
+      const response = await fetch('/api/creator/payout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          bankName: BANK_CODES[selectedAccount.bank_code] || selectedAccount.bank_code,
+          bankAccount: selectedAccount.account_number,
+          accountHolder: selectedAccount.account_holder,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      // Update available balance locally (actual update should happen via database trigger)
-      setRevenueStats({
-        ...revenueStats,
-        available_balance: revenueStats.available_balance - amount,
-        current_month_revenue: revenueStats.current_month_revenue,
-      });
+      if (!response.ok) {
+        throw new Error(data.message || '정산 요청에 실패했습니다.');
+      }
 
       setShowPayoutModal(false);
       setPayoutAmount('');
@@ -318,7 +308,7 @@ export default function PayoutPage() {
       loadData(); // Reload to get updated data
     } catch (error) {
       console.error('Payout request failed:', error);
-      setErrors({ payout: '정산 요청에 실패했습니다. 다시 시도해주세요.' });
+      setErrors({ payout: error instanceof Error ? error.message : '정산 요청에 실패했습니다. 다시 시도해주세요.' });
     } finally {
       setIsSaving(false);
     }
@@ -335,9 +325,13 @@ export default function PayoutPage() {
     setShowAccountModal(true);
   };
 
-  const availableBalance = revenueStats?.available_balance || 0;
-  const estimatedFee = payoutAmount ? Math.round(parseInt(payoutAmount) * PAYOUT_FEE_RATE) : 0;
-  const estimatedNet = payoutAmount ? parseInt(payoutAmount) - estimatedFee : 0;
+  const availableBalance = balanceData?.available_balance || 0;
+  const pendingBalance = balanceData?.pending_balance || 0;
+  const totalEarned = balanceData?.total_earned || 0;
+  const totalPaidOut = balanceData?.total_paid_out || 0;
+  // No fee on payout request - fee is already deducted when purchase is confirmed (80% to creator)
+  const estimatedFee = 0;
+  const estimatedNet = payoutAmount ? parseInt(payoutAmount) : 0;
 
   if (isLoading) {
     return (
@@ -400,13 +394,13 @@ export default function PayoutPage() {
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Clock className="w-5 h-5 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">이번 달 수익</p>
+                    <p className="text-xs text-gray-500">정산 대기 중</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(revenueStats?.current_month_revenue || 0)}
+                      {formatCurrency(pendingBalance)}
                     </p>
                   </div>
                 </div>
@@ -415,13 +409,13 @@ export default function PayoutPage() {
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">총 정산액</p>
+                    <p className="text-xs text-gray-500">총 수익</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(revenueStats?.total_revenue || 0)}
+                      {formatCurrency(totalEarned)}
                     </p>
                   </div>
                 </div>
@@ -436,10 +430,10 @@ export default function PayoutPage() {
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">정산 수수료 안내</p>
+                <p className="font-medium mb-1">정산 안내</p>
                 <p className="text-blue-700">
-                  정산 요청 시 플랫폼 수수료가 차감됩니다.
-                  정산은 매주 금요일에 일괄 처리되며, 영업일 기준 2~3일 내 입금됩니다.
+                  판매 수익의 80%가 정산 가능 금액에 적립됩니다 (플랫폼 수수료 20%).
+                  정산 요청 시 추가 수수료는 없으며, 관리자 확인 후 등록된 계좌로 입금됩니다.
                 </p>
               </div>
             </div>
@@ -588,11 +582,16 @@ export default function PayoutPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">
-                            {formatRelativeTime(payout.created_at)}
+                            {formatRelativeTime(payout.requested_at)}
                           </p>
                           {payout.processed_at && (
                             <p className="text-xs text-gray-400">
                               처리: {formatDate(payout.processed_at)}
+                            </p>
+                          )}
+                          {payout.admin_note && (
+                            <p className="text-xs text-red-500 mt-1">
+                              사유: {payout.admin_note}
                             </p>
                           )}
                         </div>
@@ -688,23 +687,22 @@ export default function PayoutPage() {
                 </p>
               </div>
 
-              {/* Fee Calculation */}
+              {/* Amount Confirmation */}
               {payoutAmount && parseInt(payoutAmount) >= MINIMUM_PAYOUT && (
                 <div className="p-4 bg-gray-50 rounded-xl space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">정산 요청 금액</span>
                     <span className="text-gray-900">{formatCurrency(parseInt(payoutAmount))}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">수수료</span>
-                    <span className="text-red-600">-{formatCurrency(estimatedFee)}</span>
-                  </div>
                   <div className="border-t border-gray-200 pt-2 mt-2">
                     <div className="flex justify-between font-semibold">
-                      <span className="text-gray-900">실수령액</span>
+                      <span className="text-gray-900">입금 예정 금액</span>
                       <span className="text-gray-900">{formatCurrency(estimatedNet)}</span>
                     </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    * 플랫폼 수수료(20%)는 판매 시점에 이미 차감되었습니다.
+                  </p>
                 </div>
               )}
 

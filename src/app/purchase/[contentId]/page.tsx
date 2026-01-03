@@ -23,13 +23,10 @@ import { formatCurrency } from '@/lib/utils';
 import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui';
 import type { User } from '@supabase/supabase-js';
 
-interface PaymentInfo {
-  method: 'toss_id' | 'kakaopay' | 'bank_account';
-  toss_id: string | null;
-  kakaopay_link: string | null;
-  bank_name: string | null;
-  bank_account: string | null;
-  account_holder: string | null;
+interface PlatformPaymentAccount {
+  bank_name: string;
+  account_number: string;
+  account_holder: string;
 }
 
 interface Product {
@@ -43,7 +40,6 @@ interface Product {
     avatar_url?: string | null;
   };
   creator_id: string;
-  payment_info: PaymentInfo | null;
 }
 
 interface PurchasePageProps {
@@ -56,6 +52,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   const [user, setUser] = useState<User | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
+  const [platformAccount, setPlatformAccount] = useState<PlatformPaymentAccount | null>(null);
   const [buyerNote, setBuyerNote] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,23 +76,36 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       }
 
       try {
-        const response = await fetch(`/api/products/${productId}`);
-        if (!response.ok) {
+        // Fetch product and platform account in parallel
+        const [productResponse, platformResponse] = await Promise.all([
+          fetch(`/api/products/${productId}`),
+          fetch('/api/platform/settings?key=payment_account'),
+        ]);
+
+        if (!productResponse.ok) {
           router.push(`/content/${productId}`);
           return;
         }
 
-        const data = await response.json();
+        const productData = await productResponse.json();
 
-        if (!data.product) {
+        if (!productData.product) {
           router.push('/content');
           return;
         }
 
-        setProduct(data.product);
+        setProduct(productData.product);
 
-        if (data.isPurchased) {
+        if (productData.isPurchased) {
           setAlreadyPurchased(true);
+        }
+
+        // Set platform payment account
+        if (platformResponse.ok) {
+          const platformData = await platformResponse.json();
+          if (platformData.value) {
+            setPlatformAccount(platformData.value);
+          }
         }
 
         // Check if there's a pending purchase
@@ -264,10 +274,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-200">
               <Clock className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">결제 확인 대기 중</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">입금 확인 대기 중</h2>
             <p className="text-gray-600 mb-6">
-              이미 결제완료 요청을 보내셨어요.<br />
-              크리에이터가 확인 중입니다.
+              결제완료 요청을 보내셨어요.<br />
+              입금 확인 후 콘텐츠를 열람할 수 있습니다.
             </p>
             <div className="flex flex-col gap-3">
               <Link href="/my/purchases">
@@ -287,8 +297,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     );
   }
 
-  // Check if creator has set up payment method
-  if (!product.payment_info) {
+  // Check if platform payment account is set up
+  if (!platformAccount) {
     return (
       <motion.div
         className="min-h-screen bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100 flex items-center justify-center"
@@ -302,10 +312,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-gray-400" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">결제수단이 설정되지 않았어요</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">결제 시스템 준비 중</h2>
             <p className="text-gray-600 mb-6">
-              크리에이터가 아직 결제수단을 등록하지 않았습니다.<br />
-              나중에 다시 시도해주세요.
+              결제 시스템을 준비 중입니다.<br />
+              잠시 후 다시 시도해주세요.
             </p>
             <Link href={`/content/${productId}`}>
               <Button variant="outline" fullWidth>
@@ -317,41 +327,6 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       </motion.div>
     );
   }
-
-  const paymentInfo = product.payment_info;
-
-  const getPaymentMethodIcon = () => {
-    switch (paymentInfo.method) {
-      case 'toss_id':
-        return <Smartphone className="w-6 h-6" />;
-      case 'kakaopay':
-        return <Banknote className="w-6 h-6" />;
-      case 'bank_account':
-        return <Building2 className="w-6 h-6" />;
-    }
-  };
-
-  const getPaymentMethodColor = () => {
-    switch (paymentInfo.method) {
-      case 'toss_id':
-        return 'from-blue-500 to-blue-600';
-      case 'kakaopay':
-        return 'from-yellow-400 to-yellow-500';
-      case 'bank_account':
-        return 'from-green-500 to-green-600';
-    }
-  };
-
-  const getPaymentMethodBg = () => {
-    switch (paymentInfo.method) {
-      case 'toss_id':
-        return 'bg-blue-50 border-blue-100';
-      case 'kakaopay':
-        return 'bg-yellow-50 border-yellow-100';
-      case 'bank_account':
-        return 'bg-green-50 border-green-100';
-    }
-  };
 
   return (
     <motion.div
@@ -383,16 +358,16 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         <div className="max-w-lg mx-auto">
           <Card variant="elevated" className="border-2 border-orange-100 shadow-xl shadow-orange-100/50 overflow-hidden">
             {/* Hero Section */}
-            <div className={`bg-gradient-to-br ${getPaymentMethodColor()} p-6 text-white relative overflow-hidden`}>
+            <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 text-white relative overflow-hidden">
               <div className="absolute top-4 right-4 opacity-20">
                 <div className="w-20 h-20">
-                  {getPaymentMethodIcon()}
+                  <Building2 className="w-full h-full" />
                 </div>
               </div>
 
               <div className="relative z-10">
                 <Badge className="bg-white/20 text-white border-white/30 mb-3">
-                  P2P 직접 결제
+                  계좌이체 결제
                 </Badge>
                 <h1 className="text-xl font-bold mb-2 line-clamp-2">{product.title}</h1>
                 <p className="text-white/80 text-sm">
@@ -410,105 +385,53 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 </p>
               </div>
 
-              {/* Payment Instructions */}
-              <div className={`rounded-2xl border-2 p-5 mb-6 ${getPaymentMethodBg()}`}>
+              {/* Payment Instructions - Platform Account */}
+              <div className="rounded-2xl border-2 p-5 mb-6 bg-green-50 border-green-100">
                 <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  {getPaymentMethodIcon()}
-                  {paymentInfo.method === 'toss_id' && '토스로 송금하기'}
-                  {paymentInfo.method === 'kakaopay' && '카카오페이로 송금하기'}
-                  {paymentInfo.method === 'bank_account' && '계좌로 송금하기'}
+                  <Building2 className="w-6 h-6" />
+                  계좌로 송금하기
                 </h3>
 
-                {/* Toss ID Payment */}
-                {paymentInfo.method === 'toss_id' && paymentInfo.toss_id && (
-                  <div className="space-y-3">
-                    <div className="bg-white rounded-xl p-4 border border-blue-100">
-                      <p className="text-xs text-gray-500 mb-1">토스 아이디</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-bold text-blue-600">{paymentInfo.toss_id}</p>
-                        <button
-                          onClick={() => copyToClipboard(paymentInfo.toss_id!, 'toss')}
-                          className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          {copiedField === 'toss' ? (
-                            <Check className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <Copy className="w-5 h-5 text-blue-600" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>1. 토스 앱을 열고 &apos;송금&apos;을 선택하세요</p>
-                      <p>2. 받는 분에 <strong className="text-blue-600">{paymentInfo.toss_id}</strong>를 입력하세요</p>
-                      <p>3. <strong className="text-orange-600">{formatCurrency(product.price)}</strong>을 송금하세요</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* KakaoPay Payment */}
-                {paymentInfo.method === 'kakaopay' && paymentInfo.kakaopay_link && (
-                  <div className="space-y-3">
-                    <a
-                      href={paymentInfo.kakaopay_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded-xl p-4 font-bold transition-colors"
-                    >
-                      카카오페이로 송금하기
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>1. 위 버튼을 눌러 카카오페이 송금 페이지로 이동하세요</p>
-                      <p>2. <strong className="text-orange-600">{formatCurrency(product.price)}</strong>을 송금하세요</p>
-                      <p>3. 송금 완료 후 아래 &apos;결제완료&apos; 버튼을 눌러주세요</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Bank Account Payment */}
-                {paymentInfo.method === 'bank_account' && paymentInfo.bank_account && (
-                  <div className="space-y-3">
-                    <div className="bg-white rounded-xl p-4 border border-green-100 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-500">은행</p>
-                          <p className="font-bold text-gray-900">{paymentInfo.bank_name}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-500">계좌번호</p>
-                          <p className="font-bold text-gray-900">{paymentInfo.bank_account}</p>
-                        </div>
-                        <button
-                          onClick={() => copyToClipboard(paymentInfo.bank_account!, 'account')}
-                          className="p-2 hover:bg-green-100 rounded-lg transition-colors"
-                        >
-                          {copiedField === 'account' ? (
-                            <Check className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <Copy className="w-5 h-5 text-green-600" />
-                          )}
-                        </button>
-                      </div>
+                <div className="space-y-3">
+                  <div className="bg-white rounded-xl p-4 border border-green-100 space-y-3">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-gray-500">예금주</p>
-                        <p className="font-bold text-gray-900">{paymentInfo.account_holder}</p>
+                        <p className="text-xs text-gray-500">은행</p>
+                        <p className="font-bold text-gray-900">{platformAccount.bank_name}</p>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>1. 위 계좌로 <strong className="text-orange-600">{formatCurrency(product.price)}</strong>을 송금하세요</p>
-                      <p>2. 송금 완료 후 아래 &apos;결제완료&apos; 버튼을 눌러주세요</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-gray-500">계좌번호</p>
+                        <p className="font-bold text-gray-900">{platformAccount.account_number}</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(platformAccount.account_number, 'account')}
+                        className="p-2 hover:bg-green-100 rounded-lg transition-colors"
+                      >
+                        {copiedField === 'account' ? (
+                          <Check className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <Copy className="w-5 h-5 text-green-600" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">예금주</p>
+                      <p className="font-bold text-gray-900">{platformAccount.account_holder}</p>
                     </div>
                   </div>
-                )}
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>1. 위 계좌로 <strong className="text-orange-600">{formatCurrency(product.price)}</strong>을 송금하세요</p>
+                    <p>2. 송금 완료 후 아래 &apos;결제완료&apos; 버튼을 눌러주세요</p>
+                  </div>
+                </div>
               </div>
 
               {/* Buyer Note (입금자명) */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  입금자명 (선택)
+                  입금자명 (필수)
                 </label>
                 <input
                   type="text"
@@ -518,7 +441,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  크리에이터가 입금을 확인할 때 참고합니다
+                  입금 확인에 사용됩니다. 정확히 입력해주세요.
                 </p>
               </div>
 
@@ -530,7 +453,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 <div>
                   <p className="text-sm font-medium text-amber-800">안내</p>
                   <p className="text-xs text-amber-600">
-                    크리에이터가 입금을 확인하면 콘텐츠를 열람할 수 있어요
+                    입금 확인 후 콘텐츠를 열람할 수 있어요
                   </p>
                 </div>
               </div>
@@ -548,7 +471,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 size="lg"
                 onClick={handlePaymentComplete}
                 isLoading={isProcessing}
-                className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-600 hover:via-amber-600 hover:to-yellow-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-orange-200 transition-all hover:shadow-xl hover:shadow-orange-300 hover:scale-[1.02]"
+                disabled={!buyerNote.trim()}
+                className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-600 hover:via-amber-600 hover:to-yellow-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-orange-200 transition-all hover:shadow-xl hover:shadow-orange-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   '처리 중...'
@@ -562,7 +486,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
               {/* Footer note */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                크리에이터가 입금을 확인하면 알림을 보내드려요
+                입금 확인 후 알림을 보내드려요
               </p>
             </CardContent>
           </Card>
@@ -571,7 +495,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           <div className="text-center mt-6">
             <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
               <span className="text-lg">💸</span>
-              직접 송금으로 안전하게 거래하세요
+              안전하게 거래하세요
               <span className="text-lg">✨</span>
             </p>
           </div>
