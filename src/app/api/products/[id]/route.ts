@@ -60,7 +60,9 @@ export async function GET(
 
     // Get creator info separately (foreign key might not exist for legacy data)
     let creatorInfo = null;
+    let profileInfo = null;
     if (content.creator_id) {
+      // First get creator settings
       const { data: creator } = await supabase
         .from('creator_settings')
         .select(`
@@ -78,6 +80,14 @@ export async function GET(
         .eq('user_id', content.creator_id)
         .single();
       creatorInfo = creator;
+
+      // Also get profile info for avatar_url fallback
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, avatar_url, bio')
+        .eq('id', content.creator_id)
+        .single();
+      profileInfo = profile;
     }
 
     // Check if user is authenticated and has purchased
@@ -134,11 +144,11 @@ export async function GET(
       routine_days: content.routine_days,
       routine_items: content.routine_items,
       allow_preview: content.allow_preview ?? true,
-      creator: creatorInfo ? {
-        name: creatorInfo.display_name || '익명',
-        avatar_url: creatorInfo.profile_image_url,
-        bio: creatorInfo.bio,
-      } : { name: '익명' },
+      creator: {
+        name: creatorInfo?.display_name || profileInfo?.username || '익명',
+        avatar_url: creatorInfo?.profile_image_url || profileInfo?.avatar_url || null,
+        bio: creatorInfo?.bio || profileInfo?.bio || null,
+      },
       creator_id: content.creator_id,
       // P2P Payment info (only if creator has set up payment)
       payment_info: creatorInfo?.payment_method ? {
