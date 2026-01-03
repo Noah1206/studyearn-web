@@ -237,7 +237,7 @@ export default function LikedContentsPage() {
                         </div>
                       )}
                       <Badge className="absolute top-2 left-2 text-xs">
-                        {contentTypeLabels[content.content_type]}
+                        {content.content_type ? contentTypeLabels[content.content_type] : '파일'}
                       </Badge>
                       <button
                         onClick={() => handleUnlike(content.id)}
