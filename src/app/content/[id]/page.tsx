@@ -415,7 +415,7 @@ export default function ProductDetailPage() {
                   <span>{product.view_count.toLocaleString()}</span>
                 </div>
               )}
-              {product.download_count > 0 && (
+              {product.content_type !== 'routine' && product.download_count > 0 && (
                 <div className="flex items-center gap-1">
                   <Download className="w-4 h-4" />
                   <span>{product.download_count.toLocaleString()}</span>
@@ -980,32 +980,38 @@ export default function ProductDetailPage() {
                           {isOwner ? '내 콘텐츠' : product.price === 0 ? '무료 자료 획득 완료' : '구매 완료'}
                         </p>
                         <p className={`text-sm ${isOwner ? 'text-orange-600' : 'text-emerald-600'}`}>
-                          {isOwner ? '직접 등록한 콘텐츠입니다' : '언제든 다운로드할 수 있어요'}
+                          {isOwner
+                            ? '직접 등록한 콘텐츠입니다'
+                            : product.content_type === 'routine'
+                              ? '위에서 루틴을 확인해보세요'
+                              : '언제든 다운로드할 수 있어요'}
                         </p>
                       </div>
                     </div>
 
-                    {/* Download Button */}
-                    <button
-                      onClick={handleDownload}
-                      disabled={isDownloading}
-                      className="w-full flex items-center justify-center gap-3 h-14 text-gray-900 font-semibold text-base rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      {isDownloading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>다운로드 중...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-5 h-5" />
-                          <span>다운로드</span>
-                        </>
-                      )}
-                    </button>
+                    {/* Download Button - 루틴이 아닐 때만 표시 */}
+                    {product.content_type !== 'routine' && (
+                      <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="w-full flex items-center justify-center gap-3 h-14 text-gray-900 font-semibold text-base rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors"
+                      >
+                        {isDownloading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>다운로드 중...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-5 h-5" />
+                            <span>다운로드</span>
+                          </>
+                        )}
+                      </button>
+                    )}
 
-                    {/* Download Count */}
-                    {product.download_count > 0 && (
+                    {/* Download Count - 루틴이 아닐 때만 표시 */}
+                    {product.content_type !== 'routine' && product.download_count > 0 && (
                       <p className="text-center text-sm text-gray-400 mt-3">
                         {product.download_count.toLocaleString()}회 다운로드됨
                       </p>
@@ -1035,7 +1041,9 @@ export default function ProductDetailPage() {
                             </div>
                           )}
                           <p className="text-sm text-gray-500 mt-1">
-                            {product.price === 0 ? '누구나 무료로 다운로드' : '한 번 구매로 평생 소장'}
+                            {product.price === 0
+                              ? (product.content_type === 'routine' ? '누구나 무료로 확인' : '누구나 무료로 다운로드')
+                              : '한 번 구매로 평생 소장'}
                           </p>
                         </div>
                       </div>
@@ -1092,7 +1100,11 @@ export default function ProductDetailPage() {
                           <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
                             <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
                           </div>
-                          <span>{product.price === 0 ? '바로' : '결제 후 바로'} 다운로드 가능</span>
+                          <span>
+                            {product.content_type === 'routine'
+                              ? (product.price === 0 ? '바로' : '결제 후 바로') + ' 루틴 확인 가능'
+                              : (product.price === 0 ? '바로' : '결제 후 바로') + ' 다운로드 가능'}
+                          </span>
                         </div>
                         {product.price > 0 && (
                           <div className="flex items-center gap-3 text-sm text-gray-600">
