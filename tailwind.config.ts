@@ -236,6 +236,7 @@ const config: Config = {
         "slide-up": "slideUp 0.3s ease-out",
         "slide-down": "slideDown 0.3s ease-out",
         "scale-in": "scaleIn 0.2s ease-out",
+        shimmer: "shimmer 2s linear infinite",
       },
 
       keyframes: {
@@ -254,6 +255,10 @@ const config: Config = {
         scaleIn: {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
         },
       },
     },

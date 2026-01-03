@@ -367,8 +367,11 @@ export default function ProductDetailPage() {
                 const contentUrl = contents[0]?.url;
                 const fileType = product.type || 'pdf';
 
+                // Check if URL is valid (starts with http or https)
+                const isValidUrl = contentUrl && (contentUrl.startsWith('http://') || contentUrl.startsWith('https://'));
+
                 // Image preview
-                if (fileType === 'image' && contentUrl) {
+                if (fileType === 'image' && isValidUrl) {
                   return (
                     <div className="aspect-[4/3] relative">
                       <Image
@@ -383,7 +386,7 @@ export default function ProductDetailPage() {
                 }
 
                 // PDF preview
-                if (fileType === 'pdf' && contentUrl) {
+                if (fileType === 'pdf' && isValidUrl) {
                   return (
                     <div className="aspect-[4/3] relative bg-white">
                       <iframe
@@ -405,7 +408,7 @@ export default function ProductDetailPage() {
                 }
 
                 // Video preview
-                if (fileType === 'video' && contentUrl) {
+                if (fileType === 'video' && isValidUrl) {
                   return (
                     <div className="aspect-video relative bg-black">
                       <video
@@ -425,12 +428,14 @@ export default function ProductDetailPage() {
                   );
                 }
 
-                // Thumbnail fallback
-                if (product.thumbnail_url) {
+                // Thumbnail fallback (also validate URL)
+                const isValidThumbnail = product.thumbnail_url &&
+                  (product.thumbnail_url.startsWith('http://') || product.thumbnail_url.startsWith('https://'));
+                if (isValidThumbnail) {
                   return (
                     <div className="aspect-[4/3] relative">
                       <Image
-                        src={product.thumbnail_url}
+                        src={product.thumbnail_url!}
                         alt={product.title}
                         fill
                         className="object-cover"
@@ -491,117 +496,154 @@ export default function ProductDetailPage() {
 
           {/* Right: Sticky Purchase Card */}
           <div className="lg:col-span-2 px-4 pb-6 lg:py-10">
-            <div className="lg:sticky lg:top-20">
+            <div className="lg:sticky lg:top-20 space-y-4">
+              {/* Purchase Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+                className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden"
               >
-                {/* Price Section */}
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    {product.price === 0 ? (
-                      <span className="text-3xl font-bold text-orange-500">무료</span>
-                    ) : (
-                      <>
-                        <span className="text-3xl font-bold text-orange-500">
-                          {formatCurrency(product.price)}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {product.price === 0 && (
-                    <p className="text-sm text-gray-500">누구나 무료로 다운로드</p>
-                  )}
-                </div>
+                {isPurchased ? (
+                  /* Purchased State */
+                  <div className="p-6">
+                    {/* Success Badge */}
+                    <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl mb-5 border border-emerald-100">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-200">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-emerald-800">
+                          {product.price === 0 ? '무료 자료 획득 완료' : '구매 완료'}
+                        </p>
+                        <p className="text-sm text-emerald-600">언제든 다운로드할 수 있어요</p>
+                      </div>
+                    </div>
 
-                {/* Action Section */}
-                <div className="p-6">
-                  {isPurchased ? (
-                    <div className="space-y-4">
-                      <Button
-                        fullWidth
-                        size="lg"
-                        onClick={handleDownload}
-                        disabled={isDownloading}
-                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
-                      >
+                    {/* Download Button */}
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="w-full relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 transition-transform group-hover:scale-[1.02]" />
+                      <div className="relative flex items-center justify-center gap-3 h-14 text-white font-semibold text-base rounded-2xl">
                         {isDownloading ? (
                           <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            다운로드 중...
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>다운로드 중...</span>
                           </>
                         ) : (
                           <>
-                            <Download className="w-5 h-5 mr-2" />
-                            다운로드
+                            <Download className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                            <span>다운로드</span>
                           </>
                         )}
-                      </Button>
+                      </div>
+                    </button>
 
-                      <div className="flex items-center justify-center gap-2 py-3 bg-green-50 text-green-700 rounded-xl">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="font-medium">
-                          {product.price === 0 ? '무료 자료' : '구매 완료'}
-                        </span>
+                    {/* Download Count */}
+                    {product.download_count > 0 && (
+                      <p className="text-center text-sm text-gray-400 mt-3">
+                        {product.download_count.toLocaleString()}회 다운로드됨
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* Not Purchased State */
+                  <>
+                    {/* Price Header */}
+                    <div className="p-6 pb-4">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          {product.price === 0 ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                                무료
+                              </span>
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+                                FREE
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="text-3xl font-extrabold text-gray-900">
+                                {formatCurrency(product.price)}
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-sm text-gray-500 mt-1">
+                            {product.price === 0 ? '누구나 무료로 다운로드' : '한 번 구매로 평생 소장'}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
+
+                    {/* Divider */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mx-6" />
+
+                    {/* Action Area */}
+                    <div className="p-6 pt-4">
+                      {/* CTA Button */}
                       {product.price === 0 ? (
-                        <Button
-                          fullWidth
-                          size="lg"
+                        <button
                           onClick={handleClaimFree}
                           disabled={isClaiming}
-                          className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
+                          className="w-full relative overflow-hidden group rounded-2xl"
                         >
-                          {isClaiming ? (
-                            <>
-                              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                              처리 중...
-                            </>
-                          ) : (
-                            <>
-                              무료로 받기
-                              <ChevronRight className="w-5 h-5 ml-1" />
-                            </>
-                          )}
-                        </Button>
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite] transition-transform group-hover:scale-[1.02]" />
+                          <div className="relative flex items-center justify-center gap-2 h-14 text-white font-bold text-base">
+                            {isClaiming ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>처리 중...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>무료로 받기</span>
+                                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                              </>
+                            )}
+                          </div>
+                        </button>
                       ) : (
                         <Link href={`/purchase/${id}`} className="block">
-                          <Button
-                            fullWidth
-                            size="lg"
-                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-14 text-base font-semibold"
-                          >
-                            구매하기
-                            <ChevronRight className="w-5 h-5 ml-1" />
-                          </Button>
+                          <button className="w-full relative overflow-hidden group rounded-2xl">
+                            <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 transition-transform group-hover:scale-[1.02]" />
+                            <div className="relative flex items-center justify-center gap-2 h-14 text-white font-bold text-base">
+                              <span>구매하기</span>
+                              <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                            </div>
+                          </button>
                         </Link>
                       )}
 
                       {/* Trust Signals */}
-                      <div className="space-y-2.5 pt-2">
-                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <div className="mt-5 space-y-3">
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          </div>
                           <span>한 번 {product.price === 0 ? '받으면' : '구매하면'} 평생 소장</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          </div>
                           <span>{product.price === 0 ? '바로' : '결제 후 바로'} 다운로드 가능</span>
                         </div>
                         {product.price > 0 && (
-                          <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            </div>
                             <span>안전한 결제 시스템</span>
                           </div>
                         )}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
               </motion.div>
 
               {/* Creator Card */}
@@ -609,34 +651,80 @@ export default function ProductDetailPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-4 bg-gray-50 rounded-2xl p-5"
+                className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {product.creator?.avatar_url ? (
-                      <Image
-                        src={product.creator.avatar_url}
-                        alt={product.creator?.name || ''}
-                        width={48}
-                        height={48}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <User className="w-6 h-6 text-teal-600" />
-                    )}
+                <div className="p-5">
+                  {/* Creator Header */}
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="relative">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 p-0.5 shadow-lg shadow-teal-200/50">
+                        <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
+                          {product.creator?.avatar_url ? (
+                            <Image
+                              src={product.creator.avatar_url}
+                              alt={product.creator?.name || ''}
+                              width={56}
+                              height={56}
+                              className="object-cover rounded-[14px]"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center">
+                              <User className="w-7 h-7 text-teal-500" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Online indicator (optional decorative) */}
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white shadow-sm" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-900 truncate text-lg">
+                        {product.creator?.name || '익명'}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
+                          <Star className="w-3 h-3 fill-teal-500 text-teal-500" />
+                          크리에이터
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Follow Button */}
+                    <button className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]">
+                      팔로우
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">
-                      {product.creator?.name || '익명'}
+
+                  {/* Bio */}
+                  {product.creator?.bio && (
+                    <p className="mt-4 text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3">
+                      {product.creator.bio}
                     </p>
-                    <p className="text-sm text-gray-500">크리에이터</p>
+                  )}
+
+                  {/* Quick Stats (optional - can be enabled if stats are available) */}
+                  {/*
+                  <div className="mt-4 flex items-center gap-4 pt-4 border-t border-gray-100">
+                    <div className="flex-1 text-center">
+                      <p className="text-lg font-bold text-gray-900">24</p>
+                      <p className="text-xs text-gray-500">자료</p>
+                    </div>
+                    <div className="w-px h-8 bg-gray-100" />
+                    <div className="flex-1 text-center">
+                      <p className="text-lg font-bold text-gray-900">1.2k</p>
+                      <p className="text-xs text-gray-500">팔로워</p>
+                    </div>
+                    <div className="w-px h-8 bg-gray-100" />
+                    <div className="flex-1 text-center">
+                      <p className="text-lg font-bold text-gray-900">4.8</p>
+                      <p className="text-xs text-gray-500">평점</p>
+                    </div>
                   </div>
+                  */}
                 </div>
-                {product.creator?.bio && (
-                  <p className="mt-3 text-sm text-gray-600 line-clamp-2">
-                    {product.creator.bio}
-                  </p>
-                )}
               </motion.div>
             </div>
           </div>
