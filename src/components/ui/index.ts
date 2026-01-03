@@ -46,6 +46,7 @@ export {
   type SkeletonProps,
 } from './Skeleton';
 export { Divider, type DividerProps } from './Divider';
+export { PageLoader } from './PageLoader';
 
 // Motion Utilities
 export * from './motion';

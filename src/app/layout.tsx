@@ -1,7 +1,16 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { HeaderWrapper, FooterWrapper } from '@/components/layout';
 import { Providers } from '@/components/providers';
 import './globals.css';
+
+// Optimize font loading with next/font
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+});
 
 export const metadata: Metadata = {
   title: {
@@ -63,16 +72,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={inter.variable}>
       <head>
+        {/* Preload Pretendard font for faster loading */}
+        <link
+          rel="preload"
+          as="style"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+        />
         <link
           rel="stylesheet"
-          as="style"
-          crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
       </head>
-      <body className="min-h-screen bg-gray-50 flex flex-col">
+      <body className="min-h-screen bg-gray-50 flex flex-col antialiased">
         <Providers>
           <HeaderWrapper />
           <main className="flex-1">{children}</main>

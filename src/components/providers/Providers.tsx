@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { ToastProvider } from '@/components/ui';
+import { ReactNode, Suspense } from 'react';
+import { ToastProvider, PageLoader } from '@/components/ui';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -10,6 +10,9 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ToastProvider position="top-center">
+      <Suspense fallback={null}>
+        <PageLoader />
+      </Suspense>
       {children}
     </ToastProvider>
   );
