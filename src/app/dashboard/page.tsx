@@ -133,9 +133,8 @@ async function getPayoutData(creatorId: string) {
     supabase
       .from('content_purchases')
       .select(`
-        id, creator_revenue, created_at,
-        content:contents!content_id (title),
-        buyer:profiles!buyer_id (display_name)
+        id, creator_revenue, created_at, buyer_id,
+        content:contents!content_id (title)
       `)
       .eq('seller_id', creatorId)
       .eq('status', 'completed')
@@ -155,14 +154,14 @@ async function getPayoutData(creatorId: string) {
     creator_revenue: number | null;
     created_at: string;
     content: { title: string } | null;
-    buyer: { display_name: string | null } | null;
+    buyer_id: string | null;
   }) => ({
     id: purchase.id,
     type: 'content' as const,
     title: purchase.content?.title || '콘텐츠',
     amount: purchase.creator_revenue || 0,
     createdAt: purchase.created_at,
-    buyerName: purchase.buyer?.display_name || undefined,
+    buyerName: undefined, // buyer info not fetched for simplicity
   })) || [];
 
   return {
