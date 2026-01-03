@@ -1,4 +1,4 @@
-import { CreatorHeader } from '@/components/layout';
+import { Header } from '@/components/layout';
 import { DashboardPageWrapper } from './DashboardPageWrapper';
 
 export default function DashboardLayout({
@@ -8,7 +8,7 @@ export default function DashboardLayout({
 }) {
   return (
     <>
-      <CreatorHeader />
+      <Header />
       <DashboardPageWrapper>{children}</DashboardPageWrapper>
     </>
   );
