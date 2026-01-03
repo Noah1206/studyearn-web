@@ -154,13 +154,24 @@ export default function ProductDetailPage() {
 
       const data = await response.json();
       if (data.downloadUrl) {
+        // Fetch the actual file as blob for cross-origin download
+        const fileResponse = await fetch(data.downloadUrl);
+        if (!fileResponse.ok) {
+          throw new Error('Failed to fetch file');
+        }
+
+        const blob = await fileResponse.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
         const link = document.createElement('a');
-        link.href = data.downloadUrl;
+        link.href = blobUrl;
         link.download = data.filename || 'download';
-        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(blobUrl);
 
         if (product) {
           setProduct({
