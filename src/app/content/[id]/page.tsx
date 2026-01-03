@@ -103,6 +103,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [isPreviewAllowed, setIsPreviewAllowed] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -126,7 +127,8 @@ export default function ProductDetailPage() {
         const data = await response.json();
         setProduct(data.product);
         setContents(data.contents || []);
-        // setIsPurchased(data.isPurchased || false); // TODO: 테스트 후 주석 해제
+        setIsPurchased(data.isPurchased || false);
+        setIsOwner(data.isOwner || false);
         setIsPreviewAllowed(data.isPreviewAllowed ?? true);
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -139,7 +141,8 @@ export default function ProductDetailPage() {
   }, [id, router]);
 
   const handleDownload = async () => {
-    if (!isPurchased || isDownloading) return;
+    // 본인 콘텐츠이거나 구매한 경우 다운로드 허용
+    if ((!isPurchased && !isOwner) || isDownloading) return;
 
     setIsDownloading(true);
     try {
@@ -588,19 +591,29 @@ export default function ProductDetailPage() {
                 transition={{ delay: 0.1 }}
                 className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden"
               >
-                {isPurchased ? (
-                  /* Purchased State */
+                {(isPurchased || isOwner) ? (
+                  /* Purchased or Owner State */
                   <div className="p-6">
                     {/* Success Badge */}
-                    <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl mb-5 border border-emerald-100">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-200">
+                    <div className={`flex items-center gap-3 p-4 rounded-2xl mb-5 border ${
+                      isOwner
+                        ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100'
+                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${
+                        isOwner
+                          ? 'bg-gradient-to-br from-orange-400 to-amber-500 shadow-orange-200'
+                          : 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-200'
+                      }`}>
                         <CheckCircle className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="font-bold text-emerald-800">
-                          {product.price === 0 ? '무료 자료 획득 완료' : '구매 완료'}
+                        <p className={`font-bold ${isOwner ? 'text-orange-800' : 'text-emerald-800'}`}>
+                          {isOwner ? '내 콘텐츠' : product.price === 0 ? '무료 자료 획득 완료' : '구매 완료'}
                         </p>
-                        <p className="text-sm text-emerald-600">언제든 다운로드할 수 있어요</p>
+                        <p className={`text-sm ${isOwner ? 'text-orange-600' : 'text-emerald-600'}`}>
+                          {isOwner ? '직접 등록한 콘텐츠입니다' : '언제든 다운로드할 수 있어요'}
+                        </p>
                       </div>
                     </div>
 
