@@ -6,7 +6,6 @@ import type {
   School,
   NearbySchoolsParams,
   SchoolType,
-  SweetMeApiError
 } from './types';
 
 /**
@@ -20,6 +19,7 @@ export const nearbySchoolsKeys = {
 
 /**
  * Fetch nearby schools using Supabase RPC function
+ * Uses PostGIS for accurate distance calculation
  */
 async function fetchNearbySchools(params: NearbySchoolsParams): Promise<School[]> {
   const supabase = createClient();
@@ -27,7 +27,7 @@ async function fetchNearbySchools(params: NearbySchoolsParams): Promise<School[]
     throw new Error('Supabase client not available');
   }
 
-  const { latitude, longitude, radiusKm = 5, type } = params;
+  const { latitude, longitude, radiusKm = 15, type } = params;
 
   // Validate coordinates
   if (latitude < -90 || latitude > 90) {
@@ -37,15 +37,13 @@ async function fetchNearbySchools(params: NearbySchoolsParams): Promise<School[]
     throw new Error('유효하지 않은 경도입니다. (-180 ~ 180)');
   }
 
-  // Build school_types array if type filter is provided
-  const schoolTypes = type ? [type] : null;
-
-  const { data, error } = await supabase.rpc('get_schools_nearby', {
+  // Call the actual RPC function: get_nearby_schools
+  // Parameters: user_lat, user_lng, radius_km, filter_type
+  const { data, error } = await supabase.rpc('get_nearby_schools', {
     user_lat: latitude,
     user_lng: longitude,
     radius_km: Math.min(radiusKm, 50), // Max 50km
-    school_types: schoolTypes,
-    limit_count: 100,
+    filter_type: type || null,
   });
 
   if (error) {
@@ -53,20 +51,22 @@ async function fetchNearbySchools(params: NearbySchoolsParams): Promise<School[]
     throw new Error(error.message || '주변 학교 조회에 실패했습니다.');
   }
 
+  // Map RPC response to School type
+  // RPC returns: id, name, type, region, address, latitude, longitude, distance_km, active_rooms_count, total_students
   return (data || []).map((school: Record<string, unknown>) => ({
     id: school.id as string,
     name: school.name as string,
-    short_name: school.short_name as string | null,
+    short_name: null, // Not returned by RPC
     type: school.type as SchoolType,
     region: school.region as string,
-    district: school.district as string | null,
+    district: null,
     address: school.address as string | null,
     latitude: Number(school.latitude),
     longitude: Number(school.longitude),
-    logo_url: school.logo_url as string | null,
+    logo_url: null,
     distance_km: Number(school.distance_km) || null,
     active_rooms_count: Number(school.active_rooms_count) || 0,
-    total_members: Number(school.total_members) || 0,
+    total_members: Number(school.total_students) || 0,
   }));
 }
 

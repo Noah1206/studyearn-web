@@ -2,9 +2,10 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Navigation, School, ChevronRight, Sparkles } from 'lucide-react';
+import { MapPin, Navigation, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getSchoolsNearLocation, type SchoolData, type SchoolType } from '@/data/schools';
+import { useNearbySchools, type School, type SchoolType } from '@/hooks/sweetme';
+import { getSchoolsNearLocation, type SchoolData, type SchoolType as StaticSchoolType } from '@/data/schools';
 import type { SchoolMarkerData } from './index';
 
 // ============================================
@@ -18,13 +19,29 @@ interface NearbySchoolsRecommendationProps {
   className?: string;
 }
 
-interface NearbySchool extends SchoolData {
-  distance: number;
+interface NearbySchool {
+  id: string;
+  name: string;
+  short_name: string | null;
+  type: SchoolType | StaticSchoolType;
+  latitude: number;
+  longitude: number;
+  distance_km: number;
+  active_rooms_count: number;
+  isRealtime: boolean; // Flag to indicate if data is from real-time source
 }
 
 // ============================================
 // Helper Functions
 // ============================================
+function formatDistance(km: number): string {
+  if (km < 1) {
+    return `${Math.round(km * 1000)}m`;
+  }
+  return `${km.toFixed(1)}km`;
+}
+
+// Client-side Haversine calculation for fallback only
 function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -39,14 +56,7 @@ function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): 
   return R * c;
 }
 
-function formatDistance(km: number): string {
-  if (km < 1) {
-    return `${Math.round(km * 1000)}m`;
-  }
-  return `${km.toFixed(1)}km`;
-}
-
-function schoolDataToMarkerData(school: SchoolData): SchoolMarkerData {
+function schoolToMarkerData(school: NearbySchool): SchoolMarkerData {
   const typeMap: Record<string, 'elementary' | 'middle' | 'high' | 'university' | 'other'> = {
     '초등학교': 'elementary',
     '중학교': 'middle',
@@ -66,20 +76,24 @@ function schoolDataToMarkerData(school: SchoolData): SchoolMarkerData {
   };
 }
 
-function getSchoolTypeLabel(type: SchoolType): string {
-  const labels: Record<SchoolType, string> = {
+function getSchoolTypeLabel(type: SchoolType | StaticSchoolType): string {
+  const labels: Record<string, string> = {
     '중학교': '중',
     '고등학교': '고',
     '대학교': '대',
+    '초등학교': '초',
+    '기타': '기타',
   };
   return labels[type] || type;
 }
 
-function getSchoolTypeColor(type: SchoolType): string {
-  const colors: Record<SchoolType, string> = {
+function getSchoolTypeColor(type: SchoolType | StaticSchoolType): string {
+  const colors: Record<string, string> = {
     '중학교': 'bg-blue-500',
     '고등학교': 'bg-orange-500',
     '대학교': 'bg-purple-500',
+    '초등학교': 'bg-green-500',
+    '기타': 'bg-gray-500',
   };
   return colors[type] || 'bg-gray-500';
 }
@@ -94,11 +108,32 @@ export default function NearbySchoolsRecommendation({
   radiusKm = 15,
   className,
 }: NearbySchoolsRecommendationProps) {
-  // Get nearby middle and high schools only
-  const nearbySchools = useMemo((): NearbySchool[] => {
+  // Fetch real-time data from Supabase using PostGIS
+  // Only fetches middle and high schools (중학교, 고등학교)
+  const {
+    data: realtimeSchools,
+    isLoading,
+    isError,
+  } = useNearbySchools(
+    userLocation
+      ? {
+          latitude: userLocation.lat,
+          longitude: userLocation.lng,
+          radiusKm,
+        }
+      : null,
+    {
+      enabled: !!userLocation,
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  // Fallback to static data when real-time data is unavailable
+  const staticSchools = useMemo((): NearbySchool[] => {
     if (!userLocation) return [];
 
-    // Filter for middle and high schools only
+    // Filter for middle and high schools only from static data
     const schools = getSchoolsNearLocation(
       userLocation.lat,
       userLocation.lng,
@@ -106,22 +141,57 @@ export default function NearbySchoolsRecommendation({
       ['중학교', '고등학교']
     );
 
-    // Add distance to each school
+    // Add client-calculated distance
     return schools
       .map((school) => ({
-        ...school,
-        distance: getDistanceKm(
+        id: school.id,
+        name: school.name,
+        short_name: school.short_name,
+        type: school.type,
+        latitude: school.latitude,
+        longitude: school.longitude,
+        distance_km: getDistanceKm(
           userLocation.lat,
           userLocation.lng,
           school.latitude,
           school.longitude
         ),
+        active_rooms_count: school.active_rooms_count, // Static: always 0
+        isRealtime: false,
       }))
       .slice(0, maxSchools);
   }, [userLocation, radiusKm, maxSchools]);
 
+  // Merge real-time data with static data
+  // Real-time provides: active_rooms_count (live), distance_km (PostGIS)
+  // Static provides: school basic info as fallback
+  const nearbySchools = useMemo((): NearbySchool[] => {
+    if (!userLocation) return [];
+
+    // If real-time data is available, filter for middle/high schools and use it
+    if (realtimeSchools && realtimeSchools.length > 0) {
+      return realtimeSchools
+        .filter((s) => s.type === '중학교' || s.type === '고등학교')
+        .map((school) => ({
+          id: school.id,
+          name: school.name,
+          short_name: school.short_name || null,
+          type: school.type,
+          latitude: school.latitude,
+          longitude: school.longitude,
+          distance_km: school.distance_km || 0,
+          active_rooms_count: school.active_rooms_count, // Real-time!
+          isRealtime: true,
+        }))
+        .slice(0, maxSchools);
+    }
+
+    // Fallback to static data during loading or error
+    return staticSchools;
+  }, [userLocation, realtimeSchools, staticSchools, maxSchools]);
+
   const handleSchoolClick = (school: NearbySchool) => {
-    const markerData = schoolDataToMarkerData(school);
+    const markerData = schoolToMarkerData(school);
     onSchoolSelect(markerData);
   };
 
@@ -130,8 +200,8 @@ export default function NearbySchoolsRecommendation({
     return null;
   }
 
-  // Don't render if no schools found
-  if (nearbySchools.length === 0) {
+  // Don't render if no schools found (after loading)
+  if (!isLoading && nearbySchools.length === 0) {
     return null;
   }
 
@@ -152,10 +222,14 @@ export default function NearbySchoolsRecommendation({
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-sm font-bold text-gray-900">내 근처 학교</h3>
             <p className="text-xs text-gray-500">가까운 중·고등학교를 찾아보세요</p>
           </div>
+          {/* Loading indicator */}
+          {isLoading && (
+            <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+          )}
         </div>
       </div>
 
@@ -194,8 +268,9 @@ export default function NearbySchoolsRecommendation({
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <MapPin className="w-3 h-3 text-gray-400" />
                   <span className="text-xs text-gray-500">
-                    {formatDistance(school.distance)}
+                    {formatDistance(school.distance_km)}
                   </span>
+                  {/* Real-time active rooms count */}
                   {school.active_rooms_count > 0 && (
                     <>
                       <span className="text-gray-300">·</span>
