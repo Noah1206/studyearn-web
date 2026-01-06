@@ -1,0 +1,1 @@
+export { FallingCoins } from './FallingCoins';

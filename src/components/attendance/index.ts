@@ -1,0 +1,1 @@
+export { AttendanceProvider } from './AttendanceProvider';
