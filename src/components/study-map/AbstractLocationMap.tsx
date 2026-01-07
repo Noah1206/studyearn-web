@@ -56,6 +56,10 @@ export interface AbstractLocationMapProps {
   showUserPulse?: boolean;
   /** Location name to display */
   locationName?: string;
+  /** Selected destination to draw connection line */
+  selectedDestination?: Coordinates | null;
+  /** Show connection line from user to destination */
+  showConnectionLine?: boolean;
   /** Children (markers) */
   children?: React.ReactNode;
   /** Called when map moves */
@@ -361,6 +365,8 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       userLocation,
       showUserPulse = true,
       locationName,
+      selectedDestination,
+      showConnectionLine = true,
       children,
       onMove,
       onClick,
@@ -707,7 +713,99 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         }
 
         // ============================================
-        // 5. Draw StuPle branding badge
+        // 5. Draw connection line from user to destination
+        // ============================================
+        if (showConnectionLine && selectedDestination && userLocation) {
+          const destScreen = project(selectedDestination);
+
+          // Calculate distance for label
+          const distKm = getDistance(userLocation, selectedDestination);
+          const distLabel = distKm < 1
+            ? `${Math.round(distKm * 1000)}m`
+            : `${distKm.toFixed(1)}km`;
+
+          // Draw curved connection line with gradient
+          const midX = (userScreen.x + destScreen.x) / 2;
+          const midY = (userScreen.y + destScreen.y) / 2;
+          const controlOffset = Math.min(100, Math.abs(destScreen.x - userScreen.x) * 0.3);
+          const controlY = midY - controlOffset;
+
+          // Line gradient
+          const lineGradient = ctx.createLinearGradient(
+            userScreen.x, userScreen.y,
+            destScreen.x, destScreen.y
+          );
+          lineGradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+          lineGradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.8)');
+          lineGradient.addColorStop(1, 'rgba(236, 72, 153, 0.8)');
+
+          // Draw shadow
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(userScreen.x + 1, userScreen.y + 2);
+          ctx.quadraticCurveTo(midX + 1, controlY + 2, destScreen.x + 1, destScreen.y + 2);
+          ctx.stroke();
+
+          // Draw main line
+          ctx.strokeStyle = lineGradient;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(userScreen.x, userScreen.y);
+          ctx.quadraticCurveTo(midX, controlY, destScreen.x, destScreen.y);
+          ctx.stroke();
+
+          // Draw animated dots along the line (using dashed line as static representation)
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 12]);
+          ctx.beginPath();
+          ctx.moveTo(userScreen.x, userScreen.y);
+          ctx.quadraticCurveTo(midX, controlY, destScreen.x, destScreen.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Draw distance label at midpoint
+          const labelX = midX;
+          const labelY = controlY - 8;
+          ctx.font = '600 11px Pretendard, -apple-system, sans-serif';
+          const textWidth = ctx.measureText(distLabel).width;
+          const pillWidth = textWidth + 16;
+          const pillHeight = 22;
+
+          // Label background
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.beginPath();
+          ctx.roundRect(labelX - pillWidth / 2, labelY - pillHeight / 2, pillWidth, pillHeight, 11);
+          ctx.fill();
+
+          // Label border
+          ctx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Label text
+          ctx.fillStyle = '#7C3AED';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(distLabel, labelX, labelY);
+
+          // Draw endpoint indicator at destination
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.2)';
+          ctx.beginPath();
+          ctx.arc(destScreen.x, destScreen.y, 20, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.4)';
+          ctx.beginPath();
+          ctx.arc(destScreen.x, destScreen.y, 12, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ============================================
+        // 6. Draw StuPle branding badge
         // ============================================
         const brandingX = width - 12;
         const brandingY = height - 12;
@@ -738,6 +836,8 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       center,
       zoom,
       userLocation,
+      selectedDestination,
+      showConnectionLine,
       project,
     ]);
 

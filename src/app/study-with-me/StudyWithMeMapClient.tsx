@@ -62,6 +62,7 @@ function schoolDataToMarkerData(school: SchoolData): SchoolMarkerData {
     activeRoomsCount: school.active_rooms_count,
     latitude: school.latitude,
     longitude: school.longitude,
+    logoUrl: school.logo_url || undefined,
   };
 }
 
@@ -269,7 +270,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     (school: SchoolMarkerData) => {
       handleSchoolClick(school);
       mapRef.current?.setCenter({ lat: school.latitude, lng: school.longitude }, true);
-      mapRef.current?.setZoom(16, true);
+      mapRef.current?.setZoom(18, true); // Maximum zoom for best detail
     },
     [handleSchoolClick]
   );
@@ -326,7 +327,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         };
         handleSchoolClick(newSchool);
         mapRef.current?.setCenter({ lat: school.latitude, lng: school.longitude }, true);
-        mapRef.current?.setZoom(16, true);
+        mapRef.current?.setZoom(18, true); // Maximum zoom for best detail
       }
     },
     [schools, handleSchoolMarkerClick, handleSchoolClick]
@@ -365,6 +366,8 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         userLocation={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null}
         showUserPulse={true}
         locationName={locationName}
+        selectedDestination={selectedSchool ? { lat: selectedSchool.latitude, lng: selectedSchool.longitude } : null}
+        showConnectionLine={!!selectedSchool && !!userLocation}
         onMove={handleMapMove}
         className="w-full h-full"
       >

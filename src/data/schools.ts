@@ -23,6 +23,8 @@ export interface SchoolData {
   high_school_type: string | null;
   foundation_type: string | null;
   coedu_type: string | null;
+  /** School logo URL (optional) */
+  logo_url?: string | null;
 }
 
 // Using JSON.parse to avoid TypeScript union complexity with large arrays
