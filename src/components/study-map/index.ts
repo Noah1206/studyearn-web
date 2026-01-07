@@ -80,6 +80,9 @@ export {
 // Sidebar (new design - left sliding)
 export { MapSidebar, type MapSidebarProps } from './MapSidebar';
 
+// Left Sidebar (always visible with search and nearby schools)
+export { MapLeftSidebar, type MapLeftSidebarProps } from './MapLeftSidebar';
+
 // Controls
 export {
   MapControls,

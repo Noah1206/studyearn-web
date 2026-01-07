@@ -10,9 +10,8 @@ import {
   AbstractLocationMap,
   LocationMarker,
   UserPulse,
-  MapSidebar,
+  MapLeftSidebar,
   SchoolMarker,
-  NearbySchoolsRecommendation,
   type AbstractLocationMapRef,
   type Coordinates,
   type SchoolMarkerData,
@@ -20,7 +19,6 @@ import {
   type SchoolType,
   type RoomCategory,
 } from '@/components/study-map';
-import { SchoolSearchBar, type SchoolSearchResult } from './components/SchoolSearchBar';
 import {
   useSchoolRooms,
   useJoinRoom,
