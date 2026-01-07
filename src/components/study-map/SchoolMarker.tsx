@@ -125,6 +125,7 @@ const markerVariants: Variants = {
   },
   selected: {
     scale: 1.05,
+    opacity: 1,
     y: -4,
     transition: {
       type: 'spring',
