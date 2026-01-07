@@ -393,7 +393,6 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
     const dragStartRef = useRef<{ x: number; y: number; center: Coordinates } | null>(null);
     const lastTouchDistRef = useRef<number | null>(null);
     const animationRef = useRef<number | null>(null);
-    const hasDraggedRef = useRef(false);
 
     // Update center when prop changes
     useEffect(() => {
@@ -853,7 +852,6 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       (e: React.MouseEvent) => {
         if (isAnimating) return;
         setIsDragging(true);
-        hasDraggedRef.current = false;
         dragStartRef.current = {
           x: e.clientX,
           y: e.clientY,
@@ -869,11 +867,6 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
 
         const dx = e.clientX - dragStartRef.current.x;
         const dy = e.clientY - dragStartRef.current.y;
-
-        // Mark as dragged if moved more than 5 pixels
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-          hasDraggedRef.current = true;
-        }
 
         const scale = Math.pow(2, zoom);
         const worldSize = TILE_SIZE * scale;
@@ -895,95 +888,6 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       },
       [isDragging, zoom]
     );
-
-    const handleMouseUp = useCallback(() => {
-      if (isDragging) {
-        setIsDragging(false);
-        dragStartRef.current = null;
-        onMove?.(center, zoom);
-      }
-    }, [isDragging, center, zoom, onMove]);
-
-    const handleWheel = useCallback(
-      (e: React.WheelEvent) => {
-        e.preventDefault();
-        const delta = -e.deltaY / 500;
-        const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
-        setZoom(newZoom);
-        onMove?.(center, newZoom);
-      },
-      [zoom, minZoom, maxZoom, center, onMove]
-    );
-
-    // Touch event handlers
-    const handleTouchStart = useCallback(
-      (e: React.TouchEvent) => {
-        if (e.touches.length === 1) {
-          setIsDragging(true);
-          hasDraggedRef.current = false;
-          dragStartRef.current = {
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY,
-            center: { ...center },
-          };
-        } else if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          lastTouchDistRef.current = Math.sqrt(dx * dx + dy * dy);
-        }
-      },
-      [center]
-    );
-
-    const handleTouchMove = useCallback(
-      (e: React.TouchEvent) => {
-        if (e.touches.length === 1 && isDragging && dragStartRef.current) {
-          const dx = e.touches[0].clientX - dragStartRef.current.x;
-          const dy = e.touches[0].clientY - dragStartRef.current.y;
-
-          // Mark as dragged if moved more than 5 pixels
-          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-            hasDraggedRef.current = true;
-          }
-
-          const scale = Math.pow(2, zoom);
-          const worldSize = TILE_SIZE * scale;
-
-          // Drag direction = map move direction (push to move style)
-          const dLng = (dx / worldSize) * 360;
-          const startMercY =
-            ((1 - latToMercatorY(dragStartRef.current.center.lat) / Math.PI) / 2) *
-            worldSize;
-          const newMercY = startMercY - dy;
-          const newLat = mercatorYToLat(
-            Math.PI * (1 - (2 * newMercY) / worldSize)
-          );
-
-          setCenter({
-            lat: Math.max(-85, Math.min(85, newLat)),
-            lng: dragStartRef.current.center.lng + dLng,
-          });
-        } else if (e.touches.length === 2 && lastTouchDistRef.current) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          const delta = (dist - lastTouchDistRef.current) / 100;
-          const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
-          setZoom(newZoom);
-
-          lastTouchDistRef.current = dist;
-        }
-      },
-      [isDragging, zoom, minZoom, maxZoom]
-    );
-
-    const handleTouchEnd = useCallback(() => {
-      setIsDragging(false);
-      dragStartRef.current = null;
-      lastTouchDistRef.current = null;
-      onMove?.(center, zoom);
-    }, [center, zoom, onMove]);
 
     // Helper: Check if point is near the connection line (quadratic bezier)
     const isNearConnectionLine = useCallback(
@@ -1020,33 +924,162 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       [showConnectionLine, selectedDestination, userLocation, project]
     );
 
-    const handleClick = useCallback(
+    const handleMouseUp = useCallback(
       (e: React.MouseEvent) => {
-        // Skip click if we just finished dragging
-        if (hasDraggedRef.current) {
-          hasDraggedRef.current = false;
-          return;
-        }
+        const wasDragging = isDragging;
+        const dragStart = dragStartRef.current;
 
-        const rect = containerRef.current?.getBoundingClientRect();
-        if (!rect) return;
+        setIsDragging(false);
+        dragStartRef.current = null;
 
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
+        if (wasDragging) {
+          onMove?.(center, zoom);
 
-        // Check if clicked on connection line first
-        if (onConnectionLineClick && isNearConnectionLine(clickX, clickY)) {
-          onConnectionLineClick();
-          return;
-        }
+          // Check if it was a click (not a drag) - less than 5px movement
+          if (dragStart) {
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Otherwise, trigger normal map click
-        if (onClick) {
-          const coords = unproject({ x: clickX, y: clickY });
-          onClick(coords);
+            if (distance < 5) {
+              // This was a click, not a drag
+              const rect = containerRef.current?.getBoundingClientRect();
+              if (rect) {
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // Check if clicked on connection line
+                if (onConnectionLineClick && isNearConnectionLine(clickX, clickY)) {
+                  onConnectionLineClick();
+                  return;
+                }
+
+                // Otherwise, trigger normal map click
+                if (onClick) {
+                  const coords = unproject({ x: clickX, y: clickY });
+                  onClick(coords);
+                }
+              }
+            }
+          }
         }
       },
-      [onClick, onConnectionLineClick, isNearConnectionLine, unproject]
+      [isDragging, center, zoom, onMove, onClick, onConnectionLineClick, isNearConnectionLine, unproject]
+    );
+
+    const handleWheel = useCallback(
+      (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = -e.deltaY / 500;
+        const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
+        setZoom(newZoom);
+        onMove?.(center, newZoom);
+      },
+      [zoom, minZoom, maxZoom, center, onMove]
+    );
+
+    // Touch event handlers
+    const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+    const handleTouchStart = useCallback(
+      (e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+          setIsDragging(true);
+          const touch = e.touches[0];
+          touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+          dragStartRef.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            center: { ...center },
+          };
+        } else if (e.touches.length === 2) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          lastTouchDistRef.current = Math.sqrt(dx * dx + dy * dy);
+        }
+      },
+      [center]
+    );
+
+    const handleTouchMove = useCallback(
+      (e: React.TouchEvent) => {
+        if (e.touches.length === 1 && isDragging && dragStartRef.current) {
+          const dx = e.touches[0].clientX - dragStartRef.current.x;
+          const dy = e.touches[0].clientY - dragStartRef.current.y;
+
+          const scale = Math.pow(2, zoom);
+          const worldSize = TILE_SIZE * scale;
+
+          // Drag direction = map move direction (push to move style)
+          const dLng = (dx / worldSize) * 360;
+          const startMercY =
+            ((1 - latToMercatorY(dragStartRef.current.center.lat) / Math.PI) / 2) *
+            worldSize;
+          const newMercY = startMercY - dy;
+          const newLat = mercatorYToLat(
+            Math.PI * (1 - (2 * newMercY) / worldSize)
+          );
+
+          setCenter({
+            lat: Math.max(-85, Math.min(85, newLat)),
+            lng: dragStartRef.current.center.lng + dLng,
+          });
+        } else if (e.touches.length === 2 && lastTouchDistRef.current) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          const delta = (dist - lastTouchDistRef.current) / 100;
+          const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
+          setZoom(newZoom);
+
+          lastTouchDistRef.current = dist;
+        }
+      },
+      [isDragging, zoom, minZoom, maxZoom]
+    );
+
+    const handleTouchEnd = useCallback(
+      (e: React.TouchEvent) => {
+        const touchStart = touchStartRef.current;
+        const dragStart = dragStartRef.current;
+
+        setIsDragging(false);
+        dragStartRef.current = null;
+        lastTouchDistRef.current = null;
+        touchStartRef.current = null;
+        onMove?.(center, zoom);
+
+        // Check if it was a tap (not a drag)
+        if (touchStart && dragStart && e.changedTouches.length > 0) {
+          const touch = e.changedTouches[0];
+          const dx = touch.clientX - touchStart.x;
+          const dy = touch.clientY - touchStart.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 10) {
+            // This was a tap, not a drag
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (rect) {
+              const clickX = touch.clientX - rect.left;
+              const clickY = touch.clientY - rect.top;
+
+              // Check if tapped on connection line
+              if (onConnectionLineClick && isNearConnectionLine(clickX, clickY)) {
+                onConnectionLineClick();
+                return;
+              }
+
+              // Otherwise, trigger normal map click
+              if (onClick) {
+                const coords = unproject({ x: clickX, y: clickY });
+                onClick(coords);
+              }
+            }
+          }
+        }
+      },
+      [center, zoom, onMove, onClick, onConnectionLineClick, isNearConnectionLine, unproject]
     );
 
     // Context value
@@ -1073,7 +1106,6 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={handleClick}
       >
         {/* Canvas background */}
         <canvas
