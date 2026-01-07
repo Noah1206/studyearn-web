@@ -26,7 +26,7 @@ import {
   useJoinRoom,
   type RoomDetail,
 } from '@/hooks/sweetme';
-import { type SchoolData } from '@/data/schools';
+import { SCHOOLS_DATA, type SchoolData } from '@/data/schools';
 import { useStudyMapStore } from '@/stores';
 
 // ============================================
@@ -130,8 +130,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [locationName, setLocationName] = useState<string>('');
-  const [schoolsData, setSchoolsData] = useState<SchoolData[]>([]);
-  const [isLoadingSchools, setIsLoadingSchools] = useState(true);
 
   // Zustand store
   const {
@@ -167,10 +165,10 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     onError: (error) => console.error('Failed to join room:', error.message),
   });
 
-  // Convert static data to component types
+  // Convert static data to component types - instant, no loading!
   const schools = useMemo((): SchoolMarkerData[] => {
-    return schoolsData.map(schoolDataToMarkerData);
-  }, [schoolsData]);
+    return SCHOOLS_DATA.map(schoolDataToMarkerData);
+  }, []);
 
   const roomsInSelectedSchool = useMemo((): RoomMarkerData[] => {
     if (schoolRoomsData?.rooms && schoolRoomsData.rooms.length > 0) {
@@ -203,14 +201,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       totalSchools: filteredSchools.length,
     };
   }, [filteredSchools]);
-
-  // Load schools data dynamically
-  useEffect(() => {
-    import('@/data/schools').then((module) => {
-      setSchoolsData(module.SCHOOLS_DATA);
-      setIsLoadingSchools(false);
-    });
-  }, []);
 
   // Update location name when center changes
   useEffect(() => {
@@ -394,16 +384,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
           </LocationMarker>
         ))}
       </AbstractLocationMap>
-
-      {/* Loading Indicator */}
-      {isLoadingSchools && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-50">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600">학교 데이터 로딩중...</span>
-          </div>
-        </div>
-      )}
 
       {/* Search Bar */}
       <motion.div
