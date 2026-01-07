@@ -573,7 +573,10 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       const tileZoom = Math.floor(zoom);
       const scale = Math.pow(2, zoom);
       const tileScale = Math.pow(2, zoom - tileZoom);
-      const tilePixelSize = TILE_SIZE * 2 * tileScale; // @2x retina tiles
+      // Fix: Use TILE_SIZE (256) not TILE_SIZE * 2 for coordinate consistency
+      // @2x tiles are 512px images but cover 256 logical pixels of map area
+      // This matches the project() function which uses 256 * scale
+      const tilePixelSize = TILE_SIZE * tileScale;
 
       // Calculate which tiles we need
       const centerTile = latLngToTile(center.lat, center.lng, tileZoom);
