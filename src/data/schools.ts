@@ -81664,18 +81664,25 @@ export interface SchoolWithDistance extends SchoolData {
  * @param lat - User's latitude
  * @param lng - User's longitude
  * @param radiusKm - Search radius in kilometers (default: 5)
- * @param limit - Maximum number of schools to return (default: 10)
+ * @param schoolTypes - Optional array of school types to filter (e.g., ['중학교', '고등학교'])
+ * @param limit - Maximum number of schools to return (default: 50)
  * @returns Array of schools with distance, sorted by distance
  */
 export function getSchoolsNearLocation(
   lat: number,
   lng: number,
   radiusKm: number = 5,
-  limit: number = 10
+  schoolTypes?: SchoolType[],
+  limit: number = 50
 ): SchoolWithDistance[] {
   const schoolsWithDistance: SchoolWithDistance[] = [];
 
   for (const school of SCHOOLS_DATA) {
+    // Filter by school type if specified
+    if (schoolTypes && schoolTypes.length > 0 && !schoolTypes.includes(school.type)) {
+      continue;
+    }
+
     if (school.latitude && school.longitude) {
       const distance = getDistanceKm(lat, lng, school.latitude, school.longitude);
       if (distance <= radiusKm) {
