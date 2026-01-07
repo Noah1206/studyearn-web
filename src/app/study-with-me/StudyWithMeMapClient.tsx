@@ -19,6 +19,7 @@ import {
   type RoomMarkerData,
   type SchoolType,
   type RoomCategory,
+  type LocationMapBounds,
 } from '@/components/study-map';
 import { SchoolSearchBar, type SchoolSearchResult } from './components/SchoolSearchBar';
 import {
@@ -130,6 +131,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [locationName, setLocationName] = useState<string>('');
+  const [mapBounds, setMapBounds] = useState<LocationMapBounds | null>(null);
 
   // Zustand store
   const {
@@ -177,9 +179,24 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     return [];
   }, [schoolRoomsData]);
 
-  // Filtered schools
+  // Filtered schools - with viewport optimization
   const filteredSchools = useMemo(() => {
     let result = schools;
+
+    // Filter by viewport bounds first (major performance gain!)
+    if (mapBounds) {
+      // Add padding to bounds for smoother panning
+      const latPadding = (mapBounds.north - mapBounds.south) * 0.2;
+      const lngPadding = (mapBounds.east - mapBounds.west) * 0.2;
+
+      result = result.filter((s) =>
+        s.latitude >= mapBounds.south - latPadding &&
+        s.latitude <= mapBounds.north + latPadding &&
+        s.longitude >= mapBounds.west - lngPadding &&
+        s.longitude <= mapBounds.east + lngPadding
+      );
+    }
+
     if (filters.liveOnly) {
       result = result.filter((s) => s.activeRoomsCount > 0);
     }
@@ -187,7 +204,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       result = result.filter((s) => filters.schoolTypes.includes(s.type));
     }
     return result;
-  }, [schools, filters]);
+  }, [schools, filters, mapBounds]);
 
   // Stats
   const stats = useMemo(() => {
@@ -207,6 +224,18 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     const name = getRegionName(mapCenter.lat, mapCenter.lng);
     setLocationName(name);
   }, [mapCenter]);
+
+  // Initialize bounds on mount
+  useEffect(() => {
+    // Small delay to ensure map is ready
+    const timer = setTimeout(() => {
+      const bounds = mapRef.current?.getBounds();
+      if (bounds) {
+        setMapBounds(bounds);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Get user location on mount
   useEffect(() => {
@@ -237,6 +266,12 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       setMapCenter(center);
       setMapZoom(newZoom);
       setZoom(newZoom);
+
+      // Update bounds for viewport-based filtering
+      const bounds = mapRef.current?.getBounds();
+      if (bounds) {
+        setMapBounds(bounds);
+      }
     },
     [setZoom]
   );
