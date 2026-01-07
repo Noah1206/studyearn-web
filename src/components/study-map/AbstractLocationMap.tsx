@@ -574,13 +574,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       ctx.scale(dpr, dpr);
 
       // ============================================
-      // 1. Draw light background as tile loading fallback
-      // ============================================
-      ctx.fillStyle = BRAND_COLORS.background;
-      ctx.fillRect(0, 0, width, height);
-
-      // ============================================
-      // 2. Load and draw map tiles (Carto Positron)
+      // 1. Calculate tile positions
       // ============================================
       const tileZoom = Math.floor(zoom);
       const scale = Math.pow(2, zoom);
@@ -627,19 +621,8 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         }
       }
 
-      // Load and draw tiles
-      const loadAndDrawTiles = async () => {
-        const tileImages = await Promise.allSettled(
-          tilesToLoad.map(({ x, y }) => loadTile(x, y, tileZoom))
-        );
-
-        // Draw tiles
-        tileImages.forEach((result, i) => {
-          if (result.status === 'fulfilled') {
-            const { screenX, screenY } = tilesToLoad[i];
-            ctx.drawImage(result.value, screenX, screenY, tilePixelSize, tilePixelSize);
-          }
-        });
+      // Draw overlays on top of tiles
+      const drawOverlays = () => {
 
         // ============================================
         // 3. Draw branded overlay elements on top
@@ -831,7 +814,40 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         ctx.fillText(brandText, brandingX - 4, brandingY - 4);
       };
 
-      loadAndDrawTiles();
+      // Step 1: Draw cached tiles immediately (sync), mark uncached areas
+      const uncachedTiles: typeof tilesToLoad = [];
+      tilesToLoad.forEach(({ x, y, screenX, screenY }) => {
+        const key = `${tileZoom}/${x}/${y}`;
+        const cachedImg = tileCache.get(key);
+        if (cachedImg) {
+          ctx.drawImage(cachedImg, screenX, screenY, tilePixelSize, tilePixelSize);
+        } else {
+          // Draw placeholder background only for uncached tiles
+          ctx.fillStyle = BRAND_COLORS.background;
+          ctx.fillRect(screenX, screenY, tilePixelSize, tilePixelSize);
+          uncachedTiles.push({ x, y, screenX, screenY });
+        }
+      });
+
+      // Draw overlays immediately with cached tiles
+      drawOverlays();
+
+      // Step 2: Load uncached tiles and redraw (async)
+      if (uncachedTiles.length > 0) {
+        Promise.allSettled(
+          uncachedTiles.map(({ x, y }) => loadTile(x, y, tileZoom))
+        ).then((results) => {
+          // Draw newly loaded tiles
+          results.forEach((result, i) => {
+            if (result.status === 'fulfilled') {
+              const { screenX, screenY } = uncachedTiles[i];
+              ctx.drawImage(result.value, screenX, screenY, tilePixelSize, tilePixelSize);
+            }
+          });
+          // Redraw overlays on top
+          drawOverlays();
+        });
+      }
     }, [
       containerSize,
       backgroundColor,
