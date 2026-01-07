@@ -81628,3 +81628,67 @@ export const SCHOOLS_DATA: SchoolData[] = [
     "coedu_type": null
   }
 ];
+
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Haversine formula to calculate distance between two points
+ * @param lat1 - Latitude of point 1
+ * @param lng1 - Longitude of point 1
+ * @param lat2 - Latitude of point 2
+ * @param lng2 - Longitude of point 2
+ * @returns Distance in kilometers
+ */
+function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export interface SchoolWithDistance extends SchoolData {
+  distance_km: number;
+}
+
+/**
+ * Get schools near a given location within a specified radius
+ * @param lat - User's latitude
+ * @param lng - User's longitude
+ * @param radiusKm - Search radius in kilometers (default: 5)
+ * @param limit - Maximum number of schools to return (default: 10)
+ * @returns Array of schools with distance, sorted by distance
+ */
+export function getSchoolsNearLocation(
+  lat: number,
+  lng: number,
+  radiusKm: number = 5,
+  limit: number = 10
+): SchoolWithDistance[] {
+  const schoolsWithDistance: SchoolWithDistance[] = [];
+
+  for (const school of SCHOOLS_DATA) {
+    if (school.latitude && school.longitude) {
+      const distance = getDistanceKm(lat, lng, school.latitude, school.longitude);
+      if (distance <= radiusKm) {
+        schoolsWithDistance.push({
+          ...school,
+          distance_km: Math.round(distance * 100) / 100, // Round to 2 decimal places
+        });
+      }
+    }
+  }
+
+  // Sort by distance and limit results
+  return schoolsWithDistance
+    .sort((a, b) => a.distance_km - b.distance_km)
+    .slice(0, limit);
+}
