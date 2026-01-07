@@ -19,7 +19,6 @@ import {
   type RoomMarkerData,
   type SchoolType,
   type RoomCategory,
-  type LocationMapBounds,
 } from '@/components/study-map';
 import { SchoolSearchBar, type SchoolSearchResult } from './components/SchoolSearchBar';
 import {
@@ -27,7 +26,7 @@ import {
   useJoinRoom,
   type RoomDetail,
 } from '@/hooks/sweetme';
-import { SCHOOLS_DATA, type SchoolData } from '@/data/schools';
+import { type SchoolData } from '@/data/schools';
 import { useStudyMapStore } from '@/stores';
 
 // ============================================
@@ -131,7 +130,8 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [locationName, setLocationName] = useState<string>('');
-  const [mapBounds, setMapBounds] = useState<LocationMapBounds | null>(null);
+  const [schoolsData, setSchoolsData] = useState<SchoolData[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(true);
 
   // Zustand store
   const {
@@ -167,10 +167,10 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     onError: (error) => console.error('Failed to join room:', error.message),
   });
 
-  // Convert static data to component types - instant, no loading!
+  // Convert static data to component types
   const schools = useMemo((): SchoolMarkerData[] => {
-    return SCHOOLS_DATA.map(schoolDataToMarkerData);
-  }, []);
+    return schoolsData.map(schoolDataToMarkerData);
+  }, [schoolsData]);
 
   const roomsInSelectedSchool = useMemo((): RoomMarkerData[] => {
     if (schoolRoomsData?.rooms && schoolRoomsData.rooms.length > 0) {
@@ -179,24 +179,9 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     return [];
   }, [schoolRoomsData]);
 
-  // Filtered schools - with viewport optimization
+  // Filtered schools
   const filteredSchools = useMemo(() => {
     let result = schools;
-
-    // Filter by viewport bounds first (major performance gain!)
-    if (mapBounds) {
-      // Add padding to bounds for smoother panning
-      const latPadding = (mapBounds.north - mapBounds.south) * 0.2;
-      const lngPadding = (mapBounds.east - mapBounds.west) * 0.2;
-
-      result = result.filter((s) =>
-        s.latitude >= mapBounds.south - latPadding &&
-        s.latitude <= mapBounds.north + latPadding &&
-        s.longitude >= mapBounds.west - lngPadding &&
-        s.longitude <= mapBounds.east + lngPadding
-      );
-    }
-
     if (filters.liveOnly) {
       result = result.filter((s) => s.activeRoomsCount > 0);
     }
@@ -204,7 +189,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       result = result.filter((s) => filters.schoolTypes.includes(s.type));
     }
     return result;
-  }, [schools, filters, mapBounds]);
+  }, [schools, filters]);
 
   // Stats
   const stats = useMemo(() => {
@@ -219,23 +204,19 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
     };
   }, [filteredSchools]);
 
+  // Load schools data dynamically
+  useEffect(() => {
+    import('@/data/schools').then((module) => {
+      setSchoolsData(module.SCHOOLS_DATA);
+      setIsLoadingSchools(false);
+    });
+  }, []);
+
   // Update location name when center changes
   useEffect(() => {
     const name = getRegionName(mapCenter.lat, mapCenter.lng);
     setLocationName(name);
   }, [mapCenter]);
-
-  // Initialize bounds on mount
-  useEffect(() => {
-    // Small delay to ensure map is ready
-    const timer = setTimeout(() => {
-      const bounds = mapRef.current?.getBounds();
-      if (bounds) {
-        setMapBounds(bounds);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Get user location on mount
   useEffect(() => {
@@ -266,12 +247,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       setMapCenter(center);
       setMapZoom(newZoom);
       setZoom(newZoom);
-
-      // Update bounds for viewport-based filtering
-      const bounds = mapRef.current?.getBounds();
-      if (bounds) {
-        setMapBounds(bounds);
-      }
     },
     [setZoom]
   );
@@ -420,7 +395,15 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         ))}
       </AbstractLocationMap>
 
-      {/* Schools are loaded instantly from static data - no loading indicator needed */}
+      {/* Loading Indicator */}
+      {isLoadingSchools && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-50">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-600">학교 데이터 로딩중...</span>
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <motion.div
