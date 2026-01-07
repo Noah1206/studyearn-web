@@ -56,6 +56,8 @@ export interface AbstractLocationMapProps {
   showUserPulse?: boolean;
   /** Location name to display */
   locationName?: string;
+  /** Show built-in map controls (zoom, center) */
+  showControls?: boolean;
   /** Selected destination to draw connection line */
   selectedDestination?: Coordinates | null;
   /** Show connection line from user to destination */
@@ -367,6 +369,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       userLocation,
       showUserPulse = true,
       locationName,
+      showControls = true,
       selectedDestination,
       showConnectionLine = true,
       children,
@@ -1061,7 +1064,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         />
 
         {/* Location name header */}
-        {locationName && (
+        {showControls && locationName && (
           <div className="absolute top-4 left-4 z-20 pointer-events-none">
             <div className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm">
               <svg
@@ -1095,33 +1098,35 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         </MapContext.Provider>
 
         {/* Zoom controls */}
-        <div className="absolute right-4 bottom-24 z-20 flex flex-col gap-1">
-          <button
-            className="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-            onClick={() => {
-              const newZoom = Math.min(maxZoom, zoom + 1);
-              animateTo(center, newZoom);
-            }}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12M6 12h12" />
-            </svg>
-          </button>
-          <button
-            className="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-            onClick={() => {
-              const newZoom = Math.max(minZoom, zoom - 1);
-              animateTo(center, newZoom);
-            }}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-            </svg>
-          </button>
-        </div>
+        {showControls && (
+          <div className="absolute right-4 bottom-24 z-20 flex flex-col gap-1">
+            <button
+              className="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              onClick={() => {
+                const newZoom = Math.min(maxZoom, zoom + 1);
+                animateTo(center, newZoom);
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12M6 12h12" />
+              </svg>
+            </button>
+            <button
+              className="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              onClick={() => {
+                const newZoom = Math.max(minZoom, zoom - 1);
+                animateTo(center, newZoom);
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Center on user button */}
-        {userLocation && (
+        {showControls && userLocation && (
           <button
             className="absolute right-4 bottom-40 z-20 w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-blue-500 hover:bg-blue-50 active:bg-blue-100 transition-colors"
             onClick={() => animateTo(userLocation, 15)}

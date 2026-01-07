@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Navigation, Sparkles, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNearbySchools, type School, type SchoolType } from '@/hooks/sweetme';
 import { getSchoolsNearLocation, type SchoolData, type SchoolType as StaticSchoolType } from '@/data/schools';
@@ -217,11 +217,8 @@ export default function NearbySchoolsRecommendation({
       transition={{ duration: 0.3, delay: 0.2 }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-orange-50">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
           <div className="flex-1">
             <h3 className="text-sm font-bold text-gray-900">내 근처 학교</h3>
             <p className="text-xs text-gray-500">가까운 중·고등학교를 찾아보세요</p>

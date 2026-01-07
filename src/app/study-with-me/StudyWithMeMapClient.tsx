@@ -102,25 +102,6 @@ function roomToMarkerData(room: RoomDetail): RoomMarkerData {
 }
 
 // ============================================
-// Region Name Utility
-// ============================================
-function getRegionName(lat: number, lng: number): string {
-  // Seoul districts by approximate coordinates
-  if (lat > 37.55 && lat < 37.62 && lng > 126.95 && lng < 127.05) return '중구';
-  if (lat > 37.55 && lat < 37.60 && lng > 127.00 && lng < 127.10) return '성동구';
-  if (lat > 37.52 && lat < 37.58 && lng > 127.02 && lng < 127.10) return '강남구';
-  if (lat > 37.48 && lat < 37.53 && lng > 127.02 && lng < 127.10) return '송파구';
-  if (lat > 37.58 && lat < 37.65 && lng > 126.95 && lng < 127.03) return '종로구';
-  if (lat > 37.58 && lat < 37.62 && lng > 127.03 && lng < 127.10) return '동대문구';
-  if (lat > 37.60 && lat < 37.68 && lng > 126.90 && lng < 127.00) return '은평구';
-  if (lat > 37.55 && lat < 37.62 && lng > 126.85 && lng < 126.95) return '마포구';
-  if (lat > 37.48 && lat < 37.55 && lng > 126.85 && lng < 126.95) return '영등포구';
-  if (lat > 37.46 && lat < 37.52 && lng > 126.88 && lng < 127.02) return '관악구';
-  if (lat > 37.45 && lat < 37.50 && lng > 126.78 && lng < 126.88) return '금천구';
-  return '서울';
-}
-
-// ============================================
 // Main Component
 // ============================================
 export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeMapClientProps) {
@@ -130,7 +111,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   // Local state for map
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
-  const [locationName, setLocationName] = useState<string>('');
 
   // Zustand store
   const {
@@ -202,12 +182,6 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
       totalSchools: filteredSchools.length,
     };
   }, [filteredSchools]);
-
-  // Update location name when center changes
-  useEffect(() => {
-    const name = getRegionName(mapCenter.lat, mapCenter.lng);
-    setLocationName(name);
-  }, [mapCenter]);
 
   // Get user location on mount
   useEffect(() => {
@@ -365,7 +339,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         ringColor="rgba(59, 130, 246, 0.12)"
         userLocation={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null}
         showUserPulse={true}
-        locationName={locationName}
+        showControls={false}
         selectedDestination={selectedSchool ? { lat: selectedSchool.latitude, lng: selectedSchool.longitude } : null}
         showConnectionLine={!!selectedSchool && !!userLocation}
         onMove={handleMapMove}
