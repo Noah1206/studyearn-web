@@ -920,8 +920,8 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         const controlY = midY - controlOffset;
 
         // Sample points along the bezier curve and check distance
-        const threshold = 20; // pixels
-        for (let t = 0; t <= 1; t += 0.05) {
+        const threshold = 35; // pixels - generous for easy clicking
+        for (let t = 0; t <= 1; t += 0.02) {
           // Quadratic bezier formula: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
           const oneMinusT = 1 - t;
           const bx = oneMinusT * oneMinusT * userScreen.x + 2 * oneMinusT * t * midX + t * t * destScreen.x;
@@ -931,9 +931,13 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
           if (dist < threshold) return true;
         }
 
-        // Also check the endpoint circle area
+        // Also check the endpoint circle area (destination)
         const distToEnd = Math.sqrt((clickX - destScreen.x) ** 2 + (clickY - destScreen.y) ** 2);
-        if (distToEnd < 25) return true;
+        if (distToEnd < 40) return true;
+
+        // Also check the startpoint circle area (user location)
+        const distToStart = Math.sqrt((clickX - userScreen.x) ** 2 + (clickY - userScreen.y) ** 2);
+        if (distToStart < 40) return true;
 
         return false;
       },
@@ -951,13 +955,13 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         if (wasDragging) {
           onMove?.(center, zoom);
 
-          // Check if it was a click (not a drag) - less than 5px movement
+          // Check if it was a click (not a drag) - less than 10px movement
           if (dragStart) {
             const dx = e.clientX - dragStart.x;
             const dy = e.clientY - dragStart.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < 5) {
+            if (distance < 10) {
               // This was a click, not a drag
               const rect = containerRef.current?.getBoundingClientRect();
               if (rect) {
