@@ -350,7 +350,7 @@ async function StudyWithMeContent() {
 
 export default function StudyWithMePage() {
   return (
-    <div className="h-screen w-full overflow-hidden">
+    <div className="w-full overflow-hidden">
       <Suspense fallback={<LoadingSection fullHeight />}>
         <StudyWithMeContent />
       </Suspense>

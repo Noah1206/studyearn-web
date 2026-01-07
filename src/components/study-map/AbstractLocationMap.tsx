@@ -66,6 +66,8 @@ export interface AbstractLocationMapProps {
   onMove?: (center: Coordinates, zoom: number) => void;
   /** Called when map click */
   onClick?: (coords: Coordinates) => void;
+  /** Called when connection line is clicked */
+  onConnectionLineClick?: () => void;
   /** Class name */
   className?: string;
 }
@@ -370,6 +372,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       children,
       onMove,
       onClick,
+      onConnectionLineClick,
       className,
     },
     ref
@@ -966,19 +969,62 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       onMove?.(center, zoom);
     }, [center, zoom, onMove]);
 
+    // Helper: Check if point is near the connection line (quadratic bezier)
+    const isNearConnectionLine = useCallback(
+      (clickX: number, clickY: number): boolean => {
+        if (!showConnectionLine || !selectedDestination || !userLocation) return false;
+
+        const userScreen = project(userLocation);
+        const destScreen = project(selectedDestination);
+
+        // Calculate bezier control point (same as in canvas rendering)
+        const midX = (userScreen.x + destScreen.x) / 2;
+        const midY = (userScreen.y + destScreen.y) / 2;
+        const controlOffset = Math.min(100, Math.abs(destScreen.x - userScreen.x) * 0.3);
+        const controlY = midY - controlOffset;
+
+        // Sample points along the bezier curve and check distance
+        const threshold = 20; // pixels
+        for (let t = 0; t <= 1; t += 0.05) {
+          // Quadratic bezier formula: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+          const oneMinusT = 1 - t;
+          const bx = oneMinusT * oneMinusT * userScreen.x + 2 * oneMinusT * t * midX + t * t * destScreen.x;
+          const by = oneMinusT * oneMinusT * userScreen.y + 2 * oneMinusT * t * controlY + t * t * destScreen.y;
+
+          const dist = Math.sqrt((clickX - bx) ** 2 + (clickY - by) ** 2);
+          if (dist < threshold) return true;
+        }
+
+        // Also check the endpoint circle area
+        const distToEnd = Math.sqrt((clickX - destScreen.x) ** 2 + (clickY - destScreen.y) ** 2);
+        if (distToEnd < 25) return true;
+
+        return false;
+      },
+      [showConnectionLine, selectedDestination, userLocation, project]
+    );
+
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
-        if (!onClick) return;
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
 
-        const coords = unproject({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
-        onClick(coords);
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Check if clicked on connection line first
+        if (onConnectionLineClick && isNearConnectionLine(clickX, clickY)) {
+          onConnectionLineClick();
+          return;
+        }
+
+        // Otherwise, trigger normal map click
+        if (onClick) {
+          const coords = unproject({ x: clickX, y: clickY });
+          onClick(coords);
+        }
       },
-      [onClick, unproject]
+      [onClick, onConnectionLineClick, isNearConnectionLine, unproject]
     );
 
     // Context value

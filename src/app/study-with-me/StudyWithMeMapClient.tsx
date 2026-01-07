@@ -350,7 +350,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   }, [filters.liveOnly, setFilters]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-50">
+    <div className="relative w-full h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
       {/* Abstract Location Map - No external API needed */}
       <AbstractLocationMap
         ref={mapRef}
@@ -369,23 +369,49 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         selectedDestination={selectedSchool ? { lat: selectedSchool.latitude, lng: selectedSchool.longitude } : null}
         showConnectionLine={!!selectedSchool && !!userLocation}
         onMove={handleMapMove}
+        onConnectionLineClick={() => {
+          if (selectedSchool) {
+            mapRef.current?.setCenter({ lat: selectedSchool.latitude, lng: selectedSchool.longitude }, true);
+            mapRef.current?.setZoom(18, true);
+          }
+        }}
         className="w-full h-full"
       >
         {/* School Markers */}
-        {filteredSchools.map((school) => (
+        {filteredSchools.map((school) => {
+          // Skip selected school here - we'll render it separately with higher z-index
+          if (selectedSchool?.id === school.id) return null;
+          return (
+            <LocationMarker
+              key={school.id}
+              position={{ lat: school.latitude, lng: school.longitude }}
+              anchor="bottom"
+              zIndex={10}
+            >
+              <SchoolMarker
+                school={school}
+                isSelected={false}
+                onClick={handleSchoolMarkerClick}
+              />
+            </LocationMarker>
+          );
+        })}
+
+        {/* Selected School Marker - Always render on top */}
+        {selectedSchool && (
           <LocationMarker
-            key={school.id}
-            position={{ lat: school.latitude, lng: school.longitude }}
+            key={`selected-${selectedSchool.id}`}
+            position={{ lat: selectedSchool.latitude, lng: selectedSchool.longitude }}
             anchor="bottom"
-            zIndex={selectedSchool?.id === school.id ? 20 : 10}
+            zIndex={100}
           >
             <SchoolMarker
-              school={school}
-              isSelected={selectedSchool?.id === school.id}
+              school={selectedSchool}
+              isSelected={true}
               onClick={handleSchoolMarkerClick}
             />
           </LocationMarker>
-        ))}
+        )}
       </AbstractLocationMap>
 
       {/* Search Bar */}

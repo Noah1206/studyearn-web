@@ -209,17 +209,14 @@ const SchoolMarker = forwardRef<HTMLDivElement, SchoolMarkerProps>(
         >
           {/* Logo or Icon */}
           <div
-            className={cn(
-              'flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden',
-              !hasLogo && colors.bg
-            )}
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center"
           >
             {hasLogo ? (
               <Image
                 src={school.logoUrl!}
                 alt={school.name}
-                width={36}
-                height={36}
+                width={24}
+                height={24}
                 className="w-full h-full object-contain"
                 unoptimized
               />
