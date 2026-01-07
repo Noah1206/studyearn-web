@@ -393,6 +393,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
     const dragStartRef = useRef<{ x: number; y: number; center: Coordinates } | null>(null);
     const lastTouchDistRef = useRef<number | null>(null);
     const animationRef = useRef<number | null>(null);
+    const hasDraggedRef = useRef(false);
 
     // Update center when prop changes
     useEffect(() => {
@@ -852,6 +853,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       (e: React.MouseEvent) => {
         if (isAnimating) return;
         setIsDragging(true);
+        hasDraggedRef.current = false;
         dragStartRef.current = {
           x: e.clientX,
           y: e.clientY,
@@ -867,6 +869,11 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
 
         const dx = e.clientX - dragStartRef.current.x;
         const dy = e.clientY - dragStartRef.current.y;
+
+        // Mark as dragged if moved more than 5 pixels
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+          hasDraggedRef.current = true;
+        }
 
         const scale = Math.pow(2, zoom);
         const worldSize = TILE_SIZE * scale;
@@ -913,6 +920,7 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
       (e: React.TouchEvent) => {
         if (e.touches.length === 1) {
           setIsDragging(true);
+          hasDraggedRef.current = false;
           dragStartRef.current = {
             x: e.touches[0].clientX,
             y: e.touches[0].clientY,
@@ -932,6 +940,11 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         if (e.touches.length === 1 && isDragging && dragStartRef.current) {
           const dx = e.touches[0].clientX - dragStartRef.current.x;
           const dy = e.touches[0].clientY - dragStartRef.current.y;
+
+          // Mark as dragged if moved more than 5 pixels
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            hasDraggedRef.current = true;
+          }
 
           const scale = Math.pow(2, zoom);
           const worldSize = TILE_SIZE * scale;
@@ -1009,6 +1022,12 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
+        // Skip click if we just finished dragging
+        if (hasDraggedRef.current) {
+          hasDraggedRef.current = false;
+          return;
+        }
+
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
 
