@@ -865,11 +865,12 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
         const scale = Math.pow(2, zoom);
         const worldSize = TILE_SIZE * scale;
 
-        const dLng = (-dx / worldSize) * 360;
+        // Drag direction = map move direction (push to move style)
+        const dLng = (dx / worldSize) * 360;
         const startMercY =
           ((1 - latToMercatorY(dragStartRef.current.center.lat) / Math.PI) / 2) *
           worldSize;
-        const newMercY = startMercY + dy;
+        const newMercY = startMercY - dy;
         const newLat = mercatorYToLat(
           Math.PI * (1 - (2 * newMercY) / worldSize)
         );
@@ -929,11 +930,12 @@ export const AbstractLocationMap = forwardRef<AbstractLocationMapRef, AbstractLo
           const scale = Math.pow(2, zoom);
           const worldSize = TILE_SIZE * scale;
 
-          const dLng = (-dx / worldSize) * 360;
+          // Drag direction = map move direction (push to move style)
+          const dLng = (dx / worldSize) * 360;
           const startMercY =
             ((1 - latToMercatorY(dragStartRef.current.center.lat) / Math.PI) / 2) *
             worldSize;
-          const newMercY = startMercY + dy;
+          const newMercY = startMercY - dy;
           const newLat = mercatorYToLat(
             Math.PI * (1 - (2 * newMercY) / worldSize)
           );
