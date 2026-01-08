@@ -306,10 +306,11 @@ export function SchoolSearchBar({
       <div
         className={cn(
           'relative flex items-center',
-          'bg-white rounded-2xl shadow-lg',
-          'border border-gray-100',
-          'transition-shadow duration-200',
-          isOpen && 'shadow-xl ring-2 ring-primary-100'
+          'bg-white rounded-2xl',
+          'border border-gray-300',
+          'transition-all duration-200',
+          'hover:border-gray-400',
+          isOpen && 'border-primary-500'
         )}
       >
         <div className="absolute left-4 text-gray-400">
