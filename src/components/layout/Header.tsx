@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, Sparkles, ArrowRightLeft, Video } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
@@ -143,12 +143,6 @@ export function Header() {
               콘텐츠
             </Link>
             <Link
-              href="/study-with-me"
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
-            >
-              Study With Me
-            </Link>
-            <Link
               href="/studyan"
               className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
             >
@@ -158,15 +152,6 @@ export function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
-            {pathname?.startsWith('/study-with-me') && (
-              <Link href="/study-with-me/create">
-                <button className="flex items-center gap-2 px-4 py-2 text-orange-500 hover:text-orange-600 rounded-lg transition-colors">
-                  <Video className="w-4 h-4" />
-                  <span className="text-sm font-medium">만들기</span>
-                </button>
-              </Link>
-            )}
             {user ? (
               <div className="relative" ref={profileDropdownRef}>
                 <button
@@ -292,32 +277,12 @@ export function Header() {
               콘텐츠
             </Link>
             <Link
-              href="/study-with-me"
-              className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Study With Me
-            </Link>
-            <Link
               href="/studyan"
               className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
               onClick={() => setIsMenuOpen(false)}
             >
               스터디언
             </Link>
-            {/* 만들기 버튼 - Study With Me 페이지에서만 표시 */}
-            {pathname?.startsWith('/study-with-me') && (
-              <Link
-                href="/study-with-me/create"
-                className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <div className="flex items-center gap-2">
-                  <Video className="w-4 h-4" />
-                  <span>방 만들기</span>
-                </div>
-              </Link>
-            )}
 
             <div className="pt-4 border-t border-gray-100 mt-4">
               {user ? (
