@@ -1548,10 +1548,10 @@ export default function StudyRoomPage() {
         })
         .eq('id', roomId);
 
-      router.push('/study-with-me');
+      router.push('/');
     } catch (err) {
       console.error('Failed to leave room:', err);
-      router.push('/study-with-me');
+      router.push('/');
     }
   };
 
@@ -2280,7 +2280,7 @@ export default function StudyRoomPage() {
             <Target className="w-8 h-8 text-red-500" />
           </div>
           <p className="text-gray-900 font-medium mb-2">{error || '방을 찾을 수 없습니다'}</p>
-          <Link href="/study-with-me">
+          <Link href="/">
             <Button className="bg-orange-500 hover:bg-orange-600">
               돌아가기
             </Button>

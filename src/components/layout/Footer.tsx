@@ -42,11 +42,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/study-with-me" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Study With Me
-                </Link>
-              </li>
-              <li>
                 <a
                   href={process.env.NEXT_PUBLIC_APP_STORE_URL}
                   target="_blank"
