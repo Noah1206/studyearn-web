@@ -279,7 +279,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
   );
 
   const handleSchoolSearch = useCallback(
-    (school: SchoolSearchResult) => {
+    (school: SchoolMarkerData) => {
       if (!school) return;
 
       const existingSchool = schools.find(
