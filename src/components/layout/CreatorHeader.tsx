@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -79,10 +80,14 @@ export function CreatorHeader() {
     <header className="bg-white border-b border-gray-100">
       <div className="relative flex items-center justify-between h-16 px-4 sm:px-6">
         {/* Logo - 왼쪽 끝에 고정 (일반 Header와 동일) */}
-        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-lg">S</span>
-          </div>
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+          <Image
+            src="/logo.svg"
+            alt="StuPle"
+            width={32}
+            height={32}
+            className="w-8 h-8"
+          />
           <span className="text-xl font-bold text-gray-900 tracking-tight">StuPle</span>
         </Link>
 
