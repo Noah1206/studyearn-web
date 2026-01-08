@@ -12,6 +12,8 @@ import {
   UserPulse,
   MapLeftSidebar,
   SchoolMarker,
+  MapSidebar,
+  NearbySchoolsRecommendation,
   type AbstractLocationMapRef,
   type Coordinates,
   type SchoolMarkerData,
@@ -386,15 +388,15 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
         )}
       </AbstractLocationMap>
 
-      {/* Search Bar */}
-      <motion.div
+      {/* Search Bar - TODO: Implement SchoolSearchBar component */}
+      {/* <motion.div
         className="absolute top-4 left-4 right-4 md:left-20 md:right-20 lg:left-1/4 lg:right-1/4 z-30"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
         <SchoolSearchBar onSchoolSelect={handleSchoolSearch} placeholder="학교 검색" showRecent />
-      </motion.div>
+      </motion.div> */}
 
       {/* Stats Bar */}
       <motion.div
