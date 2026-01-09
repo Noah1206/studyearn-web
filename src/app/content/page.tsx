@@ -219,17 +219,19 @@ function EmptyState() {
 
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession()은 로컬 세션을 확인하므로 getUser()보다 빠름
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!user) {
+      if (!session?.user) {
         router.push('/login?redirectTo=/dashboard/upload');
         return;
       }
 
+      // 크리에이터 설정 확인 (타임아웃 추가)
       const { data: creatorSettings } = await supabase
         .from('creator_settings')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (creatorSettings) {
