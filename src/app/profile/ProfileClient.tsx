@@ -720,6 +720,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     setIsConverting(true);
     setError('');
 
+    // 10초 타임아웃
+    const timeoutId = setTimeout(() => {
+      setIsConverting(false);
+      setError('연결 시간이 초과되었습니다. 다시 시도해주세요.');
+    }, 10000);
+
     try {
       // Update profiles table to set is_creator = true
       const { error: profileError } = await supabase
@@ -729,7 +735,6 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
 
       if (profileError) {
         setError('크리에이터 전환에 실패했습니다.');
-        setIsConverting(false);
         return;
       }
 
@@ -762,12 +767,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         total_subscribers: 0,
       });
 
-      // 성공 시 로딩 해제 후 이동
-      setIsConverting(false);
       router.push('/dashboard');
     } catch (err) {
       console.error('Creator conversion error:', err);
       setError('오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      clearTimeout(timeoutId);
       setIsConverting(false);
     }
   };
