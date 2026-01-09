@@ -154,16 +154,19 @@ function VerifyLoginContent() {
         if (sessionError) {
           console.error('Session error:', sessionError);
           setError('로그인 세션 설정에 실패했습니다.');
+          setIsLoading(false);
           return;
         }
+
+        // 로그인 성공 - 하드 리다이렉트로 세션 반영
+        window.location.href = decodeURIComponent(redirectTo);
+        return; // isLoading 유지하면서 페이지 전환
       }
 
-      // 로그인 성공 - 리다이렉트
-      router.push(decodeURIComponent(redirectTo));
-      router.refresh();
+      setError('로그인에 실패했습니다. 다시 시도해주세요.');
+      setIsLoading(false);
     } catch {
       setError('인증에 실패했습니다. 다시 시도해주세요.');
-    } finally {
       setIsLoading(false);
     }
   };
