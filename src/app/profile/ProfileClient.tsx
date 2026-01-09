@@ -762,8 +762,11 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         total_subscribers: 0,
       });
 
+      // 성공 시 로딩 해제 후 이동
+      setIsConverting(false);
       router.push('/dashboard');
-    } catch {
+    } catch (err) {
+      console.error('Creator conversion error:', err);
       setError('오류가 발생했습니다. 다시 시도해주세요.');
       setIsConverting(false);
     }

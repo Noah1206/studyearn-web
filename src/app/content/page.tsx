@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import {
   ContentCard,
   CategorySidebar,
@@ -211,10 +212,48 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
 
 function EmptyState() {
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // 바로 업로드 페이지로 이동 (인증 체크는 해당 페이지에서 처리)
-  const handleUploadClick = () => {
-    router.push('/dashboard/upload');
+  const handleUploadClick = async () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        router.push('/login?redirectTo=/dashboard/upload');
+        return;
+      }
+
+      // 3초 타임아웃으로 크리에이터 체크
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 3000)
+      );
+
+      const checkPromise = supabase
+        .from('creator_settings')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single();
+
+      try {
+        const { data: creatorSettings } = await Promise.race([checkPromise, timeoutPromise]) as { data: { id: string } | null };
+
+        if (creatorSettings) {
+          router.push('/dashboard/upload');
+        } else {
+          router.push('/become-creator?redirectTo=/dashboard/upload');
+        }
+      } catch {
+        // 타임아웃이나 에러 시 기본적으로 업로드 페이지로 이동
+        router.push('/dashboard/upload');
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/login?redirectTo=/dashboard/upload');
+    }
   };
 
   return (
@@ -234,9 +273,10 @@ function EmptyState() {
       </p>
       <button
         onClick={handleUploadClick}
-        className="inline-flex px-6 py-3 text-orange-500 font-semibold rounded-xl hover:text-orange-600 transition-colors"
+        disabled={isNavigating}
+        className="inline-flex px-6 py-3 text-orange-500 font-semibold rounded-xl hover:text-orange-600 transition-colors disabled:opacity-50"
       >
-        자료 올리기
+        {isNavigating ? '이동 중...' : '자료 올리기'}
       </button>
     </motion.div>
   );
