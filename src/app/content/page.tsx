@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
 import {
   ContentCard,
   CategorySidebar,
@@ -212,39 +211,10 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
 
 function EmptyState() {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(false);
 
-  const handleUploadClick = async () => {
-    setIsChecking(true);
-
-    try {
-      const supabase = createClient();
-      // getSession()은 로컬 세션을 확인하므로 getUser()보다 빠름
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.user) {
-        router.push('/login?redirectTo=/dashboard/upload');
-        return;
-      }
-
-      // 크리에이터 설정 확인 (타임아웃 추가)
-      const { data: creatorSettings } = await supabase
-        .from('creator_settings')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (creatorSettings) {
-        router.push('/dashboard/upload');
-      } else {
-        router.push('/become-creator?redirectTo=/dashboard/upload');
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      router.push('/login?redirectTo=/dashboard/upload');
-    } finally {
-      setIsChecking(false);
-    }
+  // 바로 업로드 페이지로 이동 (인증 체크는 해당 페이지에서 처리)
+  const handleUploadClick = () => {
+    router.push('/dashboard/upload');
   };
 
   return (
@@ -264,10 +234,9 @@ function EmptyState() {
       </p>
       <button
         onClick={handleUploadClick}
-        disabled={isChecking}
-        className="inline-flex px-6 py-3 text-orange-500 font-semibold rounded-xl hover:text-orange-600 transition-colors disabled:opacity-50"
+        className="inline-flex px-6 py-3 text-orange-500 font-semibold rounded-xl hover:text-orange-600 transition-colors"
       >
-        {isChecking ? '확인 중...' : '자료 올리기'}
+        자료 올리기
       </button>
     </motion.div>
   );
