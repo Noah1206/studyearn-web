@@ -1,0 +1,183 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Heart, Star, Download, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import { ContentThumbnail } from './ContentThumbnail';
+
+interface Product {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  thumbnail_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface DisplayProduct extends Product {
+  download_count: number;
+  rating_sum: number;
+  rating_count: number;
+  view_count: number;
+  like_count: number;
+  rating: number;
+  creator?: {
+    name: string;
+    avatar_url?: string;
+  };
+  subject?: string;
+  grade?: string;
+  tags?: string[];
+}
+
+interface ContentCardProps {
+  product: DisplayProduct;
+  index?: number;
+}
+
+// 과목 색상
+function getSubjectStyle(subject?: string) {
+  const styles: Record<string, { bg: string; text: string }> = {
+    '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
+    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
+    '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
+    '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '물리': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '화학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '생물': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '지구과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    '사회': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
+    '한국사': { bg: 'bg-orange-50', text: 'text-orange-600' },
+    '세계사': { bg: 'bg-orange-50', text: 'text-orange-600' },
+    '루틴': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+    '플래너': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  };
+  return styles[subject || ''] || { bg: 'bg-gray-50', text: 'text-gray-600' };
+}
+
+export function ContentCard({ product, index = 0 }: ContentCardProps) {
+  const [isLiked, setIsLiked] = useState(false);
+  const subjectStyle = getSubjectStyle(product.subject);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+    >
+      <Link href={`/content/${product.id}`} className="block group">
+        <div className="flex flex-col h-full">
+          {/* 썸네일 영역 */}
+          <div className="relative rounded-2xl overflow-hidden shadow-toss-2 group-hover:shadow-toss-4 transition-shadow duration-300">
+            <ContentThumbnail
+              thumbnailUrl={product.thumbnail_url}
+              subject={product.subject}
+              title={product.title}
+              aspectRatio="4/3"
+            />
+            {/* 찜 버튼 */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsLiked(!isLiked);
+              }}
+              className={cn(
+                'absolute top-3 right-3 p-2 rounded-full transition-all duration-200',
+                'bg-white/80 backdrop-blur-sm hover:bg-white',
+                isLiked && 'bg-red-50 hover:bg-red-100'
+              )}
+            >
+              <Heart
+                className={cn(
+                  'w-5 h-5 transition-colors',
+                  isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'
+                )}
+              />
+            </button>
+          </div>
+
+          {/* 정보 영역 - 썸네일과 분리 */}
+          <div className="pt-4 flex flex-col flex-1">
+            {/* 태그 */}
+            <div className="flex items-center gap-1.5 mb-2">
+              <span
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-xs font-bold',
+                  subjectStyle.bg,
+                  subjectStyle.text
+                )}
+              >
+                {product.subject || '학습자료'}
+              </span>
+              {product.grade && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg">
+                  {product.grade}
+                </span>
+              )}
+            </div>
+
+            {/* 제목 */}
+            <h3 className="font-bold text-gray-900 group-hover:text-orange-500 transition-colors line-clamp-2 mb-2 flex-grow">
+              {product.title}
+            </h3>
+
+            {/* 크리에이터 */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+                {product.creator?.avatar_url ? (
+                  <img
+                    src={product.creator.avatar_url}
+                    alt={product.creator.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-gray-400" />
+                )}
+              </div>
+              <span className="text-sm text-gray-600 font-medium truncate">
+                {product.creator?.name || '익명'}
+              </span>
+            </div>
+
+            {/* 통계 + 가격 */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex items-center gap-3 text-sm">
+                {product.rating > 0 && (
+                  <span className="flex items-center gap-1 text-amber-500">
+                    <Star className="w-4 h-4 fill-amber-400" />
+                    <span className="font-bold">{product.rating.toFixed(1)}</span>
+                    {product.rating_count > 0 && (
+                      <span className="text-gray-400 text-xs">({product.rating_count})</span>
+                    )}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 text-gray-400">
+                  <Download className="w-4 h-4" />
+                  <span className="font-medium">{product.download_count}</span>
+                </span>
+              </div>
+
+              {/* 가격 */}
+              {product.price === 0 ? (
+                <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-bold rounded-lg">
+                  무료
+                </span>
+              ) : (
+                <span className="text-lg font-bold text-gray-900">
+                  {formatCurrency(product.price)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+export default ContentCard;
