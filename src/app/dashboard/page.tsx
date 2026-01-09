@@ -613,11 +613,14 @@ function SectionFallback() {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getSession은 로컬 쿠키에서 읽어서 빠름 (미들웨어에서 이미 인증 체크됨)
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     redirect('/login?redirectTo=/dashboard');
   }
+
+  const user = session.user;
 
   const { data: creatorCheck } = await supabase
     .from('creator_settings')

@@ -43,12 +43,14 @@ export default async function ProfilePage() {
     return <ProfileClient prefetchedData={null} />;
   }
 
-  // Get user - this is fast as it uses the session cookie
-  const { data: { user } } = await supabase.auth.getUser();
+  // Get session - 로컬 쿠키에서 읽어서 빠름 (미들웨어에서 이미 인증 체크됨)
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     redirect('/login');
   }
+
+  const user = session.user;
 
   // Prefetch essential data in parallel on server
   const [profileResult, creatorResult, sessionResult] = await Promise.all([

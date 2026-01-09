@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Protected routes - require authentication
-  const protectedPaths = ['/dashboard', '/my', '/subscribe', '/purchase'];
+  const protectedPaths = ['/dashboard', '/my', '/subscribe', '/purchase', '/profile'];
   const authPaths = ['/login', '/signup'];
 
   const isProtectedPath = protectedPaths.some((path) =>
