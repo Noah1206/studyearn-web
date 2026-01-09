@@ -75,16 +75,17 @@ export function Header() {
       }
     };
 
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    // getSession은 로컬에서 읽어서 빠름 (getUser는 서버 요청으로 느림)
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
 
-      // Sync creator status from database to prevent stale localStorage values
-      if (user) {
-        await syncUserCreatorStatus(user.id);
+      // 크리에이터 상태 백그라운드 동기화 (UI 블로킹 X)
+      if (session?.user) {
+        syncUserCreatorStatus(session.user.id);
       }
     };
-    getUser();
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
       setUser(session?.user ?? null);

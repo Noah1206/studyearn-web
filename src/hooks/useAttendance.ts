@@ -65,8 +65,9 @@ export function useAttendance(): UseAttendanceResult {
       }
 
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get current session (getSession은 로컬에서 읽어서 빠름)
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
 
         if (!user) {
           // User not logged in - still show modal if not dismissed
