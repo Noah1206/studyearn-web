@@ -100,11 +100,29 @@ export function Header() {
   }, [supabase, syncCreatorStatus]);
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    clearUser();
-    router.push('/');
-    setIsProfileOpen(false);
+    console.log('handleLogout started');
+    try {
+      if (!supabase) {
+        console.error('Supabase client is null');
+        return;
+      }
+      console.log('Calling signOut...');
+      const { error } = await supabase.auth.signOut();
+      console.log('signOut completed, error:', error);
+      if (error) {
+        console.error('Logout error:', error);
+      }
+      clearUser();
+      setIsProfileOpen(false);
+      console.log('Redirecting to /');
+      // 하드 리다이렉트로 세션 상태 완전 반영
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Logout exception:', err);
+      // 에러가 나도 로컬 상태는 클리어하고 리다이렉트
+      clearUser();
+      window.location.href = '/';
+    }
   };
 
   const handleSwitchMode = () => {
@@ -224,7 +242,11 @@ export function Header() {
                     )}
                     <div className="border-t border-gray-100 pt-1">
                       <button
-                        onClick={handleLogout}
+                        type="button"
+                        onClick={() => {
+                          console.log('Logout button clicked');
+                          handleLogout();
+                        }}
                         className="flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error/5 w-full text-left transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
