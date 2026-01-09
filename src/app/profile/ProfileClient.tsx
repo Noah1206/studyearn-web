@@ -40,6 +40,7 @@ import { Button, Input, Avatar, Spinner, SchoolSearch } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
+import { ensureHttps } from '@/lib/utils/url';
 
 // 루틴 관련 상수
 const ROUTINE_TYPES = [
@@ -291,7 +292,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         id: storeProfile.id,
         nickname: storeProfile.nickname,
         username: storeProfile.username,
-        avatar_url: storeProfile.avatar_url,
+        avatar_url: ensureHttps(storeProfile.avatar_url) || undefined,
         bio: storeProfile.bio,
         school: storeProfile.school,
         is_creator: isCreatorOnboarded,
@@ -331,7 +332,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
           email: prefetchedData.user.email,
           nickname: prefetchedData.profile.nickname,
           username: prefetchedData.profile.username,
-          avatar_url: prefetchedData.profile.avatar_url,
+          avatar_url: ensureHttps(prefetchedData.profile.avatar_url) || undefined,
           bio: prefetchedData.profile.bio,
           school: prefetchedData.profile.school,
         });
@@ -386,7 +387,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       // Process profile data
       if (!profileResult.error && profileResult.data) {
         const profileData = profileResult.data;
-        const avatarUrl = profileData.avatar_url || user.user_metadata?.avatar_url;
+        const avatarUrl = ensureHttps(profileData.avatar_url || user.user_metadata?.avatar_url);
         const profileWithAvatar = { ...profileData, avatar_url: avatarUrl };
 
         setProfile(profileWithAvatar);
@@ -400,7 +401,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
           email: user.email || '',
           nickname: profileData.nickname || '',
           username: profileData.username,
-          avatar_url: avatarUrl,
+          avatar_url: avatarUrl || undefined,
           bio: profileData.bio,
           school: profileData.school,
         });
