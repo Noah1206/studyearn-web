@@ -15,6 +15,20 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
+  // Protected routes - require authentication
+  const protectedPaths = ['/dashboard', '/my', '/subscribe', '/purchase'];
+  const authPaths = ['/login', '/signup'];
+
+  const isProtectedPath = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+  const isAuthPath = authPaths.includes(request.nextUrl.pathname);
+
+  // 보호된 경로나 인증 페이지가 아니면 빠르게 통과
+  if (!isProtectedPath && !isAuthPath) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,21 +52,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
+  // getSession은 로컬 쿠키에서 읽어서 빠름 (getUser는 서버 요청)
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  // Protected routes - require authentication
-  const protectedPaths = ['/dashboard', '/my', '/subscribe', '/purchase'];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
-
-  if (isProtectedPath && !user) {
+  if (isProtectedPath && !session) {
     // Redirect to login with return URL
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -60,11 +65,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
-  const authPaths = ['/login', '/signup'];
-  const isAuthPath = authPaths.includes(request.nextUrl.pathname);
-
-  if (isAuthPath && user) {
+  if (isAuthPath && session) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
