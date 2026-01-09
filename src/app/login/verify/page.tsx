@@ -141,6 +141,7 @@ function VerifyLoginContent() {
         } else {
           setError(result.error || '인증번호가 올바르지 않습니다.');
         }
+        setIsLoading(false);
         return;
       }
 
@@ -159,8 +160,12 @@ function VerifyLoginContent() {
         }
 
         // 로그인 성공 - 하드 리다이렉트로 세션 반영
-        window.location.href = decodeURIComponent(redirectTo);
-        return; // isLoading 유지하면서 페이지 전환
+        // setTimeout으로 React 상태 업데이트 완료 후 리다이렉트
+        const targetUrl = decodeURIComponent(redirectTo);
+        setTimeout(() => {
+          window.location.replace(targetUrl);
+        }, 100);
+        return;
       }
 
       setError('로그인에 실패했습니다. 다시 시도해주세요.');
