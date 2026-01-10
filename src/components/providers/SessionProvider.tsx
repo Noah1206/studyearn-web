@@ -41,30 +41,34 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
     if (!supabase) return;
 
     try {
-      // 프로필 정보 가져오기
+      const user = session?.user;
+
+      // OAuth 메타데이터에서 정보 추출 (Kakao, Google 등)
+      const oauthNickname = user?.user_metadata?.full_name ||
+                           user?.user_metadata?.name ||
+                           user?.user_metadata?.user_name ||
+                           user?.user_metadata?.preferred_username ||
+                           user?.user_metadata?.nickname;
+      const oauthAvatarUrl = user?.user_metadata?.avatar_url ||
+                            user?.user_metadata?.picture ||
+                            user?.user_metadata?.profile_image;
+
+      // 프로필 정보 가져오기 시도
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, nickname, username, avatar_url, bio')
         .eq('id', userId)
         .maybeSingle();
 
-      if (profile) {
-        // 카카오 메타데이터에서 닉네임 가져오기 (fallback)
-        const user = session?.user;
-        const kakaoNickname = user?.user_metadata?.full_name ||
-                             user?.user_metadata?.name ||
-                             user?.user_metadata?.user_name ||
-                             user?.user_metadata?.preferred_username;
-
-        setProfile({
-          id: profile.id,
-          email: user?.email || '',
-          nickname: profile.nickname || profile.username || kakaoNickname || '사용자',
-          username: profile.username,
-          avatar_url: profile.avatar_url || user?.user_metadata?.avatar_url,
-          bio: profile.bio,
-        });
-      }
+      // DB 프로필이 있든 없든 항상 setProfile 호출 (OAuth 메타데이터 fallback)
+      setProfile({
+        id: userId,
+        email: user?.email || '',
+        nickname: profile?.nickname || profile?.username || oauthNickname || '사용자',
+        username: profile?.username,
+        avatar_url: profile?.avatar_url || oauthAvatarUrl,
+        bio: profile?.bio,
+      });
 
       // 크리에이터 설정 가져오기
       const { data: creatorSettings } = await supabase
@@ -86,6 +90,24 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       }
     } catch (error) {
       console.error('Failed to load user data:', error);
+
+      // 에러 발생해도 OAuth 메타데이터로 기본 프로필 설정
+      const user = session?.user;
+      if (user) {
+        const oauthNickname = user.user_metadata?.full_name ||
+                             user.user_metadata?.name ||
+                             user.user_metadata?.nickname ||
+                             '사용자';
+        const oauthAvatarUrl = user.user_metadata?.avatar_url ||
+                              user.user_metadata?.picture;
+
+        setProfile({
+          id: userId,
+          email: user.email || '',
+          nickname: oauthNickname,
+          avatar_url: oauthAvatarUrl,
+        });
+      }
     }
   }, [supabase, session?.user, setProfile, syncCreatorStatus]);
 
