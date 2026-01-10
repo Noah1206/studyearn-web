@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -16,7 +16,9 @@ export function Header() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const supabase = createClient();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // Supabase client를 useMemo로 캐싱하여 매 렌더마다 새 인스턴스 생성 방지
+  const supabase = useMemo(() => createClient(), []);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // User Store
@@ -100,38 +102,59 @@ export function Header() {
   }, [supabase, syncCreatorStatus]);
 
   const handleLogout = async () => {
+    // 중복 클릭 방지
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
     console.log('handleLogout started');
+
+    // 즉시 UI 상태 변경
+    setUser(null);
+    clearUser();
+    setIsProfileOpen(false);
+    setIsMenuOpen(false);
+
     try {
-      // 먼저 로컬 상태 클리어
-      clearUser();
-      setIsProfileOpen(false);
+      // 1. localStorage 전체에서 관련 데이터 클리어
+      if (typeof window !== 'undefined') {
+        const keysToRemove = Object.keys(localStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
+        );
+        keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // localStorage에서 Supabase 관련 데이터 클리어
-      const keysToRemove = Object.keys(localStorage).filter(
-        key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
-      );
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-
-      // 서버 API로 로그아웃 (쿠키 삭제)
-      console.log('Calling logout API...');
-      await fetch('/api/auth/logout', { method: 'POST' });
-
-      // 클라이언트에서도 signOut 호출
-      if (supabase) {
-        await supabase.auth.signOut({ scope: 'global' });
+        // sessionStorage도 클리어
+        const sessionKeysToRemove = Object.keys(sessionStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase')
+        );
+        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
       }
 
-      console.log('Redirecting to /');
-      // 하드 리다이렉트로 세션 상태 완전 반영
-      window.location.href = '/';
+      // 2. 클라이언트에서 signOut 호출 (scope: 'global'로 모든 세션 종료)
+      if (supabase) {
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        if (error) {
+          console.error('SignOut error:', error);
+        } else {
+          console.log('Client signOut successful');
+        }
+      }
+
+      // 3. 서버 API로 로그아웃 (서버 쿠키 삭제) - credentials: 'include'로 쿠키 전송
+      console.log('Calling logout API...');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      console.log('Logout API response:', response.status);
+
+      // 4. 응답이 성공하면 쿠키가 설정됨. 잠시 대기 후 리다이렉트
+      await new Promise(resolve => setTimeout(resolve, 100));
+
     } catch (err) {
       console.error('Logout exception:', err);
-      // 에러가 나도 리다이렉트
-      clearUser();
-      const keysToRemove = Object.keys(localStorage).filter(
-        key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
-      );
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } finally {
+      // 5. 새로고침으로 완전히 상태 초기화 (replace 대신 href 사용)
+      console.log('Redirecting to /');
       window.location.href = '/';
     }
   };
