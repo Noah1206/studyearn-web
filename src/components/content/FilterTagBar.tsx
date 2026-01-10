@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Grid3X3, List, SlidersHorizontal, Zap } from 'lucide-react';
+import { ChevronDown, Grid3X3, List, SlidersHorizontal } from 'lucide-react';
 
 interface ActiveFilter {
   id: string;
@@ -63,24 +63,27 @@ function Dropdown({
   onChange: (id: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.left
+      });
+    }
+    setIsOpen(!isOpen);
+  };
 
   const selectedLabel = options.find(o => o.id === value)?.label || label;
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative flex-shrink-0">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={handleToggle}
         className={cn(
           'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors',
           'border border-gray-200 hover:border-gray-300 bg-white',
@@ -92,25 +95,34 @@ function Dropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-30">
-          {options.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => {
-                onChange(option.id);
-                setIsOpen(false);
-              }}
-              className={cn(
-                'w-full px-4 py-2.5 text-left text-sm transition-colors',
-                value === option.id
-                  ? 'bg-gray-50 text-gray-900 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div
+            className="fixed w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+          >
+            {options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => {
+                  onChange(option.id);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  'w-full px-4 py-2.5 text-left text-sm transition-colors',
+                  value === option.id
+                    ? 'bg-gray-50 text-gray-900 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -119,7 +131,7 @@ function Dropdown({
 export function FilterTagBar({
   activeFilters,
   onRemoveFilter,
-  onClearAll,
+  onClearAll: _onClearAll,
   sortBy,
   onSortChange,
   viewMode,
@@ -127,6 +139,7 @@ export function FilterTagBar({
   totalCount,
   onMobileFilterClick,
 }: FilterTagBarProps) {
+  void _onClearAll; // Reserved for future use
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   // 활성 필터에서 카테고리와 학년 값 추출
@@ -240,13 +253,6 @@ export function FilterTagBar({
           )}
         >
           평점높은순
-        </button>
-
-        <button
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-yellow-400 to-orange-400 text-white flex-shrink-0"
-        >
-          <Zap className="w-3.5 h-3.5" />
-          빠른 응답
         </button>
       </div>
 
