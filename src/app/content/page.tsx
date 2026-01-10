@@ -81,8 +81,8 @@ const gradeSubjectMap: Record<string, string[]> = {
 };
 
 // 리스트 뷰 카드 (크몽 스타일)
-function ProductListCard({ product, index }: { product: DisplayProduct; index: number }) {
-  const [isLiked, setIsLiked] = useState(false);
+function ProductListCard({ product, index, likedIds, onToggleLike }: { product: DisplayProduct; index: number; likedIds: Set<string>; onToggleLike: (id: string) => void }) {
+  const isLiked = likedIds.has(product.id);
 
   return (
     <motion.div
@@ -137,7 +137,7 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  setIsLiked(!isLiked);
+                  onToggleLike(product.id);
                 }}
                 className={cn(
                   'p-2 rounded-full transition-all duration-200',
@@ -288,6 +288,65 @@ export default function ProductsPage() {
     freeOnly: false,
     minRating: 0,
   });
+
+  // 찜한 콘텐츠 ID 목록
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [isLiking, setIsLiking] = useState(false);
+
+  // 찜한 콘텐츠 불러오기
+  useEffect(() => {
+    const fetchLikedIds = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: likes } = await supabase
+        .from('content_likes')
+        .select('content_id')
+        .eq('user_id', user.id);
+
+      if (likes) {
+        setLikedIds(new Set(likes.map((l: { content_id: string }) => l.content_id)));
+      }
+    };
+    fetchLikedIds();
+  }, []);
+
+  // 찜하기 토글
+  const handleToggleLike = async (contentId: string) => {
+    if (isLiking) return;
+    setIsLiking(true);
+
+    try {
+      const response = await fetch(`/api/content/${contentId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.status === 401) {
+        // 로그인 필요
+        window.location.href = `/login?redirectTo=/content`;
+        return;
+      }
+
+      const data = await response.json();
+      if (response.ok) {
+        setLikedIds(prev => {
+          const newSet = new Set(prev);
+          if (data.isLiked) {
+            newSet.add(contentId);
+          } else {
+            newSet.delete(contentId);
+          }
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Like toggle failed:', error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -624,13 +683,13 @@ export default function ProductsPage() {
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
                   {sortedProducts.map((product, index) => (
-                    <ContentCard key={product.id} product={product} index={index} />
+                    <ContentCard key={product.id} product={product} index={index} likedIds={likedIds} onToggleLike={handleToggleLike} />
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {sortedProducts.map((product, index) => (
-                    <ProductListCard key={product.id} product={product} index={index} />
+                    <ProductListCard key={product.id} product={product} index={index} likedIds={likedIds} onToggleLike={handleToggleLike} />
                   ))}
                 </div>
               )

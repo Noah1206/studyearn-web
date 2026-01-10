@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, Star } from 'lucide-react';
@@ -36,6 +35,8 @@ interface DisplayProduct extends Product {
 interface ContentCardProps {
   product: DisplayProduct;
   index?: number;
+  likedIds?: Set<string>;
+  onToggleLike?: (id: string) => void;
 }
 
 // 과목 색상
@@ -58,8 +59,8 @@ function getSubjectStyle(subject?: string) {
   return styles[subject || ''] || { bg: 'bg-gray-50', text: 'text-gray-600' };
 }
 
-export function ContentCard({ product, index = 0 }: ContentCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
+export function ContentCard({ product, index = 0, likedIds, onToggleLike }: ContentCardProps) {
+  const isLiked = likedIds?.has(product.id) ?? false;
   const subjectStyle = getSubjectStyle(product.subject);
 
   return (
@@ -83,7 +84,7 @@ export function ContentCard({ product, index = 0 }: ContentCardProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setIsLiked(!isLiked);
+                onToggleLike?.(product.id);
               }}
               className={cn(
                 'absolute top-3 right-3 p-2 rounded-full transition-all duration-200',
