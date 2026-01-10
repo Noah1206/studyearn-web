@@ -346,16 +346,31 @@ function UploadPageContent() {
 
       if (!user) return;
 
+      // content_data JSONB에서 루틴 정보 조회
       const { data, error } = await supabase
         .from('contents')
-        .select('id, title, routine_type, routine_items, routine_days, created_at')
+        .select('id, title, content_data, created_at')
         .eq('creator_id', user.id)
-        .eq('content_type', 'routine')
+        .eq('content_type', 'post')
+        .not('content_data->type', 'is', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setMyRoutines((data || []).filter((r: MyRoutine) => r.routine_items && r.routine_items.length > 0));
+      // content_data에서 루틴 정보 추출하여 MyRoutine 형태로 변환
+      type ContentRow = { id: string; title: string; content_data: Record<string, unknown> | null; created_at: string };
+      const routines = (data || [] as ContentRow[])
+        .filter((r: ContentRow) => r.content_data?.type === 'routine' && Array.isArray(r.content_data?.routine_items) && (r.content_data?.routine_items as unknown[]).length > 0)
+        .map((r: ContentRow) => ({
+          id: r.id,
+          title: r.title,
+          routine_type: r.content_data?.routine_type,
+          routine_items: r.content_data?.routine_items,
+          routine_days: r.content_data?.routine_days,
+          created_at: r.created_at,
+        }));
+
+      setMyRoutines(routines);
     } catch (err) {
       console.error('Failed to load routines:', err);
     } finally {
@@ -564,11 +579,11 @@ function UploadPageContent() {
       // 썸네일 업로드 (있는 경우)
       let uploadedThumbnailUrl: string | null = null;
       if (thumbnailFile) {
-        const thumbnailName = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const thumbnailPath = `contents/${thumbnailName}`;
+        // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
+        const thumbnailPath = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         const { error: thumbnailUploadError } = await supabase.storage
-          .from('contents')
+          .from('creator-content')
           .upload(thumbnailPath, thumbnailFile, {
             cacheControl: '3600',
             upsert: false
@@ -579,34 +594,34 @@ function UploadPageContent() {
           // 썸네일 업로드 실패는 무시하고 계속 진행
         } else {
           const { data: { publicUrl } } = supabase.storage
-            .from('contents')
+            .from('creator-content')
             .getPublicUrl(thumbnailPath);
           uploadedThumbnailUrl = publicUrl;
         }
       }
 
       if (contentType === 'routine') {
-        // 루틴 데이터 (content_data JSONB에 루틴 정보 저장)
+        // 루틴 데이터 (content_data JSONB에 모든 추가 정보 저장)
         const routineData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
-          subject: subjectValue,
-          grade: gradeValue,
-          type: 'image' as const,
           content_type: 'post',  // DB CHECK constraint: 'post' for routine type
+          content_url: 'routine://placeholder',
+          thumbnail_url: uploadedThumbnailUrl,
           content_data: {
+            subject: subjectValue,
+            grade: gradeValue,
+            type: 'routine',
+            allow_preview: allowPreview,
             routine_type: routineType,
             routine_days: routineType === 'custom' ? customDays : null,
             routine_items: routineItems,
           },
-          url: 'routine://placeholder',
-          thumbnail_url: uploadedThumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
           published_at: new Date().toISOString(),
-          allow_preview: allowPreview,
         };
 
         const { error: insertError } = await supabase
@@ -636,11 +651,11 @@ function UploadPageContent() {
         }
 
         // Supabase Storage에 파일 업로드
-        const fileName = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filePath = `contents/${fileName}`;
+        // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
+        const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('contents')
+          .from('creator-content')
           .upload(filePath, file!, {
             cacheControl: '3600',
             upsert: false
@@ -659,7 +674,7 @@ function UploadPageContent() {
 
         // 공개 URL 가져오기
         const { data: { publicUrl } } = supabase.storage
-          .from('contents')
+          .from('creator-content')
           .getPublicUrl(filePath);
 
         // 썸네일 URL 설정 (업로드된 썸네일 > 이미지인 경우 원본 URL)
@@ -668,22 +683,24 @@ function UploadPageContent() {
           thumbnailUrl = publicUrl;
         }
 
-        // 콘텐츠 데이터
+        // 콘텐츠 데이터 (content_data JSONB에 추가 정보 저장)
         const contentData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
-          subject: subjectValue,
-          grade: gradeValue,
-          type: fileType,
           content_type: dbContentType,  // Use valid DB constraint value
-          url: publicUrl,
+          content_url: publicUrl,
           thumbnail_url: thumbnailUrl,
+          content_data: {
+            subject: subjectValue,
+            grade: gradeValue,
+            type: fileType,
+            allow_preview: allowPreview,
+          },
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
           published_at: new Date().toISOString(),
-          allow_preview: allowPreview,
         };
 
         const { error: insertError } = await supabase
@@ -693,7 +710,7 @@ function UploadPageContent() {
         if (insertError) {
           console.error('Upload error:', insertError);
           // 실패 시 업로드된 파일 삭제 시도
-          await supabase.storage.from('contents').remove([filePath]);
+          await supabase.storage.from('creator-content').remove([filePath]);
           setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
           return;
         }
