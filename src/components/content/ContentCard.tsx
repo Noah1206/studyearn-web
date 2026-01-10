@@ -63,13 +63,38 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
   const isLiked = likedIds?.has(product.id) ?? false;
   const subjectStyle = getSubjectStyle(product.subject);
 
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleLike?.(product.id);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
+      className="relative group"
     >
-      <Link href={`/content/${product.id}`} className="block group">
+      {/* 찜 버튼 - Link 바깥에 배치 */}
+      <button
+        type="button"
+        onClick={handleLikeClick}
+        className={cn(
+          'absolute top-3 right-3 z-10 p-2 rounded-full transition-all duration-200',
+          'bg-white/80 backdrop-blur-sm hover:bg-white',
+          isLiked && 'bg-red-50 hover:bg-red-100'
+        )}
+      >
+        <Heart
+          className={cn(
+            'w-5 h-5 transition-colors',
+            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'
+          )}
+        />
+      </button>
+
+      <Link href={`/content/${product.id}`} className="block">
         <div className="flex flex-col h-full">
           {/* 썸네일 영역 */}
           <div className="relative rounded-2xl overflow-hidden shadow-toss-2 group-hover:shadow-toss-4 transition-shadow duration-300">
@@ -79,26 +104,6 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
               title={product.title}
               aspectRatio="4/3"
             />
-            {/* 찜 버튼 */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleLike?.(product.id);
-              }}
-              className={cn(
-                'absolute top-3 right-3 p-2 rounded-full transition-all duration-200',
-                'bg-white/80 backdrop-blur-sm hover:bg-white',
-                isLiked && 'bg-red-50 hover:bg-red-100'
-              )}
-            >
-              <Heart
-                className={cn(
-                  'w-5 h-5 transition-colors',
-                  isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'
-                )}
-              />
-            </button>
           </div>
 
           {/* 정보 영역 */}

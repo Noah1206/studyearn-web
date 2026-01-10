@@ -84,12 +84,36 @@ const gradeSubjectMap: Record<string, string[]> = {
 function ProductListCard({ product, index, likedIds, onToggleLike }: { product: DisplayProduct; index: number; likedIds: Set<string>; onToggleLike: (id: string) => void }) {
   const isLiked = likedIds.has(product.id);
 
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleLike(product.id);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.02 }}
+      className="relative"
     >
+      {/* 찜 버튼 - Link 바깥에 배치 */}
+      <button
+        type="button"
+        onClick={handleLikeClick}
+        className={cn(
+          'absolute top-5 right-5 z-10 p-2 rounded-full transition-all duration-200',
+          isLiked ? 'bg-red-50' : 'hover:bg-gray-50'
+        )}
+      >
+        <Heart
+          className={cn(
+            'w-5 h-5 transition-colors',
+            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-300'
+          )}
+        />
+      </button>
+
       <Link href={`/content/${product.id}`} className="block group">
         <div className="bg-white rounded-xl p-5 hover:shadow-md transition-shadow duration-200">
           <div className="flex gap-5">
@@ -132,26 +156,8 @@ function ProductListCard({ product, index, likedIds, onToggleLike }: { product: 
               </span>
             </div>
 
-            {/* 우측: 찜 버튼 */}
-            <div className="flex flex-col items-end justify-start">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onToggleLike(product.id);
-                }}
-                className={cn(
-                  'p-2 rounded-full transition-all duration-200',
-                  isLiked ? 'bg-red-50' : 'hover:bg-gray-50'
-                )}
-              >
-                <Heart
-                  className={cn(
-                    'w-5 h-5 transition-colors',
-                    isLiked ? 'text-red-500 fill-red-500' : 'text-gray-300'
-                  )}
-                />
-              </button>
-            </div>
+            {/* 우측 여백 (버튼 공간) */}
+            <div className="w-9" />
           </div>
         </div>
       </Link>
