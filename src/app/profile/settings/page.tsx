@@ -95,43 +95,61 @@ function SettingsContent() {
 
   useEffect(() => {
     const fetchUserAndSettings = async () => {
-      if (!supabase) return;
-
-      // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.user) {
+      // supabase 클라이언트가 없으면 로그인 페이지로 리다이렉트
+      if (!supabase) {
+        console.error('Supabase client not available');
+        setIsLoading(false);
         router.push('/login');
         return;
       }
 
-      setUser(session.user);
-
-      // API를 통해 preferences 로드 (RLS 우회)
       try {
-        const response = await fetch('/api/me/preferences');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.preferences) {
-            if (data.preferences.notification_settings) {
-              setNotificationSettings(prev => ({
-                ...prev,
-                ...data.preferences.notification_settings,
-              }));
-            }
-            if (data.preferences.privacy_settings) {
-              setPrivacySettings(prev => ({
-                ...prev,
-                ...data.preferences.privacy_settings,
-              }));
+        // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setIsLoading(false);
+          router.push('/login');
+          return;
+        }
+
+        if (!session?.user) {
+          router.push('/login');
+          return;
+        }
+
+        setUser(session.user);
+
+        // API를 통해 preferences 로드 (RLS 우회)
+        try {
+          const response = await fetch('/api/me/preferences');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.preferences) {
+              if (data.preferences.notification_settings) {
+                setNotificationSettings(prev => ({
+                  ...prev,
+                  ...data.preferences.notification_settings,
+                }));
+              }
+              if (data.preferences.privacy_settings) {
+                setPrivacySettings(prev => ({
+                  ...prev,
+                  ...data.preferences.privacy_settings,
+                }));
+              }
             }
           }
+        } catch (error) {
+          console.error('Failed to load preferences:', error);
         }
       } catch (error) {
-        console.error('Failed to load preferences:', error);
+        console.error('Error fetching user and settings:', error);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     fetchUserAndSettings();
