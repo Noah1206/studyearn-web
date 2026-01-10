@@ -9,16 +9,13 @@ import {
   Search,
   FileText,
   Star,
-  Download,
   Heart,
-  User,
   ChevronRight,
   Home,
   X,
   Clock,
 } from 'lucide-react';
-import { formatCurrency, formatRelativeTime } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import {
   ContentCard,
@@ -83,25 +80,9 @@ const gradeSubjectMap: Record<string, string[]> = {
   cert: ['자격증'],
 };
 
-// 과목 색상
-function getSubjectStyle(subject?: string) {
-  const styles: Record<string, { bg: string; text: string }> = {
-    '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
-    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
-    '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
-    '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
-    '사회': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
-    '한국사': { bg: 'bg-orange-50', text: 'text-orange-600' },
-    '루틴': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-    '플래너': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-  };
-  return styles[subject || ''] || { bg: 'bg-gray-50', text: 'text-gray-600' };
-}
-
-// 리스트 뷰 카드
+// 리스트 뷰 카드 (크몽 스타일)
 function ProductListCard({ product, index }: { product: DisplayProduct; index: number }) {
   const [isLiked, setIsLiked] = useState(false);
-  const subjectStyle = getSubjectStyle(product.subject);
 
   return (
     <motion.div
@@ -110,79 +91,57 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
       transition={{ duration: 0.2, delay: index * 0.02 }}
     >
       <Link href={`/content/${product.id}`} className="block group">
-        <div className={cn(
-          'bg-white rounded-2xl p-6 transition-all duration-200',
-          'hover:shadow-toss-2'
-        )}>
+        <div className="bg-white rounded-xl p-5 hover:shadow-md transition-shadow duration-200">
           <div className="flex gap-5">
             {/* 콘텐츠 정보 */}
             <div className="flex-1 min-w-0">
-              {/* 태그 라인 */}
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-bold',
-                  subjectStyle.bg, subjectStyle.text
-                )}>
-                  {product.subject || '학습자료'}
-                </span>
-                {product.grade && (
-                  <span className="px-2.5 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg">
-                    {product.grade}
-                  </span>
-                )}
-                <span className="text-xs text-gray-400">• {formatRelativeTime(product.created_at)}</span>
-              </div>
-
-              {/* 제목 */}
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-1.5 line-clamp-1">
+              {/* 제목 - 크몽 스타일로 강조 */}
+              <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2 leading-snug">
                 {product.title}
               </h3>
 
-              {/* 설명 */}
-              {product.description && (
-                <p className="text-sm text-gray-500 mb-4 line-clamp-1">
-                  {product.description}
-                </p>
-              )}
-
-              {/* 하단: 창작자 + 메타 */}
-              <div className="flex items-center justify-between">
-                {/* 창작자 */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-gray-500" />
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700">{product.creator?.name || '익명'}</span>
-                </div>
-
-                {/* 통계 */}
-                <div className="flex items-center gap-4 text-sm">
-                  {product.rating > 0 && (
-                    <span className="flex items-center gap-1 text-amber-500">
-                      <Star className="w-4 h-4 fill-amber-400" />
-                      <span className="font-bold">{product.rating.toFixed(1)}</span>
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1 text-gray-400">
-                    <Download className="w-4 h-4" />
-                    <span className="font-medium">{product.download_count}</span>
-                  </span>
-                </div>
+              {/* 별점 + 리뷰 수 */}
+              <div className="flex items-center gap-1.5 mb-2">
+                {product.rating > 0 ? (
+                  <>
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span className="text-sm font-bold text-gray-900">{product.rating.toFixed(1)}</span>
+                    {product.rating_count > 0 && (
+                      <span className="text-sm text-gray-400">({product.rating_count})</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-sm text-gray-400">리뷰 없음</span>
+                )}
               </div>
+
+              {/* 가격 */}
+              <div className="mb-2">
+                {product.price === 0 ? (
+                  <span className="text-base font-bold text-blue-600">무료</span>
+                ) : (
+                  <span className="text-base font-bold text-gray-900">
+                    {formatCurrency(product.price)}~
+                  </span>
+                )}
+              </div>
+
+              {/* 크리에이터 */}
+              <span className="text-xs text-gray-400">
+                {product.creator?.name || '익명'}
+              </span>
             </div>
 
-            {/* 우측: 가격 + 찜 */}
-            <div className="flex flex-col items-end justify-between pl-5 min-w-[100px]">
+            {/* 우측: 찜 버튼 */}
+            <div className="flex flex-col items-end justify-start">
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   setIsLiked(!isLiked);
                 }}
                 className={cn(
-                  'p-2.5 rounded-xl transition-all duration-200',
-                  isLiked
-                    ? 'bg-red-50 scale-110'
-                    : 'hover:scale-110'
+                  'p-2 rounded-full transition-all duration-200',
+                  isLiked ? 'bg-red-50' : 'hover:bg-gray-50'
                 )}
               >
                 <Heart
@@ -192,18 +151,6 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
                   )}
                 />
               </button>
-              <div className="text-right">
-                {product.price === 0 ? (
-                  <span className="inline-block px-4 py-2 bg-blue-50 text-blue-600 text-lg font-bold rounded-xl">
-                    무료
-                  </span>
-                ) : (
-                  <div>
-                    <span className="block text-xs text-gray-400 mb-0.5">가격</span>
-                    <span className="text-xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

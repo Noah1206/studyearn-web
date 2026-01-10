@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Heart, Star, Download, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import { Heart, Star } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
 import { ContentThumbnail } from './ContentThumbnail';
 
 interface Product {
@@ -101,77 +100,44 @@ export function ContentCard({ product, index = 0 }: ContentCardProps) {
             </button>
           </div>
 
-          {/* 정보 영역 - 썸네일과 분리 */}
-          <div className="pt-4 flex flex-col flex-1">
-            {/* 태그 */}
-            <div className="flex items-center gap-1.5 mb-2">
-              <span
-                className={cn(
-                  'px-2.5 py-1 rounded-lg text-xs font-bold',
-                  subjectStyle.bg,
-                  subjectStyle.text
-                )}
-              >
-                {product.subject || '학습자료'}
-              </span>
-              {product.grade && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg">
-                  {product.grade}
-                </span>
-              )}
-            </div>
-
-            {/* 제목 */}
-            <h3 className="font-bold text-gray-900 group-hover:text-orange-500 transition-colors line-clamp-2 mb-2 flex-grow">
+          {/* 정보 영역 */}
+          <div className="pt-3.5 flex flex-col flex-1">
+            {/* 제목 - 크몽 스타일로 강조 */}
+            <h3 className="text-[15px] font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2.5 leading-snug flex-grow">
               {product.title}
             </h3>
 
-            {/* 크리에이터 */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-                {product.creator?.avatar_url ? (
-                  <img
-                    src={product.creator.avatar_url}
-                    alt={product.creator.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-3.5 h-3.5 text-gray-400" />
-                )}
-              </div>
-              <span className="text-sm text-gray-600 font-medium truncate">
-                {product.creator?.name || '익명'}
-              </span>
+            {/* 별점 + 리뷰 수 (크몽 스타일) */}
+            <div className="flex items-center gap-1.5 mb-2">
+              {product.rating > 0 ? (
+                <>
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-sm font-bold text-gray-900">{product.rating.toFixed(1)}</span>
+                  {product.rating_count > 0 && (
+                    <span className="text-sm text-gray-400">({product.rating_count})</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-sm text-gray-400">리뷰 없음</span>
+              )}
             </div>
 
-            {/* 통계 + 가격 */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-              <div className="flex items-center gap-3 text-sm">
-                {product.rating > 0 && (
-                  <span className="flex items-center gap-1 text-amber-500">
-                    <Star className="w-4 h-4 fill-amber-400" />
-                    <span className="font-bold">{product.rating.toFixed(1)}</span>
-                    {product.rating_count > 0 && (
-                      <span className="text-gray-400 text-xs">({product.rating_count})</span>
-                    )}
-                  </span>
-                )}
-                <span className="flex items-center gap-1 text-gray-400">
-                  <Download className="w-4 h-4" />
-                  <span className="font-medium">{product.download_count}</span>
-                </span>
-              </div>
-
-              {/* 가격 */}
+            {/* 가격 (크몽 스타일) */}
+            <div className="mb-2.5">
               {product.price === 0 ? (
-                <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-bold rounded-lg">
-                  무료
-                </span>
+                <span className="text-base font-bold text-blue-600">무료</span>
               ) : (
-                <span className="text-lg font-bold text-gray-900">
-                  {formatCurrency(product.price)}
+                <span className="text-base font-bold text-gray-900">
+                  {formatCurrency(product.price)}~
                 </span>
               )}
+            </div>
+
+            {/* 크리에이터 */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-400 truncate">
+                {product.creator?.name || '익명'}
+              </span>
             </div>
           </div>
         </div>

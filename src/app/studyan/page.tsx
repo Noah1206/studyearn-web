@@ -136,7 +136,7 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
       whileHover={{ y: -2, transition: { duration: 0.15, ease: "easeOut" } }}
     >
       <Link href={`/studyan/${user.id}`}>
-        <Card className="h-full overflow-hidden transition-all duration-200 border-gray-100 cursor-pointer group">
+        <Card className="h-full overflow-hidden transition-all duration-200 cursor-pointer group hover:shadow-md">
           <CardContent className="pt-4 pb-4 px-4 relative">
             {/* Avatar and Follow Button Row */}
             <div className="flex items-start justify-between mb-4">
@@ -256,7 +256,7 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
 function UserSkeleton() {
   return (
     <Card className="h-full">
-      <CardContent className="p-6">
+      <CardContent className="p-5">
         <div className="flex items-start gap-4 mb-4">
           <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1">
@@ -266,7 +266,7 @@ function UserSkeleton() {
         </div>
         <Skeleton className="h-4 w-full mb-2" />
         <Skeleton className="h-4 w-3/4 mb-4" />
-        <div className="flex gap-4 pt-4 border-t border-gray-100">
+        <div className="flex gap-4 pt-3">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-16" />
         </div>
