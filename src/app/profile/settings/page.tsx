@@ -107,26 +107,28 @@ function SettingsContent() {
 
       setUser(session.user);
 
-      // Load user preferences from database
-      const { data: preferences } = await supabase
-        .from('user_preferences')
-        .select('notification_settings, privacy_settings')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (preferences) {
-        if (preferences.notification_settings) {
-          setNotificationSettings(prev => ({
-            ...prev,
-            ...preferences.notification_settings,
-          }));
+      // API를 통해 preferences 로드 (RLS 우회)
+      try {
+        const response = await fetch('/api/me/preferences');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.preferences) {
+            if (data.preferences.notification_settings) {
+              setNotificationSettings(prev => ({
+                ...prev,
+                ...data.preferences.notification_settings,
+              }));
+            }
+            if (data.preferences.privacy_settings) {
+              setPrivacySettings(prev => ({
+                ...prev,
+                ...data.preferences.privacy_settings,
+              }));
+            }
+          }
         }
-        if (preferences.privacy_settings) {
-          setPrivacySettings(prev => ({
-            ...prev,
-            ...preferences.privacy_settings,
-          }));
-        }
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
       }
 
       setIsLoading(false);
@@ -162,18 +164,16 @@ function SettingsContent() {
   };
 
   const handleSaveNotifications = async () => {
-    if (!user || !supabase) return;
+    if (!user) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          notification_settings: notificationSettings,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+      const response = await fetch('/api/me/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notification_settings: notificationSettings }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to save');
     } catch (error) {
       console.error('Failed to save notification settings:', error);
     } finally {
@@ -182,18 +182,16 @@ function SettingsContent() {
   };
 
   const handleSavePrivacy = async () => {
-    if (!user || !supabase) return;
+    if (!user) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          privacy_settings: privacySettings,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+      const response = await fetch('/api/me/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privacy_settings: privacySettings }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to save');
     } catch (error) {
       console.error('Failed to save privacy settings:', error);
     } finally {
