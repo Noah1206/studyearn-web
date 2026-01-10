@@ -43,7 +43,7 @@ export async function POST(
       .select('id')
       .eq('content_id', id)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (existingLike) {
       // Unlike - remove the like

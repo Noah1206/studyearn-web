@@ -124,7 +124,7 @@ export async function GET(
         .select('id')
         .eq('content_id', id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       isLiked = !!like;
     } else if (!content.price || content.price === 0) {
