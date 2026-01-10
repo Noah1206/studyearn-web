@@ -61,56 +61,36 @@ export function Header() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
 
-    console.log('handleLogout started');
-
-    // 즉시 UI 상태 변경
-    clearUser();
+    // 즉시 UI 닫기
     setIsProfileOpen(false);
     setIsMenuOpen(false);
 
     try {
-      // 1. localStorage 전체에서 관련 데이터 클리어
+      // localStorage/sessionStorage 클리어
       if (typeof window !== 'undefined') {
-        const keysToRemove = Object.keys(localStorage).filter(
+        Object.keys(localStorage).filter(
           key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
-        );
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        ).forEach(key => localStorage.removeItem(key));
 
-        // sessionStorage도 클리어
-        const sessionKeysToRemove = Object.keys(sessionStorage).filter(
+        Object.keys(sessionStorage).filter(
           key => key.startsWith('sb-') || key.includes('supabase')
-        );
-        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+        ).forEach(key => sessionStorage.removeItem(key));
       }
 
-      // 2. 클라이언트에서 signOut 호출 (scope: 'global'로 모든 세션 종료)
-      if (supabase) {
-        const { error } = await supabase.auth.signOut({ scope: 'global' });
-        if (error) {
-          console.error('SignOut error:', error);
-        } else {
-          console.log('Client signOut successful');
-        }
-      }
+      // 클라이언트 signOut
+      await supabase?.auth.signOut({ scope: 'global' });
 
-      // 3. 서버 API로 로그아웃 (서버 쿠키 삭제) - credentials: 'include'로 쿠키 전송
-      console.log('Calling logout API...');
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      console.log('Logout API response:', response.status);
+      // 서버 API 호출
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
 
-      // 4. 응답이 성공하면 쿠키가 설정됨. 잠시 대기 후 리다이렉트
-      await new Promise(resolve => setTimeout(resolve, 100));
-
+      // User store 클리어
+      clearUser();
     } catch (err) {
-      console.error('Logout exception:', err);
-    } finally {
-      // 5. 새로고침으로 완전히 상태 초기화 (replace 대신 href 사용)
-      console.log('Redirecting to /');
-      window.location.href = '/';
+      console.error('Logout error:', err);
     }
+
+    // 홈으로 리다이렉트
+    window.location.href = '/';
   };
 
   const handleSwitchMode = () => {
@@ -231,11 +211,12 @@ export function Header() {
                     <div className="border-t border-gray-100 pt-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          console.log('Logout button clicked');
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           handleLogout();
                         }}
-                        className="flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error/5 w-full text-left transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error/5 w-full text-left transition-colors cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
                         <span className="text-sm">로그아웃</span>
@@ -342,11 +323,13 @@ export function Header() {
                     </button>
                   )}
                   <button
-                    onClick={() => {
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       handleLogout();
-                      setIsMenuOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-3 text-error hover:bg-error/5 rounded-lg"
+                    className="block w-full text-left px-4 py-3 text-error hover:bg-error/5 rounded-lg cursor-pointer"
                   >
                     로그아웃
                   </button>
