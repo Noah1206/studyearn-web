@@ -13,6 +13,7 @@ interface ActiveFilter {
 interface FilterTagBarProps {
   activeFilters: ActiveFilter[];
   onRemoveFilter: (filterId: string, type: string) => void;
+  onAddFilter?: (filterId: string, type: string, label: string) => void;
   onClearAll: () => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
@@ -131,6 +132,7 @@ function Dropdown({
 export function FilterTagBar({
   activeFilters,
   onRemoveFilter,
+  onAddFilter,
   onClearAll: _onClearAll,
   sortBy,
   onSortChange,
@@ -207,6 +209,8 @@ export function FilterTagBar({
           onClick={() => {
             if (isFreeOnly) {
               onRemoveFilter('free', 'price');
+            } else {
+              onAddFilter?.('free', 'price', '무료');
             }
           }}
           className={cn(

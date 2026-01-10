@@ -452,6 +452,27 @@ export default function ProductsPage() {
     }
   };
 
+  // 필터 추가 핸들러
+  const handleAddFilter = (filterId: string, type: string) => {
+    switch (type) {
+      case 'category':
+        setFilters(prev => ({ ...prev, category: filterId }));
+        break;
+      case 'grade':
+        setFilters(prev => ({
+          ...prev,
+          grades: prev.grades.includes(filterId) ? prev.grades : [...prev.grades, filterId],
+        }));
+        break;
+      case 'price':
+        setFilters(prev => ({ ...prev, freeOnly: true }));
+        break;
+      case 'rating':
+        setFilters(prev => ({ ...prev, minRating: 4 }));
+        break;
+    }
+  };
+
   // 전체 필터 초기화
   const handleClearAllFilters = () => {
     setFilters({
@@ -584,6 +605,7 @@ export default function ProductsPage() {
             <FilterTagBar
               activeFilters={activeFilters}
               onRemoveFilter={handleRemoveFilter}
+              onAddFilter={handleAddFilter}
               onClearAll={handleClearAllFilters}
               sortBy={sortBy}
               onSortChange={setSortBy}
