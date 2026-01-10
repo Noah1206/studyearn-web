@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
@@ -12,7 +12,6 @@ import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/s
 
 export function Header() {
   const router = useRouter();
-  const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

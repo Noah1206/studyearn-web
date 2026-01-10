@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -22,7 +22,7 @@ type TwoFAStatus = 'disabled' | 'setup' | 'enabled';
 
 export default function TwoFactorAuthPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const [isLoading, setIsLoading] = useState(true);
   const [twoFAStatus, setTwoFAStatus] = useState<TwoFAStatus>('disabled');

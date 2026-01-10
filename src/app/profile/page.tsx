@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import ProfileClient from './ProfileClient';
+import { Spinner } from '@/components/ui';
 
 // Prefetched data types
 export interface PrefetchedProfileData {
@@ -107,5 +109,9 @@ export default async function ProfilePage() {
     };
   }
 
-  return <ProfileClient prefetchedData={prefetchedData} />;
+  return (
+    <Suspense fallback={<div className="min-h-[calc(100vh-4rem)] flex items-center justify-center"><Spinner size="lg" /></div>}>
+      <ProfileClient prefetchedData={prefetchedData} />
+    </Suspense>
+  );
 }

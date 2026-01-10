@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -102,7 +102,8 @@ const CREATOR_MENUS = [
 
 export default function CreatorProfilePage() {
   const router = useRouter();
-  const supabase = createClient();
+  // Supabase client를 useMemo로 캐싱
+  const supabase = useMemo(() => createClient(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // User Store

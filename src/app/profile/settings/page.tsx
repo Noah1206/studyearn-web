@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -44,16 +44,18 @@ interface PrivacySettings {
 }
 
 type SettingsSection = 'notifications' | 'privacy' | 'payment' | 'help' | 'account';
+const validSections: SettingsSection[] = ['notifications', 'privacy', 'payment', 'help', 'account'];
 
-export default function SettingsPage() {
+// useSearchParams를 사용하는 내부 컴포넌트
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  // Supabase client를 useMemo로 캐싱
+  const supabase = useMemo(() => createClient(), []);
   const { clearUser, userType, profile } = useUserStore();
 
   // URL 쿼리 파라미터에서 초기 섹션 가져오기
   const tabParam = searchParams.get('tab') as SettingsSection | null;
-  const validSections: SettingsSection[] = ['notifications', 'privacy', 'payment', 'help', 'account'];
   const initialSection = tabParam && validSections.includes(tabParam) ? tabParam : 'notifications';
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -774,5 +776,18 @@ export default function SettingsPage() {
         </motion.div>
       )}
     </motion.div>
+  );
+}
+
+// Suspense로 감싸서 export
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-neutral-light">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }
