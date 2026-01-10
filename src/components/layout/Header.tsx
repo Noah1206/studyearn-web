@@ -79,9 +79,20 @@ export function Header() {
       }
     };
 
-    // getSession()으로 빠르게 로컬 세션 확인 (미들웨어에서 이미 검증됨)
+    // 세션 확인 - getSession() 실패 시 getUser()로 재시도
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      // 먼저 getSession()으로 빠르게 확인
+      let { data: { session } } = await supabase.auth.getSession();
+
+      // 세션이 없으면 getUser()로 서버에서 확인 (쿠키 동기화 문제 해결)
+      if (!session?.user) {
+        const { data: { user: serverUser } } = await supabase.auth.getUser();
+        if (serverUser) {
+          // getUser()로 찾았으면 세션도 복원됨
+          const result = await supabase.auth.getSession();
+          session = result.data.session;
+        }
+      }
 
       if (!session?.user) {
         setUser(null);
