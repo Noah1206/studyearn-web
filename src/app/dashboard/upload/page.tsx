@@ -141,6 +141,9 @@ function UploadPageContent() {
   // 간소화된 상태
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [customSubject, setCustomSubject] = useState('');
   const [showCustomSubject, setShowCustomSubject] = useState(false);
@@ -247,6 +250,41 @@ function UploadPageContent() {
 
     setFile(selectedFile);
     setError(null);
+  };
+
+  // 썸네일 선택
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    // 이미지 파일만 허용
+    if (!selectedFile.type.startsWith('image/')) {
+      setError('썸네일은 이미지 파일만 가능해요');
+      return;
+    }
+
+    // 5MB 제한
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError('썸네일 크기는 5MB 이하여야 해요');
+      return;
+    }
+
+    setThumbnailFile(selectedFile);
+    setError(null);
+
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setThumbnailPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(selectedFile);
+  };
+
+  // 썸네일 제거
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
   };
 
   // 과목 태그 토글
@@ -523,6 +561,30 @@ function UploadPageContent() {
       const subjectValue = getSubjectLabel();
       const gradeValue = getGradeLabel();
 
+      // 썸네일 업로드 (있는 경우)
+      let uploadedThumbnailUrl: string | null = null;
+      if (thumbnailFile) {
+        const thumbnailName = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const thumbnailPath = `contents/${thumbnailName}`;
+
+        const { error: thumbnailUploadError } = await supabase.storage
+          .from('contents')
+          .upload(thumbnailPath, thumbnailFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (thumbnailUploadError) {
+          console.error('Thumbnail upload error:', thumbnailUploadError);
+          // 썸네일 업로드 실패는 무시하고 계속 진행
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('contents')
+            .getPublicUrl(thumbnailPath);
+          uploadedThumbnailUrl = publicUrl;
+        }
+      }
+
       if (contentType === 'routine') {
         // 루틴 데이터
         const routineData = {
@@ -537,6 +599,7 @@ function UploadPageContent() {
           routine_days: routineType === 'custom' ? customDays : null,
           routine_items: routineItems,
           url: 'routine://placeholder',
+          thumbnail_url: uploadedThumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
@@ -590,9 +653,9 @@ function UploadPageContent() {
           .from('contents')
           .getPublicUrl(filePath);
 
-        // 썸네일 URL 설정 (이미지인 경우 원본 URL 사용)
-        let thumbnailUrl = null;
-        if (fileType === 'image') {
+        // 썸네일 URL 설정 (업로드된 썸네일 > 이미지인 경우 원본 URL)
+        let thumbnailUrl = uploadedThumbnailUrl;
+        if (!thumbnailUrl && fileType === 'image') {
           thumbnailUrl = publicUrl;
         }
 
@@ -1250,6 +1313,48 @@ function UploadPageContent() {
 
           {/* 오른쪽: 태그 및 설정 */}
           <div className="space-y-6 h-fit">
+            {/* 썸네일 업로드 (선택) */}
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-3">
+                썸네일 <span className="text-gray-400 font-normal">(선택)</span>
+              </p>
+              {thumbnailPreview ? (
+                <div className="relative">
+                  <img
+                    src={thumbnailPreview}
+                    alt="썸네일 미리보기"
+                    className="w-full aspect-video object-cover rounded-xl border border-gray-200"
+                  />
+                  <button
+                    onClick={removeThumbnail}
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  className="w-full flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-orange-300 hover:bg-orange-50/50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-900">썸네일 추가</p>
+                    <p className="text-sm text-gray-500">이미지 파일 (최대 5MB)</p>
+                  </div>
+                </button>
+              )}
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailSelect}
+                className="hidden"
+              />
+            </div>
+
             {/* 과목 태그 */}
             <div>
               <p className="text-sm font-medium text-gray-700 mb-3">과목</p>

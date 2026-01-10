@@ -156,7 +156,7 @@ export default function LikedContentsPage() {
                 <Card key={content.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-0">
                     {/* Thumbnail */}
-                    <div className="aspect-video bg-gray-100 relative">
+                    <Link href={`/content/${content.id}`} className="block aspect-video bg-gray-100 relative">
                       {content.thumbnail_url ? (
                         <Image
                           src={content.thumbnail_url}
@@ -173,9 +173,13 @@ export default function LikedContentsPage() {
                         {content.content_type ? contentTypeLabels[content.content_type] : '파일'}
                       </Badge>
                       <button
-                        onClick={() => handleUnlike(content.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleUnlike(content.id);
+                        }}
                         disabled={unlikingId === content.id}
-                        className="absolute top-2 right-2 p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
+                        className="absolute top-2 right-2 p-2 bg-white/90 rounded-full hover:bg-white transition-colors z-10"
                       >
                         {unlikingId === content.id ? (
                           <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
@@ -183,7 +187,7 @@ export default function LikedContentsPage() {
                           <Heart className="w-5 h-5 text-red-500 fill-red-500" />
                         )}
                       </button>
-                    </div>
+                    </Link>
 
                     {/* Info */}
                     <div className="p-4">
