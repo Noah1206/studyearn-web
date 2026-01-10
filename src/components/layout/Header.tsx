@@ -26,13 +26,16 @@ export function Header() {
     isCreatorOnboarded,
     hasBeenCreator,
     profile,
+    isHydrated,
     revertToRunner,
     switchToCreator,
     syncCreatorStatus,
     clearUser,
   } = useUserStore();
 
-  const isCreatorMode = userType === 'creator' && isCreatorOnboarded;
+  // Store가 hydrate된 후에만 creator 상태 적용
+  const isCreatorMode = isHydrated && userType === 'creator' && isCreatorOnboarded;
+  const canSwitchMode = isHydrated && hasBeenCreator && isCreatorOnboarded;
 
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
@@ -166,7 +169,7 @@ export function Header() {
     if (isCreatorMode) {
       revertToRunner();
       router.push('/');
-    } else if (hasBeenCreator && isCreatorOnboarded) {
+    } else if (canSwitchMode) {
       switchToCreator();
       router.push('/dashboard');
     }
@@ -264,7 +267,7 @@ export function Header() {
                       </Link>
                     </div>
                     {/* 모드 전환 */}
-                    {hasBeenCreator && isCreatorOnboarded && (
+                    {canSwitchMode && (
                       <div className="border-t border-gray-100 pt-1">
                         <button
                           onClick={handleSwitchMode}
@@ -379,7 +382,7 @@ export function Header() {
                   >
                     내 구매 내역
                   </Link>
-                  {hasBeenCreator && isCreatorOnboarded && (
+                  {canSwitchMode && (
                     <button
                       onClick={() => {
                         handleSwitchMode();
