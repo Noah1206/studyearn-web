@@ -84,7 +84,7 @@ export async function GET(
       // Also get profile info for avatar_url fallback
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, avatar_url, bio')
+        .select('nickname, username, avatar_url, bio')
         .eq('id', content.creator_id)
         .maybeSingle();
       profileInfo = profile;
@@ -156,7 +156,7 @@ export async function GET(
       routine_items: content.routine_items,
       allow_preview: content.allow_preview ?? true,
       creator: {
-        name: creatorInfo?.display_name || profileInfo?.username || '익명',
+        name: creatorInfo?.display_name || profileInfo?.nickname || profileInfo?.username || '익명',
         avatar_url: creatorInfo?.profile_image_url || profileInfo?.avatar_url || null,
         bio: creatorInfo?.bio || profileInfo?.bio || null,
       },

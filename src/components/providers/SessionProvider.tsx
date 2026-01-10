@@ -44,7 +44,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       // 프로필 정보 가져오기
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, bio')
+        .select('id, nickname, username, avatar_url, bio')
         .eq('id', userId)
         .maybeSingle();
 
@@ -53,12 +53,13 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         const user = session?.user;
         const kakaoNickname = user?.user_metadata?.full_name ||
                              user?.user_metadata?.name ||
+                             user?.user_metadata?.user_name ||
                              user?.user_metadata?.preferred_username;
 
         setProfile({
           id: profile.id,
           email: user?.email || '',
-          nickname: profile.username || kakaoNickname || '사용자',
+          nickname: profile.nickname || profile.username || kakaoNickname || '사용자',
           username: profile.username,
           avatar_url: profile.avatar_url || user?.user_metadata?.avatar_url,
           bio: profile.bio,
