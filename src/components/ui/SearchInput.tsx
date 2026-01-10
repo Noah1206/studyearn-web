@@ -4,11 +4,11 @@ import { forwardRef, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
 
-export interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface SearchInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /** Show search icon on the left */
   showIcon?: boolean;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  inputSize?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -30,7 +30,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       className,
       placeholder = '검색어를 입력하세요',
       showIcon = false,
-      size = 'md',
+      inputSize = 'md',
       disabled,
       ...props
     },
@@ -52,7 +52,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       <div className="relative w-full">
         {showIcon && (
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            <Search className={iconSizeStyles[size]} />
+            <Search className={iconSizeStyles[inputSize]} />
           </div>
         )}
 
@@ -71,7 +71,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             'focus:outline-none focus:border-gray-300',
             'focus:ring-2 focus:ring-gray-100',
             // Size
-            sizeStyles[size],
+            sizeStyles[inputSize],
             // Icon padding
             showIcon && 'pl-11',
             // Disabled state
