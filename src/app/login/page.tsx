@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,7 +25,7 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // 전화번호 포맷팅 (010-1234-5678 형식)
   const formatPhoneNumber = (text: string) => {
@@ -78,7 +78,7 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -92,7 +92,14 @@ function LoginForm() {
         return;
       }
 
-      router.push(redirectTo);
+      // 세션이 성공적으로 설정되었는지 확인
+      if (data.session) {
+        // 쿠키가 설정될 시간을 주고 전체 페이지 새로고침으로 이동
+        await new Promise(resolve => setTimeout(resolve, 100));
+        window.location.href = redirectTo;
+      } else {
+        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
     } catch {
       setError('로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {

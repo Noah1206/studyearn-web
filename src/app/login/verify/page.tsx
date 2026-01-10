@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -21,7 +21,7 @@ function VerifyLoginContent() {
   const [timer, setTimer] = useState(180); // 3분 (180초)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // 타이머 카운트다운
   useEffect(() => {
