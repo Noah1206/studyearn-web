@@ -76,19 +76,19 @@ export function Header() {
       }
     };
 
-    // getUser()로 서버에서 세션 검증 및 리프레시
+    // getSession()으로 빠르게 로컬 세션 확인 (미들웨어에서 이미 검증됨)
     const initAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error || !user) {
+      if (!session?.user) {
         setUser(null);
         return;
       }
 
-      setUser(user);
+      setUser(session.user);
 
       // 크리에이터 상태 백그라운드 동기화 (UI 블로킹 X)
-      syncUserCreatorStatus(user.id);
+      syncUserCreatorStatus(session.user.id);
     };
     initAuth();
 
