@@ -94,11 +94,21 @@ function SettingsContent() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
+    // 5초 타임아웃 - 어떤 상황에서도 로딩 종료
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('Settings page load timeout - forcing load complete');
+        setIsLoading(false);
+      }
+    }, 5000);
+
     const fetchUserAndSettings = async () => {
       // supabase 클라이언트가 없으면 로그인 페이지로 리다이렉트
       if (!supabase) {
         console.error('Supabase client not available');
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
         router.push('/login');
         return;
       }
@@ -106,6 +116,8 @@ function SettingsContent() {
       try {
         // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
 
         if (sessionError) {
           console.error('Session error:', sessionError);
@@ -115,6 +127,7 @@ function SettingsContent() {
         }
 
         if (!session?.user) {
+          setIsLoading(false);
           router.push('/login');
           return;
         }
@@ -124,7 +137,7 @@ function SettingsContent() {
         // API를 통해 preferences 로드 (RLS 우회)
         try {
           const response = await fetch('/api/me/preferences');
-          if (response.ok) {
+          if (response.ok && isMounted) {
             const data = await response.json();
             if (data.preferences) {
               if (data.preferences.notification_settings) {
@@ -146,13 +159,18 @@ function SettingsContent() {
         }
       } catch (error) {
         console.error('Error fetching user and settings:', error);
-        router.push('/login');
+        if (isMounted) router.push('/login');
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchUserAndSettings();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, [supabase, router]);
 
   const handleLogout = async () => {
