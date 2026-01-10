@@ -1,11 +1,19 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/types/database';
 
+// 싱글톤 인스턴스
+let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null;
+
 /**
  * Create Supabase client for browser/client components
- * Returns null during build time when env vars are not available
+ * Uses singleton pattern to ensure consistent session state
  */
 export function createClient() {
+  // 이미 인스턴스가 있으면 재사용
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -18,5 +26,7 @@ export function createClient() {
     throw new Error('Missing Supabase environment variables');
   }
 
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  // 싱글톤 인스턴스 생성
+  supabaseInstance = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  return supabaseInstance;
 }
