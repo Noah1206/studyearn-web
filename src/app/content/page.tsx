@@ -314,14 +314,20 @@ export default function ProductsPage() {
 
   // 찜하기 토글
   const handleToggleLike = async (contentId: string) => {
-    if (isLiking) return;
+    console.log('handleToggleLike called:', contentId);
+    if (isLiking) {
+      console.log('Already liking, skipping');
+      return;
+    }
     setIsLiking(true);
 
     try {
+      console.log('Fetching like API...');
       const response = await fetch(`/api/content/${contentId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      console.log('Response status:', response.status);
 
       if (response.status === 401) {
         // 로그인 필요
@@ -330,7 +336,9 @@ export default function ProductsPage() {
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
       if (response.ok) {
+        console.log('Like success, isLiked:', data.isLiked);
         setLikedIds(prev => {
           const newSet = new Set(prev);
           if (data.isLiked) {

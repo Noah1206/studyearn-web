@@ -275,24 +275,33 @@ export default function ProductDetailPage() {
 
   // 찜하기/찜 취소 (자신의 콘텐츠도 가능)
   const handleLike = async () => {
-    if (isLiking) return;
+    console.log('handleLike called, id:', id);
+    if (isLiking) {
+      console.log('Already liking, skipping');
+      return;
+    }
 
     setIsLiking(true);
     try {
+      console.log('Fetching like API...');
       const response = await fetch(`/api/content/${id}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      console.log('Response status:', response.status);
 
       if (!response.ok && response.status === 401) {
         // Not logged in, redirect to login
+        console.log('Not logged in, redirecting...');
         router.push(`/login?redirectTo=/content/${id}`);
         return;
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
+        console.log('Like success, isLiked:', data.isLiked);
         setIsLiked(data.isLiked);
         if (product) {
           setProduct({
