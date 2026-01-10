@@ -536,19 +536,6 @@ function SettingsContent() {
                       <ChevronRight className="w-5 h-5 text-gray-300" />
                     </Link>
 
-                    <Link
-                      href="/privacy"
-                      className="flex items-center gap-4 py-4"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-gray-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">개인정보처리방침</p>
-                        <p className="text-xs text-gray-400">개인정보 처리 안내</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-300" />
-                    </Link>
                   </div>
                 </CardContent>
               </Card>

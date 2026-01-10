@@ -124,10 +124,6 @@ export default function SignupPage() {
             {/* Terms */}
             <p className="text-center text-xs text-gray-500 leading-relaxed">
               인증을 요청하면 스터플의{' '}
-              <Link href="/privacy" className="text-gray-700 underline">
-                개인정보처리방침
-              </Link>{' '}
-              및{' '}
               <Link href="/terms" className="text-gray-700 underline">
                 이용약관
               </Link>

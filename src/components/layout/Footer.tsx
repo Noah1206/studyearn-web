@@ -64,11 +64,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  개인정보처리방침
-                </Link>
-              </li>
-              <li>
                 <a
                   href="mailto:support@stuple.kr"
                   className="text-gray-400 hover:text-white transition-colors text-sm"

@@ -224,13 +224,6 @@ export default function HelpPage() {
                 <span className="text-gray-700">이용약관</span>
                 <ExternalLink className="w-4 h-4 text-gray-400" />
               </Link>
-              <Link
-                href="/privacy"
-                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <span className="text-gray-700">개인정보 처리방침</span>
-                <ExternalLink className="w-4 h-4 text-gray-400" />
-              </Link>
             </div>
           </CardContent>
         </Card>

@@ -35,7 +35,6 @@ const INQUIRY_TYPES = [
 const QUICK_LINKS = [
   { label: '자주 묻는 질문', href: '/faq', icon: HelpCircle },
   { label: '이용약관', href: '/terms', icon: FileText },
-  { label: '개인정보처리방침', href: '/privacy', icon: FileText },
 ];
 
 export default function ContactPage() {

@@ -1291,7 +1291,6 @@ export default function HomePage() {
               <h4 className="text-gray-900 font-bold mb-4">법적 고지</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/terms" className="text-gray-500 hover:text-gray-900 transition-colors">이용약관</Link></li>
-                <li><Link href="/privacy" className="text-gray-500 hover:text-gray-900 transition-colors">개인정보처리방침</Link></li>
               </ul>
             </div>
           </div>
