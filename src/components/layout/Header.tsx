@@ -106,14 +106,26 @@ export function Header() {
         console.error('Supabase client is null');
         return;
       }
-      console.log('Calling signOut...');
-      const { error } = await supabase.auth.signOut();
+
+      // 먼저 로컬 상태 클리어
+      clearUser();
+      setIsProfileOpen(false);
+
+      console.log('Calling signOut with global scope...');
+      // OAuth 로그아웃 시 scope: 'global' 필요
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       console.log('signOut completed, error:', error);
+
       if (error) {
         console.error('Logout error:', error);
       }
-      clearUser();
-      setIsProfileOpen(false);
+
+      // localStorage에서 Supabase 관련 데이터 클리어
+      const keysToRemove = Object.keys(localStorage).filter(
+        key => key.startsWith('sb-') || key.includes('supabase')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
       console.log('Redirecting to /');
       // 하드 리다이렉트로 세션 상태 완전 반영
       window.location.href = '/';
@@ -121,6 +133,11 @@ export function Header() {
       console.error('Logout exception:', err);
       // 에러가 나도 로컬 상태는 클리어하고 리다이렉트
       clearUser();
+      // localStorage 클리어 시도
+      const keysToRemove = Object.keys(localStorage).filter(
+        key => key.startsWith('sb-') || key.includes('supabase')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       window.location.href = '/';
     }
   };
