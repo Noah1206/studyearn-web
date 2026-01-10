@@ -74,20 +74,27 @@ export async function POST(
       });
     } else {
       // Like - add the like
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('content_likes')
         .insert({
           content_id: id,
           user_id: user.id,
-        });
+        })
+        .select();
 
       if (insertError) {
         console.error('Failed to like:', insertError);
         return NextResponse.json(
-          { error: '찜하기에 실패했습니다.' },
+          {
+            error: '찜하기에 실패했습니다.',
+            details: insertError.message,
+            code: insertError.code,
+          },
           { status: 500 }
         );
       }
+
+      console.log('Like inserted:', insertData);
 
       // Increment like count
       await supabase

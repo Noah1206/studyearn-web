@@ -300,9 +300,13 @@ export default function ProductDetailPage() {
             like_count: data.like_count,
           });
         }
+      } else {
+        console.error('Like API error:', data);
+        alert(data.error || '찜하기에 실패했습니다.');
       }
     } catch (error) {
       console.error('Like failed:', error);
+      alert('찜하기 요청 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
     }
