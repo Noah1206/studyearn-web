@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/content/[id]/like
@@ -13,9 +13,20 @@ export async function POST(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    // Check admin client is available
+    if (!adminClient) {
+      console.error('Like API - Admin client not available (missing SUPABASE_SERVICE_ROLE_KEY)');
+      return NextResponse.json(
+        { error: '서버 설정 오류입니다.' },
+        { status: 500 }
+      );
+    }
 
     // Check authentication
     const { data: { user } } = await supabase.auth.getUser();
+    console.log('Like API - User:', user?.id, 'Content ID:', id);
     if (!user) {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
@@ -23,12 +34,14 @@ export async function POST(
       );
     }
 
-    // Check if content exists
-    const { data: content, error: contentError } = await supabase
+    // Check if content exists (use admin client to bypass RLS)
+    const { data: content, error: contentError } = await adminClient
       .from('contents')
       .select('id, like_count')
       .eq('id', id)
       .single();
+
+    console.log('Like API - Content check:', content?.id, 'Error:', contentError?.message);
 
     if (contentError || !content) {
       return NextResponse.json(
@@ -37,17 +50,19 @@ export async function POST(
       );
     }
 
-    // Check if already liked
-    const { data: existingLike } = await supabase
+    // Check if already liked (use admin client to bypass RLS)
+    const { data: existingLike } = await adminClient
       .from('content_likes')
       .select('id')
       .eq('content_id', id)
       .eq('user_id', user.id)
       .maybeSingle();
 
+    console.log('Like API - Existing like:', existingLike);
+
     if (existingLike) {
-      // Unlike - remove the like
-      const { error: deleteError } = await supabase
+      // Unlike - remove the like (use admin client to bypass RLS)
+      const { error: deleteError } = await adminClient
         .from('content_likes')
         .delete()
         .eq('content_id', id)
@@ -61,11 +76,13 @@ export async function POST(
         );
       }
 
-      // Decrement like count
-      await supabase
+      // Decrement like count (use admin client)
+      await adminClient
         .from('contents')
         .update({ like_count: Math.max(0, (content.like_count || 0) - 1) })
         .eq('id', id);
+
+      console.log('Like API - Unlike success for content:', id);
 
       return NextResponse.json({
         isLiked: false,
@@ -73,8 +90,8 @@ export async function POST(
         message: '찜이 취소되었습니다.',
       });
     } else {
-      // Like - add the like
-      const { data: insertData, error: insertError } = await supabase
+      // Like - add the like (use admin client to bypass RLS)
+      const { data: insertData, error: insertError } = await adminClient
         .from('content_likes')
         .insert({
           content_id: id,
@@ -94,10 +111,10 @@ export async function POST(
         );
       }
 
-      console.log('Like inserted:', insertData);
+      console.log('Like API - Like inserted:', insertData);
 
-      // Increment like count
-      await supabase
+      // Increment like count (use admin client)
+      await adminClient
         .from('contents')
         .update({ like_count: (content.like_count || 0) + 1 })
         .eq('id', id);
