@@ -273,49 +273,34 @@ export default function ProductDetailPage() {
     }
   };
 
-  // 찜하기/찜 취소 (자신의 콘텐츠도 가능)
+  // 찜하기/찜 취소
   const handleLike = async () => {
-    console.log('handleLike called, id:', id);
-    if (isLiking) {
-      console.log('Already liking, skipping');
-      return;
-    }
-
+    if (isLiking) return;
     setIsLiking(true);
+
     try {
-      console.log('Fetching like API...');
       const response = await fetch(`/api/content/${id}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
-      console.log('Response status:', response.status);
 
-      if (!response.ok && response.status === 401) {
-        // Not logged in, redirect to login
-        console.log('Not logged in, redirecting...');
+      if (response.status === 401) {
         router.push(`/login?redirectTo=/content/${id}`);
         return;
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
-
       if (response.ok) {
-        console.log('Like success, isLiked:', data.isLiked);
         setIsLiked(data.isLiked);
+        // 좋아요 수 업데이트
         if (product) {
           setProduct({
             ...product,
-            like_count: data.like_count,
+            like_count: product.like_count + (data.isLiked ? 1 : -1),
           });
         }
-      } else {
-        console.error('Like API error:', data);
-        alert(data.error || '찜하기에 실패했습니다.');
       }
     } catch (error) {
       console.error('Like failed:', error);
-      alert('찜하기 요청 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
     }

@@ -66,13 +66,7 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
   const handleLikeClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('ContentCard handleLikeClick - product.id:', product.id);
-    console.log('ContentCard handleLikeClick - onToggleLike exists:', !!onToggleLike);
-    if (onToggleLike) {
-      onToggleLike(product.id);
-    } else {
-      console.warn('onToggleLike is not provided!');
-    }
+    onToggleLike?.(product.id);
   };
 
   return (
@@ -86,16 +80,12 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
       <button
         type="button"
         onClick={handleLikeClick}
-        className={cn(
-          'absolute top-3 right-3 z-10 p-2 rounded-full transition-all duration-200',
-          'bg-white/80 backdrop-blur-sm hover:bg-white',
-          isLiked && 'bg-red-50 hover:bg-red-100'
-        )}
+        className="absolute top-2 right-2 z-10 p-1.5 transition-all duration-200"
       >
         <Heart
           className={cn(
-            'w-5 h-5 transition-colors',
-            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'
+            'w-4 h-4 transition-colors',
+            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-300 hover:text-gray-400'
           )}
         />
       </button>

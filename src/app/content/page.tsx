@@ -101,15 +101,12 @@ function ProductListCard({ product, index, likedIds, onToggleLike }: { product: 
       <button
         type="button"
         onClick={handleLikeClick}
-        className={cn(
-          'absolute top-5 right-5 z-10 p-2 rounded-full transition-all duration-200',
-          isLiked ? 'bg-red-50' : 'hover:bg-gray-50'
-        )}
+        className="absolute top-5 right-5 z-10 p-1.5 transition-all duration-200"
       >
         <Heart
           className={cn(
-            'w-5 h-5 transition-colors',
-            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-300'
+            'w-4 h-4 transition-colors',
+            isLiked ? 'text-red-500 fill-red-500' : 'text-gray-300 hover:text-gray-400'
           )}
         />
       </button>
@@ -320,31 +317,21 @@ export default function ProductsPage() {
 
   // 찜하기 토글
   const handleToggleLike = async (contentId: string) => {
-    console.log('handleToggleLike called:', contentId);
-    if (isLiking) {
-      console.log('Already liking, skipping');
-      return;
-    }
+    if (isLiking) return;
     setIsLiking(true);
 
     try {
-      console.log('Fetching like API...');
       const response = await fetch(`/api/content/${contentId}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
-      console.log('Response status:', response.status);
 
       if (response.status === 401) {
-        // 로그인 필요
         window.location.href = `/login?redirectTo=/content`;
         return;
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
       if (response.ok) {
-        console.log('Like success, isLiked:', data.isLiked);
         setLikedIds(prev => {
           const newSet = new Set(prev);
           if (data.isLiked) {
@@ -354,13 +341,9 @@ export default function ProductsPage() {
           }
           return newSet;
         });
-      } else {
-        console.error('Like API error:', data);
-        alert(data.error || '찜하기에 실패했습니다.');
       }
     } catch (error) {
       console.error('Like toggle failed:', error);
-      alert('찜하기 요청 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
     }
