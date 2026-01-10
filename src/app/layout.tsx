@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { HeaderWrapper, FooterWrapper } from '@/components/layout';
 import { Providers } from '@/components/providers';
+import { createClient } from '@/lib/supabase/server';
 import './globals.css';
 
 // Optimize font loading with next/font
@@ -66,11 +67,15 @@ export const viewport: Viewport = {
   themeColor: '#1A1A1A',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // 서버에서 세션 읽기
+  const supabase = await createClient();
+  const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+
   return (
     <html lang="ko" className={inter.variable}>
       <head>
@@ -86,7 +91,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-gray-50 flex flex-col antialiased">
-        <Providers>
+        <Providers initialSession={session}>
           <HeaderWrapper />
           <main className="flex-1">{children}</main>
           <FooterWrapper />

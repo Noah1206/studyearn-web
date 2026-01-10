@@ -1,11 +1,14 @@
 'use client';
 
-import { ReactNode, Suspense, useState } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider, PageLoader } from '@/components/ui';
+import { SessionProvider } from './SessionProvider';
+import type { Session } from '@supabase/supabase-js';
 
 interface ProvidersProps {
   children: ReactNode;
+  initialSession: Session | null;
 }
 
 function makeQueryClient() {
@@ -40,7 +43,7 @@ function getQueryClient() {
   }
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, initialSession }: ProvidersProps) {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial
@@ -49,12 +52,14 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider position="top-center">
-        <Suspense fallback={null}>
-          <PageLoader />
-        </Suspense>
-        {children}
-      </ToastProvider>
+      <SessionProvider initialSession={initialSession}>
+        <ToastProvider position="top-center">
+          <Suspense fallback={null}>
+            <PageLoader />
+          </Suspense>
+          {children}
+        </ToastProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

@@ -8,11 +8,12 @@ import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } f
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
-import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { useSession } from '@/components/providers';
 
 export function Header() {
   const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  // 서버에서 전달받은 세션 사용
+  const { user, isLoading: isSessionLoading } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -54,15 +55,15 @@ export function Header() {
     };
   }, [isProfileOpen]);
 
+  // 크리에이터 상태 동기화
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !user) return;
 
-    // 크리에이터 상태 동기화 함수
-    const syncUserCreatorStatus = async (userId: string) => {
+    const syncUserCreatorStatus = async () => {
       const { data: creatorSettings } = await supabase
         .from('creator_settings')
         .select('display_name, bio, profile_image_url, is_verified')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .single();
 
       if (creatorSettings) {
@@ -74,49 +75,12 @@ export function Header() {
           total_subscribers: 0,
         });
       } else {
-        // No creator settings - user has never completed creator onboarding
         syncCreatorStatus(false);
       }
     };
 
-    // 세션 확인 - getSession() 실패 시 getUser()로 재시도
-    const initAuth = async () => {
-      // 먼저 getSession()으로 빠르게 확인
-      let { data: { session } } = await supabase.auth.getSession();
-
-      // 세션이 없으면 getUser()로 서버에서 확인 (쿠키 동기화 문제 해결)
-      if (!session?.user) {
-        const { data: { user: serverUser } } = await supabase.auth.getUser();
-        if (serverUser) {
-          // getUser()로 찾았으면 세션도 복원됨
-          const result = await supabase.auth.getSession();
-          session = result.data.session;
-        }
-      }
-
-      if (!session?.user) {
-        setUser(null);
-        return;
-      }
-
-      setUser(session.user);
-
-      // 크리에이터 상태 백그라운드 동기화 (UI 블로킹 X)
-      syncUserCreatorStatus(session.user.id);
-    };
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
-
-      // 로그인 시 크리에이터 상태도 동기화
-      if (session?.user) {
-        await syncUserCreatorStatus(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase, syncCreatorStatus]);
+    syncUserCreatorStatus();
+  }, [supabase, user, syncCreatorStatus]);
 
   const handleLogout = async () => {
     // 중복 클릭 방지
@@ -126,7 +90,6 @@ export function Header() {
     console.log('handleLogout started');
 
     // 즉시 UI 상태 변경
-    setUser(null);
     clearUser();
     setIsProfileOpen(false);
     setIsMenuOpen(false);
