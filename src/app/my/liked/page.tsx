@@ -18,7 +18,6 @@ import {
   Loader2,
   HeartCrack,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { formatNumber, formatDate, cn } from '@/lib/utils';
 import { Button, Card, CardContent, Badge, Avatar, Spinner } from '@/components/ui';
 import type { Content } from '@/types/database';
@@ -54,81 +53,23 @@ export default function LikedContentsPage() {
 
   const loadLikedContents = async () => {
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      // API 사용으로 RLS 우회
+      const response = await fetch('/api/me/liked-contents');
 
-      if (!user) return;
-
-      // content_likes 테이블에서 좋아요한 콘텐츠 조회
-      const { data: likes, error } = await supabase
-        .from('content_likes')
-        .select(`
-          id,
-          created_at,
-          content_id,
-          contents (
-            id,
-            product_id,
-            creator_id,
-            title,
-            description,
-            type,
-            content_type,
-            url,
-            thumbnail_url,
-            duration,
-            sort_order,
-            is_active,
-            access_level,
-            price,
-            view_count,
-            like_count,
-            is_published,
-            published_at,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Failed to load liked contents:', error);
-        setLikedContents([]);
-        return;
+      if (!response.ok) {
+        if (response.status === 401) {
+          // 로그인 필요
+          window.location.href = '/login?redirectTo=/my/liked';
+          return;
+        }
+        throw new Error('Failed to fetch liked contents');
       }
 
-      // 크리에이터 정보 조회
-      const transformedContents: LikedContent[] = await Promise.all(
-        (likes || []).map(async (like: any) => {
-          const content = like.contents;
-          if (!content) return null;
-
-          // 크리에이터 정보 가져오기
-          let creator = null;
-          if (content.creator_id) {
-            const { data: creatorData } = await supabase
-              .from('creator_settings')
-              .select('display_name, profile_image_url')
-              .eq('user_id', content.creator_id)
-              .single();
-            creator = creatorData;
-          }
-
-          return {
-            ...content,
-            liked_at: like.created_at,
-            creator: creator ? {
-              display_name: creator.display_name,
-              profile_image_url: creator.profile_image_url,
-            } : null,
-          };
-        })
-      );
-
-      setLikedContents(transformedContents.filter(Boolean) as LikedContent[]);
+      const data = await response.json();
+      setLikedContents(data.contents || []);
     } catch (error) {
       console.error('Failed to load liked contents:', error);
+      setLikedContents([]);
     } finally {
       setIsLoading(false);
     }
@@ -137,22 +78,14 @@ export default function LikedContentsPage() {
   const handleUnlike = async (contentId: string) => {
     setUnlikingId(contentId);
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      // 기존 like API 사용 (toggle 방식이므로 liked 상태에서 호출하면 unlike됨)
+      const response = await fetch(`/api/content/${contentId}/like`, {
+        method: 'POST',
+      });
 
-      if (!user) return;
-
-      // content_likes 테이블에서 좋아요 삭제
-      const { error } = await supabase
-        .from('content_likes')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('content_id', contentId);
-
-      if (error) throw error;
-
-      // 콘텐츠 like_count 감소
-      await supabase.rpc('decrement_content_likes', { p_content_id: contentId });
+      if (!response.ok) {
+        throw new Error('Failed to unlike content');
+      }
 
       // UI에서 제거
       setLikedContents(prev => prev.filter(c => c.id !== contentId));

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/products/[id]
@@ -118,15 +118,18 @@ export async function GET(
         isPurchased = true;
       }
 
-      // Check if user has liked this content
-      const { data: like } = await supabase
-        .from('content_likes')
-        .select('id')
-        .eq('content_id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Check if user has liked this content (use admin to bypass RLS)
+      const admin = createAdminClient();
+      if (admin) {
+        const { data: like } = await admin
+          .from('content_likes')
+          .select('id')
+          .eq('content_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      isLiked = !!like;
+        isLiked = !!like;
+      }
     } else if (!content.price || content.price === 0) {
       // Free content accessible without login
       isPurchased = true;

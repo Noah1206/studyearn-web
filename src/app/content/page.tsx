@@ -296,20 +296,23 @@ export default function ProductsPage() {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [isLiking, setIsLiking] = useState(false);
 
-  // 찜한 콘텐츠 불러오기
+  // 찜한 콘텐츠 불러오기 (API 사용으로 RLS 우회)
   useEffect(() => {
     const fetchLikedIds = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const response = await fetch('/api/me/likes');
+        if (!response.ok) {
+          // 401인 경우 로그인 안 된 상태이므로 조용히 종료
+          if (response.status === 401) return;
+          throw new Error('Failed to fetch likes');
+        }
 
-      const { data: likes } = await supabase
-        .from('content_likes')
-        .select('content_id')
-        .eq('user_id', user.id);
-
-      if (likes) {
-        setLikedIds(new Set(likes.map((l: { content_id: string }) => l.content_id)));
+        const data = await response.json();
+        if (data.likedIds) {
+          setLikedIds(new Set(data.likedIds));
+        }
+      } catch (error) {
+        console.error('Failed to fetch liked IDs:', error);
       }
     };
     fetchLikedIds();
