@@ -45,7 +45,7 @@ export default async function ProfilePage() {
     return <ProfileClient prefetchedData={null} />;
   }
 
-  // Get session - 로컬 쿠키에서 읽어서 빠름 (미들웨어에서 이미 인증 체크됨)
+  // getSession()으로 빠르게 세션 확인 (미들웨어에서 이미 getUser()로 검증됨)
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -54,17 +54,13 @@ export default async function ProfilePage() {
 
   const user = session.user;
 
-  // Prefetch essential data in parallel on server
-  const [profileResult, creatorResult, sessionResult] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).single(),
+  // 필수 데이터만 서버에서 로드 (profile, creator_settings)
+  // study_with_me는 클라이언트에서 로드하도록 제거
+  const [profileResult, creatorResult] = await Promise.all([
+    supabase.from('profiles').select('id, nickname, username, avatar_url, bio, school').eq('id', user.id).single(),
     supabase.from('creator_settings')
       .select('display_name, bio, profile_image_url, is_verified, subject')
       .eq('user_id', user.id)
-      .single(),
-    supabase.from('study_with_me_participants')
-      .select(`room_id, seat_number, status, joined_at, current_session_minutes, study_with_me_rooms!inner(name)`)
-      .eq('user_id', user.id)
-      .is('left_at', null)
       .single(),
   ]);
 
@@ -94,18 +90,6 @@ export default async function ProfilePage() {
       profile_image_url: creatorResult.data.profile_image_url,
       is_verified: creatorResult.data.is_verified || false,
       subject: creatorResult.data.subject,
-    };
-  }
-
-  // Add current session if exists
-  if (sessionResult.data) {
-    prefetchedData.currentSession = {
-      room_id: sessionResult.data.room_id,
-      room_name: (sessionResult.data.study_with_me_rooms as any)?.name || 'Study Room',
-      seat_number: sessionResult.data.seat_number,
-      status: sessionResult.data.status,
-      joined_at: sessionResult.data.joined_at,
-      current_session_minutes: sessionResult.data.current_session_minutes || 0,
     };
   }
 
