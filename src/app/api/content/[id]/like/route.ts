@@ -6,7 +6,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    // URL의 id는 content.id (contents 테이블의 id)
+    const { id: contentId } = await params;
     const supabase = await createClient();
     const admin = createAdminClient();
 
@@ -24,7 +25,7 @@ export async function POST(
     const { data: existing, error: selectError } = await admin
       .from('content_likes')
       .select('id')
-      .eq('content_id', id)
+      .eq('content_id', contentId)
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -49,7 +50,7 @@ export async function POST(
       // 찜하기
       const { error: insertError } = await admin
         .from('content_likes')
-        .insert({ content_id: id, user_id: user.id });
+        .insert({ content_id: contentId, user_id: user.id });
 
       if (insertError) {
         console.error('Insert error:', insertError);
