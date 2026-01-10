@@ -76,15 +76,19 @@ export function Header() {
       }
     };
 
-    // getSession은 로컬에서 읽어서 빠름 (getUser는 서버 요청으로 느림)
+    // getUser()로 서버에서 세션 검증 및 리프레시
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        setUser(null);
+        return;
+      }
+
+      setUser(user);
 
       // 크리에이터 상태 백그라운드 동기화 (UI 블로킹 X)
-      if (session?.user) {
-        syncUserCreatorStatus(session.user.id);
-      }
+      syncUserCreatorStatus(user.id);
     };
     initAuth();
 
