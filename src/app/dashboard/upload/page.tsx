@@ -586,7 +586,7 @@ function UploadPageContent() {
       }
 
       if (contentType === 'routine') {
-        // 루틴 데이터
+        // 루틴 데이터 (content_data JSONB에 루틴 정보 저장)
         const routineData = {
           creator_id: user.id,
           title: extractTitle(),
@@ -594,10 +594,12 @@ function UploadPageContent() {
           subject: subjectValue,
           grade: gradeValue,
           type: 'image' as const,
-          content_type: 'routine',
-          routine_type: routineType,
-          routine_days: routineType === 'custom' ? customDays : null,
-          routine_items: routineItems,
+          content_type: 'post',  // DB CHECK constraint: 'post' for routine type
+          content_data: {
+            routine_type: routineType,
+            routine_days: routineType === 'custom' ? customDays : null,
+            routine_items: routineItems,
+          },
           url: 'routine://placeholder',
           thumbnail_url: uploadedThumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',
@@ -620,10 +622,17 @@ function UploadPageContent() {
         // 파일 타입 결정
         const ext = file!.name.split('.').pop()?.toLowerCase();
         let fileType: 'video' | 'pdf' | 'image' = 'pdf';
+        // DB content_type은 CHECK constraint가 있음: 'post', 'video', 'audio', 'document', 'image', 'live'
+        let dbContentType: 'video' | 'document' | 'image' = 'document';
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) {
           fileType = 'image';
+          dbContentType = 'image';
         } else if (ext === 'pdf') {
           fileType = 'pdf';
+          dbContentType = 'document';  // 'pdf' -> 'document' mapping
+        } else if (['mp4', 'mov', 'avi', 'webm'].includes(ext || '')) {
+          fileType = 'video';
+          dbContentType = 'video';
         }
 
         // Supabase Storage에 파일 업로드
@@ -667,7 +676,7 @@ function UploadPageContent() {
           subject: subjectValue,
           grade: gradeValue,
           type: fileType,
-          content_type: fileType,
+          content_type: dbContentType,  // Use valid DB constraint value
           url: publicUrl,
           thumbnail_url: thumbnailUrl,
           access_level: price > 0 ? 'paid' : 'public',
