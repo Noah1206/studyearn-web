@@ -14,6 +14,8 @@ import {
   User,
   ChevronRight,
   Home,
+  X,
+  Clock,
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -283,6 +285,9 @@ function EmptyState() {
 }
 
 
+const RECENT_SEARCHES_KEY = 'stuple_recent_searches';
+const MAX_RECENT_SEARCHES = 10;
+
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<DisplayProduct[]>([]);
@@ -290,6 +295,44 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // 최근 검색어 불러오기
+  useEffect(() => {
+    const saved = localStorage.getItem(RECENT_SEARCHES_KEY);
+    if (saved) {
+      setRecentSearches(JSON.parse(saved));
+    }
+  }, []);
+
+  // 검색어 저장
+  const saveSearch = (query: string) => {
+    if (!query.trim()) return;
+    const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, MAX_RECENT_SEARCHES);
+    setRecentSearches(updated);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  };
+
+  // 검색어 삭제
+  const removeSearch = (query: string) => {
+    const updated = recentSearches.filter(s => s !== query);
+    setRecentSearches(updated);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  };
+
+  // 전체 삭제
+  const clearAllSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+  };
+
+  // 검색 실행
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    saveSearch(query);
+    setIsSearchFocused(false);
+  };
 
   // 통합 필터 상태
   const [filters, setFilters] = useState<ContentFilters>({
@@ -506,14 +549,70 @@ export default function ProductsPage() {
           {/* 검색바 */}
           <div className="pb-6">
             <div className="relative max-w-2xl">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
               <input
                 type="text"
                 placeholder="필요한 학습 자료를 검색해보세요"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-300 transition-all text-base"
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    handleSearch(searchQuery);
+                  }
+                }}
+                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition-all text-base"
               />
+
+              {/* 최근 검색어 드롭다운 */}
+              {isSearchFocused && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-semibold text-gray-900">최근 검색어</span>
+                      {recentSearches.length > 0 && (
+                        <button
+                          onClick={clearAllSearches}
+                          className="text-xs text-gray-400 hover:text-gray-600"
+                        >
+                          전체 삭제
+                        </button>
+                      )}
+                    </div>
+
+                    {recentSearches.length > 0 ? (
+                      <div className="space-y-1">
+                        {recentSearches.map((search, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between group px-2 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                            onClick={() => handleSearch(search)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Clock className="w-4 h-4 text-gray-300" />
+                              <span className="text-sm text-gray-700">{search}</span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeSearch(search);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                            >
+                              <X className="w-3.5 h-3.5 text-gray-400" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 text-center py-6">
+                        최근 검색어 내역이 없습니다
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
