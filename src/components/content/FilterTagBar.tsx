@@ -153,11 +153,12 @@ export function FilterTagBar({
     if (id === 'all') {
       onRemoveFilter(activeCategory, 'category');
     } else {
-      // 기존 카테고리 제거 후 새로 추가하는 로직은 부모에서 처리
-      // 여기서는 단순히 필터 변경 트리거
+      // 기존 카테고리 제거 후 새로 추가
       if (activeCategory !== 'all') {
         onRemoveFilter(activeCategory, 'category');
       }
+      const label = categoryOptions.find(o => o.id === id)?.label || id;
+      onAddFilter?.(id, 'category', label);
     }
   };
 
@@ -195,8 +196,16 @@ export function FilterTagBar({
           options={gradeOptions}
           value={activeGrade}
           onChange={(id) => {
-            if (id === 'all' && activeGrade !== 'all') {
-              onRemoveFilter(activeGrade, 'grade');
+            if (id === 'all') {
+              if (activeGrade !== 'all') {
+                onRemoveFilter(activeGrade, 'grade');
+              }
+            } else {
+              if (activeGrade !== 'all') {
+                onRemoveFilter(activeGrade, 'grade');
+              }
+              const label = gradeOptions.find(o => o.id === id)?.label || id;
+              onAddFilter?.(id, 'grade', label);
             }
           }}
         />
