@@ -613,12 +613,14 @@ function SectionFallback() {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  // getUser()로 서버에서 세션 검증 (미들웨어와 동일하게)
-  const { data: { user }, error } = await supabase.auth.getUser();
+  // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user || error) {
+  if (!session?.user) {
     redirect('/login?redirectTo=/dashboard');
   }
+
+  const user = session.user;
 
   const { data: creatorCheck } = await supabase
     .from('creator_settings')

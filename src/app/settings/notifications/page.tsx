@@ -138,12 +138,15 @@ export default function NotificationsSettingsPage() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!user) {
+        if (!session?.user) {
           router.push('/login');
           return;
         }
+
+        const user = session.user;
 
         // Load from user_preferences table if exists
         const { data } = await supabase

@@ -97,20 +97,21 @@ function SettingsContent() {
     const fetchUserAndSettings = async () => {
       if (!supabase) return;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession()으로 빠르게 확인 (미들웨어에서 이미 getUser()로 검증 완료)
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!user) {
+      if (!session?.user) {
         router.push('/login');
         return;
       }
 
-      setUser(user);
+      setUser(session.user);
 
       // Load user preferences from database
       const { data: preferences } = await supabase
         .from('user_preferences')
         .select('notification_settings, privacy_settings')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (preferences) {
