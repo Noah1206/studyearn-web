@@ -78,7 +78,7 @@ export async function GET(
           account_holder
         `)
         .eq('user_id', content.creator_id)
-        .single();
+        .maybeSingle();
       creatorInfo = creator;
 
       // Also get profile info for avatar_url fallback
@@ -86,7 +86,7 @@ export async function GET(
         .from('profiles')
         .select('username, avatar_url, bio')
         .eq('id', content.creator_id)
-        .single();
+        .maybeSingle();
       profileInfo = profile;
     }
 
@@ -110,7 +110,7 @@ export async function GET(
           .eq('content_id', id)
           .eq('buyer_id', user.id)
           .eq('status', 'completed')
-          .single();
+          .maybeSingle();
 
         isPurchased = !!purchase;
       } else {
