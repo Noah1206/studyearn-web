@@ -111,8 +111,8 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
     >
       <Link href={`/content/${product.id}`} className="block group">
         <div className={cn(
-          'bg-white rounded-2xl p-6 border transition-all duration-200',
-          'border-gray-200 hover:border-gray-300 hover:shadow-toss-2'
+          'bg-white rounded-2xl p-6 transition-all duration-200',
+          'hover:shadow-toss-2'
         )}>
           <div className="flex gap-5">
             {/* 콘텐츠 정보 */}
@@ -126,7 +126,7 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
                   {product.subject || '학습자료'}
                 </span>
                 {product.grade && (
-                  <span className="px-2.5 py-1.5 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg">
+                  <span className="px-2.5 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg">
                     {product.grade}
                   </span>
                 )}
@@ -149,7 +149,7 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
               <div className="flex items-center justify-between">
                 {/* 창작자 */}
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-gray-500" />
                   </div>
                   <span className="text-sm font-semibold text-gray-700">{product.creator?.name || '익명'}</span>
@@ -172,7 +172,7 @@ function ProductListCard({ product, index }: { product: DisplayProduct; index: n
             </div>
 
             {/* 우측: 가격 + 찜 */}
-            <div className="flex flex-col items-end justify-between pl-5 border-l border-gray-200 min-w-[100px]">
+            <div className="flex flex-col items-end justify-between pl-5 min-w-[100px]">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -262,9 +262,9 @@ function EmptyState() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-center py-24 bg-white rounded-2xl border-2 border-dashed border-gray-200"
+      className="text-center py-24 bg-white rounded-2xl"
     >
-      <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6">
         <FileText className="w-10 h-10 text-gray-300" />
       </div>
       <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -527,7 +527,7 @@ export default function ProductsPage() {
       variants={pageVariants}
     >
       {/* 상단 헤더 */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* 브레드크럼 */}
           <nav className="flex items-center gap-2 py-4 text-sm">
