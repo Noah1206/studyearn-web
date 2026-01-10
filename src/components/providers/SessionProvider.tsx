@@ -1,19 +1,22 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useUserStore } from '@/store/userStore';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface SessionContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  refreshUserData: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType>({
   user: null,
   session: null,
   isLoading: true,
+  refreshUserData: async () => {},
 });
 
 export function useSession() {
@@ -30,6 +33,68 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
   const [isLoading, setIsLoading] = useState(!initialSession);
   const supabase = useMemo(() => createClient(), []);
 
+  // User store actions
+  const { setProfile, syncCreatorStatus, clearUser } = useUserStore();
+
+  // 유저 프로필 및 크리에이터 정보 로드
+  const loadUserData = useCallback(async (userId: string) => {
+    if (!supabase) return;
+
+    try {
+      // 프로필 정보 가져오기
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, bio')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profile) {
+        // 카카오 메타데이터에서 닉네임 가져오기 (fallback)
+        const user = session?.user;
+        const kakaoNickname = user?.user_metadata?.full_name ||
+                             user?.user_metadata?.name ||
+                             user?.user_metadata?.preferred_username;
+
+        setProfile({
+          id: profile.id,
+          email: user?.email || '',
+          nickname: profile.username || kakaoNickname || '사용자',
+          username: profile.username,
+          avatar_url: profile.avatar_url || user?.user_metadata?.avatar_url,
+          bio: profile.bio,
+        });
+      }
+
+      // 크리에이터 설정 가져오기
+      const { data: creatorSettings } = await supabase
+        .from('creator_settings')
+        .select('display_name, bio, profile_image_url, is_verified')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (creatorSettings) {
+        syncCreatorStatus(true, {
+          display_name: creatorSettings.display_name || '',
+          bio: creatorSettings.bio,
+          profile_image_url: creatorSettings.profile_image_url,
+          is_verified: creatorSettings.is_verified || false,
+          total_subscribers: 0,
+        });
+      } else {
+        syncCreatorStatus(false);
+      }
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
+  }, [supabase, session?.user, setProfile, syncCreatorStatus]);
+
+  // 외부에서 호출 가능한 새로고침 함수
+  const refreshUserData = useCallback(async () => {
+    if (session?.user?.id) {
+      await loadUserData(session.user.id);
+    }
+  }, [session?.user?.id, loadUserData]);
+
   useEffect(() => {
     if (!supabase) return;
 
@@ -37,6 +102,10 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
     if (initialSession) {
       setSession(initialSession);
       setIsLoading(false);
+      // 초기 세션이 있으면 유저 데이터 로드
+      if (initialSession.user?.id) {
+        loadUserData(initialSession.user.id);
+      }
     }
 
     // Auth 상태 변경 구독
@@ -44,17 +113,28 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       async (event: AuthChangeEvent, currentSession: Session | null) => {
         setSession(currentSession);
         setIsLoading(false);
+
+        // 로그인 이벤트 시 유저 데이터 로드
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && currentSession?.user?.id) {
+          await loadUserData(currentSession.user.id);
+        }
+
+        // 로그아웃 시 유저 스토어 클리어
+        if (event === 'SIGNED_OUT') {
+          clearUser();
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase, initialSession]);
+  }, [supabase, initialSession, loadUserData, clearUser]);
 
   const value = useMemo(() => ({
     user: session?.user ?? null,
     session,
     isLoading,
-  }), [session, isLoading]);
+    refreshUserData,
+  }), [session, isLoading, refreshUserData]);
 
   return (
     <SessionContext.Provider value={value}>

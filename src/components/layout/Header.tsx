@@ -30,7 +30,6 @@ export function Header() {
     isHydrated,
     revertToRunner,
     switchToCreator,
-    syncCreatorStatus,
     clearUser,
   } = useUserStore();
 
@@ -55,32 +54,7 @@ export function Header() {
     };
   }, [isProfileOpen]);
 
-  // 크리에이터 상태 동기화
-  useEffect(() => {
-    if (!supabase || !user) return;
-
-    const syncUserCreatorStatus = async () => {
-      const { data: creatorSettings } = await supabase
-        .from('creator_settings')
-        .select('display_name, bio, profile_image_url, is_verified')
-        .eq('user_id', user.id)
-        .single();
-
-      if (creatorSettings) {
-        syncCreatorStatus(true, {
-          display_name: creatorSettings.display_name || '',
-          bio: creatorSettings.bio,
-          profile_image_url: creatorSettings.profile_image_url,
-          is_verified: creatorSettings.is_verified || false,
-          total_subscribers: 0,
-        });
-      } else {
-        syncCreatorStatus(false);
-      }
-    };
-
-    syncUserCreatorStatus();
-  }, [supabase, user, syncCreatorStatus]);
+  // 크리에이터 상태는 SessionProvider에서 자동으로 동기화됨
 
   const handleLogout = async () => {
     // 중복 클릭 방지
