@@ -66,7 +66,13 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
   const handleLikeClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onToggleLike?.(product.id);
+    console.log('ContentCard handleLikeClick - product.id:', product.id);
+    console.log('ContentCard handleLikeClick - onToggleLike exists:', !!onToggleLike);
+    if (onToggleLike) {
+      onToggleLike(product.id);
+    } else {
+      console.warn('onToggleLike is not provided!');
+    }
   };
 
   return (
