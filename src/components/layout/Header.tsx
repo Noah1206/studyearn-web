@@ -102,40 +102,34 @@ export function Header() {
   const handleLogout = async () => {
     console.log('handleLogout started');
     try {
-      if (!supabase) {
-        console.error('Supabase client is null');
-        return;
-      }
-
       // 먼저 로컬 상태 클리어
       clearUser();
       setIsProfileOpen(false);
 
-      console.log('Calling signOut with global scope...');
-      // OAuth 로그아웃 시 scope: 'global' 필요
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      console.log('signOut completed, error:', error);
-
-      if (error) {
-        console.error('Logout error:', error);
-      }
-
       // localStorage에서 Supabase 관련 데이터 클리어
       const keysToRemove = Object.keys(localStorage).filter(
-        key => key.startsWith('sb-') || key.includes('supabase')
+        key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // 서버 API로 로그아웃 (쿠키 삭제)
+      console.log('Calling logout API...');
+      await fetch('/api/auth/logout', { method: 'POST' });
+
+      // 클라이언트에서도 signOut 호출
+      if (supabase) {
+        await supabase.auth.signOut({ scope: 'global' });
+      }
 
       console.log('Redirecting to /');
       // 하드 리다이렉트로 세션 상태 완전 반영
       window.location.href = '/';
     } catch (err) {
       console.error('Logout exception:', err);
-      // 에러가 나도 로컬 상태는 클리어하고 리다이렉트
+      // 에러가 나도 리다이렉트
       clearUser();
-      // localStorage 클리어 시도
       const keysToRemove = Object.keys(localStorage).filter(
-        key => key.startsWith('sb-') || key.includes('supabase')
+        key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
       window.location.href = '/';
