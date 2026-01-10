@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
@@ -126,38 +127,43 @@ function SettingItem({
 }
 
 export default function NotificationsSettingsPage() {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    const loadSettings = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-  const loadSettings = async () => {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
 
-      if (!user) return;
+        // Load from user_preferences table if exists
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('notification_settings')
+          .eq('user_id', user.id)
+          .single();
 
-      // Load from user_preferences table if exists
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('notification_settings')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data?.notification_settings) {
-        setSettings({ ...defaultSettings, ...data.notification_settings });
+        if (data?.notification_settings) {
+          setSettings(prev => ({ ...prev, ...data.notification_settings }));
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    loadSettings();
+  }, [supabase, router]);
 
   const handleChange = async (key: keyof NotificationSettings, value: boolean | string) => {
     const newSettings = { ...settings, [key]: value };
@@ -166,7 +172,6 @@ export default function NotificationsSettingsPage() {
     // Auto-save
     setIsSaving(true);
     try {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {

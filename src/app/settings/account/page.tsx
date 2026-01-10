@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -59,6 +59,8 @@ const LANGUAGES = [
 export default function AccountSettingsPage() {
   const router = useRouter();
   const toast = useToastActions();
+  const supabase = useMemo(() => createClient(), []);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -71,35 +73,34 @@ export default function AccountSettingsPage() {
   });
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    const loadSettings = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-  const loadSettings = async () => {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
 
-      if (!user) {
+        // DB에서 설정 로드
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('account_settings')
+          .eq('user_id', user.id)
+          .single();
+
+        if (data?.account_settings) {
+          setSettings(prev => ({ ...prev, ...data.account_settings }));
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
         setIsLoading(false);
-        return;
       }
+    };
 
-      // DB에서 설정 로드
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('account_settings')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data?.account_settings) {
-        setSettings({ ...settings, ...data.account_settings });
-      }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    loadSettings();
+  }, [supabase, router]);
 
   const handleLanguageChange = (code: string) => {
     setSettings(prev => ({ ...prev, language: code }));
@@ -112,7 +113,6 @@ export default function AccountSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -133,9 +133,8 @@ export default function AccountSettingsPage() {
 
   const handleLogout = async () => {
     try {
-      const supabase = createClient();
       await supabase.auth.signOut();
-      router.push('/login');
+      window.location.href = '/login';
     } catch (error) {
       console.error('Failed to logout:', error);
     }
@@ -149,8 +148,6 @@ export default function AccountSettingsPage() {
 
     setIsDeleting(true);
     try {
-      const supabase = createClient();
-
       // 사용자 데이터 삭제 (RPC 함수 호출)
       const { error: deleteError } = await supabase.rpc('delete_user_account');
 
@@ -161,7 +158,7 @@ export default function AccountSettingsPage() {
 
       // 로그아웃 처리
       await supabase.auth.signOut();
-      router.push('/');
+      window.location.href = '/';
     } catch (error) {
       console.error('Failed to delete account:', error);
       toast.error('오류', '계정 삭제에 실패했습니다.');

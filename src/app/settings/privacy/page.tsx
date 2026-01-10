@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -125,6 +125,8 @@ function VisibilitySelector({
 export default function PrivacySettingsPage() {
   const router = useRouter();
   const toast = useToastActions();
+  const supabase = useMemo(() => createClient(), []);
+
   const [settings, setSettings] = useState<PrivacySettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -155,31 +157,33 @@ export default function PrivacySettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    const loadSettings = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-  const loadSettings = async () => {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
 
-      if (!user) return;
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('privacy_settings')
+          .eq('user_id', user.id)
+          .single();
 
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('privacy_settings')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data?.privacy_settings) {
-        setSettings({ ...defaultSettings, ...data.privacy_settings });
+        if (data?.privacy_settings) {
+          setSettings(prev => ({ ...prev, ...data.privacy_settings }));
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    loadSettings();
+  }, [supabase, router]);
 
   const handleChange = async (key: keyof PrivacySettings, value: any) => {
     const newSettings = { ...settings, [key]: value };
@@ -187,7 +191,6 @@ export default function PrivacySettingsPage() {
 
     setIsSaving(true);
     try {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -224,7 +227,6 @@ export default function PrivacySettingsPage() {
 
     setIsChangingPassword(true);
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -247,7 +249,6 @@ export default function PrivacySettingsPage() {
   const handleDownloadData = async () => {
     setIsExporting(true);
     try {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
@@ -364,8 +365,6 @@ export default function PrivacySettingsPage() {
 
     setIsDeleting(true);
     try {
-      const supabase = createClient();
-
       // 사용자 데이터 삭제 (RPC 함수 호출)
       const { error: deleteError } = await supabase.rpc('delete_user_account');
 
@@ -376,7 +375,7 @@ export default function PrivacySettingsPage() {
 
       // 로그아웃 처리
       await supabase.auth.signOut();
-      router.push('/');
+      window.location.href = '/';
     } catch (error) {
       console.error('Failed to delete account:', error);
       toast.error('오류', '계정 삭제에 실패했습니다.');
