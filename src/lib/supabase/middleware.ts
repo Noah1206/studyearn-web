@@ -52,12 +52,14 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // getSession은 로컬 쿠키에서 읽어서 빠름 (getUser는 서버 요청)
+  // getUser()는 서버에서 세션을 검증하고 필요시 리프레시함
+  // getSession()은 쿠키만 읽어서 빠르지만 만료된 세션을 감지 못할 수 있음
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  if (isProtectedPath && !session) {
+  if (isProtectedPath && (!user || error)) {
     // Redirect to login with return URL
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -65,7 +67,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthPath && session) {
+  if (isAuthPath && user && !error) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
