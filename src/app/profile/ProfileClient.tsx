@@ -94,6 +94,7 @@ interface Profile {
   bio?: string;
   school?: string;
   is_creator: boolean;
+  follower_count?: number;
 }
 
 interface StudySession {
@@ -1036,20 +1037,50 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
 
   // ===== 루틴 생성용 인터랙티브 함수들 =====
 
-  // 시간 슬롯 클릭 핸들러 (day, week 타입)
+  // 시간 슬롯 클릭 핸들러 (day, week 타입) - 인라인 입력으로 변경
   const handleTimeSlotClick = (day: number, hour: number) => {
     setEditingItem({ day, startHour: hour, endHour: hour + 1 });
     setNewItemTitle('');
     setNewItemColor(ROUTINE_COLORS[Math.floor(Math.random() * ROUTINE_COLORS.length)]);
-    setShowAddItemModal(true);
   };
 
-  // 날짜 클릭 핸들러 (month, custom 타입)
+  // 날짜 클릭 핸들러 (month, custom 타입) - 인라인 입력으로 변경
   const handleDateClick = (day: number) => {
     setEditingItem({ day });
     setNewItemTitle('');
     setNewItemColor(ROUTINE_COLORS[Math.floor(Math.random() * ROUTINE_COLORS.length)]);
-    setShowAddItemModal(true);
+  };
+
+  // 인라인 입력 취소 (ESC 또는 외부 클릭)
+  const cancelInlineAdd = () => {
+    setEditingItem(null);
+    setNewItemTitle('');
+  };
+
+  // 인라인 입력에서 아이템 추가 (Enter)
+  const addItemInline = () => {
+    if (!newItemTitle.trim() || !editingItem || isAddingRef.current) return;
+
+    isAddingRef.current = true;
+    setIsAddingItem(true);
+
+    const newItem: RoutineItem = {
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      day: editingItem.day,
+      startHour: editingItem.startHour,
+      endHour: editingItem.endHour,
+      title: newItemTitle.trim(),
+      color: newItemColor,
+    };
+
+    setNewRoutineItems(prev => [...prev, newItem]);
+    setEditingItem(null);
+    setNewItemTitle('');
+
+    setTimeout(() => {
+      isAddingRef.current = false;
+      setIsAddingItem(false);
+    }, 300);
   };
 
   // 아이템 추가 (중복 방지 - useRef로 동기적 체크)
@@ -1365,16 +1396,41 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         <div className="min-w-[280px]">
           {TIME_SLOTS.map(hour => {
             const item = newRoutineItems.find(i => i.day === 0 && i.startHour === hour);
+            const isAddingHere = editingItem && editingItem.day === 0 && editingItem.startHour === hour && !item;
             return (
               <div key={hour} className="flex border-b border-gray-100 last:border-b-0">
                 <div className="w-14 py-2 px-2 text-xs text-gray-500 bg-gray-50 flex-shrink-0 border-r border-gray-100">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 <div
-                  className="flex-1 py-2 px-2 min-h-[36px] cursor-pointer hover:bg-orange-50 transition-colors"
-                  onClick={() => !item && handleTimeSlotClick(0, hour)}
+                  className={cn(
+                    "flex-1 py-2 px-2 min-h-[36px] cursor-pointer transition-colors",
+                    isAddingHere ? 'bg-orange-100' : 'hover:bg-orange-50'
+                  )}
+                  onClick={() => !item && !isAddingHere && handleTimeSlotClick(0, hour)}
                 >
-                  {item ? (
+                  {isAddingHere ? (
+                    <input
+                      type="text"
+                      value={newItemTitle}
+                      onChange={(e) => setNewItemTitle(e.target.value)}
+                      onBlur={() => {
+                        if (newItemTitle.trim()) addItemInline();
+                        else cancelInlineAdd();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newItemTitle.trim()) {
+                          e.preventDefault();
+                          addItemInline();
+                        }
+                        if (e.key === 'Escape') cancelInlineAdd();
+                      }}
+                      placeholder="일정 입력 후 Enter"
+                      className={cn('w-full px-2 py-1 rounded text-white text-xs outline-none', newItemColor)}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : item ? (
                     <div className={cn('px-2 py-1 rounded text-white text-xs flex items-center justify-between', item.color)}>
                       {inlineEditingItemId === item.id ? (
                         <input
@@ -1445,13 +1501,38 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
               </div>
               {WEEKDAYS.map((_, dayIdx) => {
                 const item = newRoutineItems.find(i => i.day === dayIdx && i.startHour === hour);
+                const isAddingHere = editingItem && editingItem.day === dayIdx && editingItem.startHour === hour && !item;
                 return (
                   <div
                     key={dayIdx}
-                    className="flex-1 min-h-[32px] border-l border-gray-100 p-0.5 cursor-pointer hover:bg-orange-50 transition-colors"
-                    onClick={() => !item && handleTimeSlotClick(dayIdx, hour)}
+                    className={cn(
+                      "flex-1 min-h-[32px] border-l border-gray-100 p-0.5 cursor-pointer transition-colors",
+                      isAddingHere ? 'bg-orange-100' : 'hover:bg-orange-50'
+                    )}
+                    onClick={() => !item && !isAddingHere && handleTimeSlotClick(dayIdx, hour)}
                   >
-                    {item ? (
+                    {isAddingHere ? (
+                      <input
+                        type="text"
+                        value={newItemTitle}
+                        onChange={(e) => setNewItemTitle(e.target.value)}
+                        onBlur={() => {
+                          if (newItemTitle.trim()) addItemInline();
+                          else cancelInlineAdd();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newItemTitle.trim()) {
+                            e.preventDefault();
+                            addItemInline();
+                          }
+                          if (e.key === 'Escape') cancelInlineAdd();
+                        }}
+                        placeholder="일정 입력"
+                        className={cn('w-full h-full px-1 py-0.5 text-white text-[10px] rounded outline-none', newItemColor)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : item ? (
                       <div className={cn('px-1 py-0.5 text-white text-[10px] truncate flex items-center justify-between group', item.color)}>
                         {inlineEditingItemId === item.id ? (
                           <input
@@ -1552,15 +1633,17 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         <div className="grid grid-cols-7">
           {days.map((day, idx) => {
             const dayItems = day ? newRoutineItems.filter(i => i.day === day) : [];
+            const isAddingHere = editingItem && editingItem.day === day && editingItem.startHour === undefined;
             return (
               <div
                 key={idx}
                 className={cn(
-                  'min-h-[60px] border-b border-r border-gray-100 p-1 cursor-pointer hover:bg-orange-50 transition-colors',
+                  'min-h-[60px] border-b border-r border-gray-100 p-1 cursor-pointer transition-colors',
                   !day && 'bg-gray-50 cursor-default hover:bg-gray-50',
+                  isAddingHere ? 'bg-orange-100' : 'hover:bg-orange-50',
                   (idx + 1) % 7 === 0 && 'border-r-0'
                 )}
-                onClick={() => day && handleDateClick(day)}
+                onClick={() => day && !isAddingHere && handleDateClick(day)}
               >
                 {day && (
                   <>
@@ -1613,8 +1696,30 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                           </button>
                         </div>
                       ))}
-                      {dayItems.length > 2 && (
+                      {dayItems.length > 2 && !isAddingHere && (
                         <div className="text-[9px] text-gray-500">+{dayItems.length - 2}</div>
+                      )}
+                      {isAddingHere && (
+                        <input
+                          type="text"
+                          value={newItemTitle}
+                          onChange={(e) => setNewItemTitle(e.target.value)}
+                          onBlur={() => {
+                            if (newItemTitle.trim()) addItemInline();
+                            else cancelInlineAdd();
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newItemTitle.trim()) {
+                              e.preventDefault();
+                              addItemInline();
+                            }
+                            if (e.key === 'Escape') cancelInlineAdd();
+                          }}
+                          placeholder="일정 입력"
+                          className={cn('w-full px-1 py-0.5 rounded text-white text-[9px] outline-none', newItemColor)}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       )}
                     </div>
                   </>
@@ -1632,63 +1737,88 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
       {Array.from({ length: Math.min(customDays, 30) }, (_, i) => i + 1).map(day => {
         const dayItems = newRoutineItems.filter(i => i.day === day);
+        const isAddingHere = editingItem && editingItem.day === day && editingItem.startHour === undefined;
         return (
           <div key={day} className="flex border-b border-gray-100 last:border-b-0">
             <div className="w-16 py-2 px-2 text-xs font-medium text-gray-700 bg-gray-50 flex-shrink-0 border-r border-gray-100">
               Day {day}
             </div>
             <div
-              className="flex-1 py-2 px-2 min-h-[40px] cursor-pointer hover:bg-orange-50 transition-colors"
-              onClick={() => handleDateClick(day)}
+              className={cn(
+                "flex-1 py-2 px-2 min-h-[40px] cursor-pointer transition-colors",
+                isAddingHere ? 'bg-orange-100' : 'hover:bg-orange-50'
+              )}
+              onClick={() => !isAddingHere && handleDateClick(day)}
             >
-              {dayItems.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {dayItems.map(item => (
-                    <div
-                      key={item.id}
-                      className={cn('px-2 py-0.5 rounded text-white text-xs flex items-center gap-1 group', item.color)}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {inlineEditingItemId === item.id ? (
-                        <input
-                          type="text"
-                          value={inlineEditTitle}
-                          onChange={(e) => setInlineEditTitle(e.target.value)}
-                          onBlur={saveInlineEdit}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveInlineEdit();
-                            if (e.key === 'Escape') cancelInlineEdit();
-                          }}
-                          className="bg-white/20 text-white text-xs px-1 rounded outline-none w-20"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startInlineEdit(item);
-                          }}
-                        >
-                          {item.title}
-                        </span>
-                      )}
-                      <button
+              <div className="flex flex-wrap gap-1">
+                {dayItems.map(item => (
+                  <div
+                    key={item.id}
+                    className={cn('px-2 py-0.5 rounded text-white text-xs flex items-center gap-1 group', item.color)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {inlineEditingItemId === item.id ? (
+                      <input
+                        type="text"
+                        value={inlineEditTitle}
+                        onChange={(e) => setInlineEditTitle(e.target.value)}
+                        onBlur={saveInlineEdit}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveInlineEdit();
+                          if (e.key === 'Escape') cancelInlineEdit();
+                        }}
+                        className="bg-white/20 text-white text-xs px-1 rounded outline-none w-20"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span
+                        className="cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeRoutineItem(item.id);
+                          startInlineEdit(item);
                         }}
-                        className="opacity-0 group-hover:opacity-100"
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-300 text-xs">+ 클릭하여 추가</div>
-              )}
+                        {item.title}
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeRoutineItem(item.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                {isAddingHere && (
+                  <input
+                    type="text"
+                    value={newItemTitle}
+                    onChange={(e) => setNewItemTitle(e.target.value)}
+                    onBlur={() => {
+                      if (newItemTitle.trim()) addItemInline();
+                      else cancelInlineAdd();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newItemTitle.trim()) {
+                        e.preventDefault();
+                        addItemInline();
+                      }
+                      if (e.key === 'Escape') cancelInlineAdd();
+                    }}
+                    placeholder="일정 입력 후 Enter"
+                    className={cn('px-2 py-0.5 rounded text-white text-xs outline-none', newItemColor)}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+                {dayItems.length === 0 && !isAddingHere && (
+                  <div className="text-gray-300 text-xs">+ 클릭하여 추가</div>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -1860,12 +1990,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   <p className="text-xs text-gray-500">출석</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{purchasedContents.length}</p>
-                  <p className="text-xs text-gray-500">구매 자료</p>
+                  <p className="text-2xl font-bold text-gray-900">{profile?.follower_count || 0}</p>
+                  <p className="text-xs text-gray-500">팔로워</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{studyStats.joinedRooms}</p>
-                  <p className="text-xs text-gray-500">참여한 방</p>
+                  <p className="text-2xl font-bold text-gray-900">{purchasedContents.length}</p>
+                  <p className="text-xs text-gray-500">구매자료</p>
                 </div>
               </div>
             </motion.div>
@@ -2590,102 +2720,6 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         )}
       </AnimatePresence>
 
-      {/* 루틴 아이템 추가 모달 */}
-      <AnimatePresence>
-        {showAddItemModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={(e) => e.target === e.currentTarget && setShowAddItemModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">일정 추가</h3>
-                <button
-                  onClick={() => setShowAddItemModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              {/* 시간 정보 표시 */}
-              {editingItem && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    {newRoutineType === 'day' && editingItem.startHour !== undefined && (
-                      <span>{editingItem.startHour.toString().padStart(2, '0')}:00 - {(editingItem.endHour || editingItem.startHour + 1).toString().padStart(2, '0')}:00</span>
-                    )}
-                    {newRoutineType === 'week' && editingItem.startHour !== undefined && (
-                      <span>{WEEKDAYS[editingItem.day]} {editingItem.startHour.toString().padStart(2, '0')}:00</span>
-                    )}
-                    {newRoutineType === 'month' && (
-                      <span>{routineMonth + 1}월 {editingItem.day}일</span>
-                    )}
-                    {newRoutineType === 'custom' && (
-                      <span>{Math.floor((editingItem.day - 1) / 30) + 1}월차 {((editingItem.day - 1) % 30) + 1}일</span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* 일정 제목 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">일정 이름</label>
-                <input
-                  type="text"
-                  value={newItemTitle}
-                  onChange={(e) => setNewItemTitle(e.target.value)}
-                  placeholder="예: 수학 공부"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newItemTitle.trim()) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      addRoutineItem();
-                    }
-                  }}
-                />
-              </div>
-
-              {/* 버튼 */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddItemModal(false)}
-                  className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={addRoutineItem}
-                  disabled={!newItemTitle.trim() || isAddingItem}
-                  className={cn(
-                    'flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    newItemTitle.trim() && !isAddingItem
-                      ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  )}
-                >
-                  {isAddingItem ? '추가 중...' : '추가'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* 공유 성공 토스트 */}
       <AnimatePresence>

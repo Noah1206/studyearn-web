@@ -150,6 +150,7 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
 
@@ -172,6 +173,7 @@ export default function ProductDetailPage() {
         setContents(data.contents || []);
         setIsPurchased(data.isPurchased || false);
         setIsOwner(data.isOwner || false);
+        setIsLiked(data.isLiked || false);
         setIsPreviewAllowed(data.isPreviewAllowed ?? true);
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -268,6 +270,41 @@ export default function ProductDetailPage() {
       alert('루틴 복사에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsCopying(false);
+    }
+  };
+
+  // 찜하기/찜 취소 (자신의 콘텐츠도 가능)
+  const handleLike = async () => {
+    if (isLiking) return;
+
+    setIsLiking(true);
+    try {
+      const response = await fetch(`/api/content/${id}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok && response.status === 401) {
+        // Not logged in, redirect to login
+        router.push(`/login?redirectTo=/content/${id}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsLiked(data.isLiked);
+        if (product) {
+          setProduct({
+            ...product,
+            like_count: data.like_count,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Like failed:', error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -376,10 +413,11 @@ export default function ProductDetailPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLike}
+              disabled={isLiking}
               className={`p-2 rounded-full transition-colors ${
                 isLiked ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-              }`}
+              } ${isLiking ? 'opacity-50' : ''}`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500' : ''}`} />
             </button>
@@ -443,13 +481,14 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mb-6 text-sm text-gray-500">
               {/* Like/Wishlist Button */}
               <button
-                onClick={() => setIsLiked(!isLiked)}
+                onClick={handleLike}
+                disabled={isLiking}
                 className={`flex items-center gap-1 transition-colors ${
                   isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-                }`}
+                } ${isLiking ? 'opacity-50' : ''}`}
               >
                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500' : ''}`} />
-                <span>{(product.like_count + (isLiked ? 1 : 0)).toLocaleString()}</span>
+                <span>{product.like_count.toLocaleString()}</span>
               </button>
               {product.view_count > 0 && (
                 <div className="flex items-center gap-1">

@@ -23,7 +23,9 @@ export async function GET(request: Request) {
       if (!existingProfile) {
         // OAuth 메타데이터에서 사용자 정보 추출
         const metadata = user.user_metadata || {};
-        const nickname = metadata.name || metadata.full_name || metadata.preferred_username || `user_${user.id.slice(0, 8)}`;
+        // 카카오: user_name, name 순서로 확인 (Supabase가 카카오 닉네임을 user_name에 매핑)
+        const nickname = metadata.user_name || metadata.name || metadata.full_name || metadata.preferred_username || `user_${user.id.slice(0, 8)}`;
+        // 카카오: avatar_url 또는 picture 확인
         const avatarUrl = metadata.avatar_url || metadata.picture || null;
         const email = user.email || metadata.email || null;
 

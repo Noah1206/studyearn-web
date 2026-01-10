@@ -93,6 +93,7 @@ export async function GET(
     // Check if user is authenticated and has purchased
     let isPurchased = false;
     let isOwner = false;
+    let isLiked = false;
 
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -116,6 +117,16 @@ export async function GET(
         // Free content is accessible
         isPurchased = true;
       }
+
+      // Check if user has liked this content
+      const { data: like } = await supabase
+        .from('content_likes')
+        .select('id')
+        .eq('content_id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      isLiked = !!like;
     } else if (!content.price || content.price === 0) {
       // Free content accessible without login
       isPurchased = true;
@@ -186,6 +197,7 @@ export async function GET(
       contents,
       isPurchased,
       isOwner,
+      isLiked,
       isPreviewAllowed: content.allow_preview ?? true,
     });
   } catch (error) {
