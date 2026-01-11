@@ -1919,7 +1919,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       variants={pageVariants}
     >
       {/* 헤더 */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
+      <header className="sticky top-0 z-10 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
