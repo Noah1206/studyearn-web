@@ -564,7 +564,10 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
 
   const handleSaveProfile = async () => {
+    console.log('=== handleSaveProfile 시작 ===');
+
     if (!user || !supabase) {
+      console.log('user 또는 supabase 없음');
       setError('사용자 정보를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
       return;
     }
@@ -572,6 +575,8 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     setIsSaving(true);
     setError('');
     setSuccess('');
+
+    console.log('업데이트 데이터:', { editNickname, editUsername, editBio, editSchool, userId: user.id });
 
     try {
       const { data, error: updateError } = await supabase
@@ -586,7 +591,10 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         .eq('id', user.id)
         .select();
 
+      console.log('Supabase 응답:', { data, updateError });
+
       if (updateError) {
+        console.log('업데이트 에러:', updateError);
         if (updateError.code === '23505' && updateError.message.includes('username')) {
           setError('이미 사용 중인 사용자 이름입니다. 다른 이름을 선택해주세요.');
         } else {
@@ -598,11 +606,13 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
 
       // RLS로 인해 data가 빈 배열일 수 있음 - 이 경우도 처리
       if (!data || data.length === 0) {
+        console.log('data가 비어있음 - RLS 문제');
         setError('프로필 저장 권한이 없습니다. 다시 로그인해주세요.');
         setIsSaving(false);
         return;
       }
 
+      console.log('저장 성공!');
       setProfile(prev => prev ? {
         ...prev,
         nickname: editNickname,
@@ -613,6 +623,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       setSuccess('프로필이 저장되었습니다.');
       setIsEditing(false);
     } catch (err) {
+      console.error('catch 에러:', err);
       setError('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
