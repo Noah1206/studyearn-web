@@ -72,14 +72,35 @@ export function CategorySidebar({
 
   return (
     <aside className={cn('w-52 flex-shrink-0', className)}>
-      {/* 메인 카테고리 헤더 */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <span className="text-blue-600 text-sm font-bold">IT</span>
+      {/* 메인 카테고리 배너 - 크몽 스타일 */}
+      <div className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl p-5 mb-6 overflow-hidden">
+        {/* 배경 장식 */}
+        <div className="absolute top-3 right-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-purple-400">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+          </svg>
         </div>
-        <div>
-          <h2 className="font-bold text-gray-900 text-sm">학습자료</h2>
-          <span className="text-xs text-gray-400">바로가기 &gt;</span>
+        <div className="absolute bottom-0 right-0 w-20 h-20 opacity-80">
+          <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
+            <rect x="20" y="30" width="35" height="45" rx="3" fill="#1a1a2e" />
+            <rect x="25" y="35" width="25" height="3" rx="1" fill="#4a4a6a" />
+            <rect x="25" y="42" width="20" height="2" rx="1" fill="#4a4a6a" />
+            <rect x="25" y="48" width="22" height="2" rx="1" fill="#4a4a6a" />
+            <rect x="45" y="20" width="8" height="50" rx="2" fill="#e91e8c" />
+          </svg>
+        </div>
+
+        {/* 콘텐츠 */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="font-bold text-gray-900 text-lg leading-tight">
+              IT·프로그래밍<br />포트폴리오
+            </h2>
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">IT</span>
+            </div>
+          </div>
+          <span className="text-sm text-gray-500">바로가기 &gt;</span>
         </div>
       </div>
 
