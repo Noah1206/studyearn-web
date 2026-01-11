@@ -2689,10 +2689,10 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      console.log('저장 버튼 클릭!');
+                      alert('버튼 클릭됨! isSaving=' + isSaving);
+                      console.log('저장 버튼 클릭! isSaving:', isSaving);
                       handleSaveProfile();
                     }}
-                    disabled={isSaving}
                     className="flex-1 bg-accent hover:bg-cta-hover text-white py-2 px-4 rounded-lg flex items-center justify-center"
                   >
                     {isSaving ? (
@@ -2700,7 +2700,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                     ) : (
                       <Check className="w-4 h-4 mr-2" />
                     )}
-                    저장
+                    저장 (isSaving: {String(isSaving)})
                   </button>
                 </div>
               </div>
