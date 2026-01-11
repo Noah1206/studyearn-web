@@ -2670,14 +2670,24 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   >
                     취소
                   </Button>
-                  <Button
-                    onClick={handleSaveProfile}
-                    isLoading={isSaving}
-                    className="flex-1 bg-accent hover:bg-cta-hover"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log('=== BUTTON CLICKED ===');
+                      handleSaveProfile();
+                    }}
+                    disabled={isSaving}
+                    className="flex-1 bg-accent hover:bg-cta-hover text-white px-4 py-2 rounded-lg flex items-center justify-center"
                   >
-                    <Check className="w-4 h-4 mr-2" />
-                    저장
-                  </Button>
+                    {isSaving ? (
+                      <span>저장 중...</span>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        저장
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </motion.div>
