@@ -579,7 +579,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     console.log('업데이트 데이터:', { editNickname, editUsername, editBio, editSchool, userId: user.id });
 
     try {
-      const { data, error: updateError } = await supabase
+      // 타임아웃 추가 (10초)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('요청 시간이 초과되었습니다.')), 10000)
+      );
+
+      const updatePromise = supabase
         .from('profiles')
         .update({
           nickname: editNickname,
@@ -590,6 +595,10 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         })
         .eq('id', user.id)
         .select();
+
+      console.log('Supabase 요청 시작...');
+      const result = await Promise.race([updatePromise, timeoutPromise]) as { data: any; error: any };
+      const { data, error: updateError } = result;
 
       console.log('Supabase 응답:', { data, updateError });
 
@@ -622,9 +631,9 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       } : null);
       setSuccess('프로필이 저장되었습니다.');
       setIsEditing(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('catch 에러:', err);
-      setError('프로필 저장 중 오류가 발생했습니다.');
+      setError(err.message || '프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }
