@@ -68,7 +68,9 @@ export function SchoolSearch({
 
       const data = await response.json();
       if (data.success) {
-        setSchools(data.schools || []);
+        // Edge Function returns { success, data: { schools } }
+        const schools = data.data?.schools || data.schools || [];
+        setSchools(schools);
       } else {
         setSchools([]);
       }
