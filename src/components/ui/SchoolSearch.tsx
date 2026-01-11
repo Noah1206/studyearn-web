@@ -46,6 +46,12 @@ export function SchoolSearch({
       return;
     }
 
+    if (!SUPABASE_URL) {
+      console.error('SUPABASE_URL is not defined');
+      setSchools([]);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/search-schools`, {
@@ -56,9 +62,13 @@ export function SchoolSearch({
         body: JSON.stringify({ query: searchQuery, limit: 10 }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success) {
-        setSchools(data.schools);
+        setSchools(data.schools || []);
       } else {
         setSchools([]);
       }
@@ -192,9 +202,7 @@ export function SchoolSearch({
             setSelectedIndex(-1);
           }}
           onFocus={() => {
-            if (query && query !== value) {
-              setIsOpen(true);
-            }
+            setIsOpen(true);
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -263,7 +271,7 @@ export function SchoolSearch({
       )}
 
       {/* 검색 결과 없음 */}
-      {isOpen && query && !isLoading && schools.length === 0 && query !== value && (
+      {isOpen && query && query.length >= 1 && !isLoading && schools.length === 0 && query !== value && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-gray-200 shadow-lg"
