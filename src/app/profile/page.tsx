@@ -57,11 +57,11 @@ export default async function ProfilePage() {
   // 필수 데이터만 서버에서 로드 (profile, creator_settings)
   // study_with_me는 클라이언트에서 로드하도록 제거
   const [profileResult, creatorResult] = await Promise.all([
-    supabase.from('profiles').select('id, nickname, username, avatar_url, bio, school').eq('id', user.id).single(),
+    supabase.from('profiles').select('id, nickname, username, avatar_url, bio, school').eq('id', user.id).maybeSingle(),
     supabase.from('creator_settings')
       .select('display_name, bio, profile_image_url, is_verified, subject')
       .eq('user_id', user.id)
-      .single(),
+      .maybeSingle(),
   ]);
 
   // Build prefetched data
