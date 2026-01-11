@@ -38,6 +38,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Avatar, Spinner, SchoolSearch } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
+import { updateProfile } from './actions';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 import { ensureHttps } from '@/lib/utils/url';
@@ -564,64 +565,23 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
 
   const handleSaveProfile = async () => {
-    console.log('=== handleSaveProfile 시작 ===');
-
-    if (!user || !supabase) {
-      console.log('user 또는 supabase 없음');
-      setError('사용자 정보를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
-      return;
-    }
-
     setIsSaving(true);
     setError('');
     setSuccess('');
 
-    console.log('업데이트 데이터:', { editNickname, editUsername, editBio, editSchool, userId: user.id });
-
     try {
-      // 타임아웃 추가 (10초)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('요청 시간이 초과되었습니다.')), 10000)
-      );
+      const result = await updateProfile({
+        nickname: editNickname,
+        username: editUsername,
+        bio: editBio,
+        school: editSchool,
+      });
 
-      const updatePromise = supabase
-        .from('profiles')
-        .update({
-          nickname: editNickname,
-          username: editUsername,
-          bio: editBio,
-          school: editSchool,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id)
-        .select();
-
-      console.log('Supabase 요청 시작...');
-      const result = await Promise.race([updatePromise, timeoutPromise]) as { data: any; error: any };
-      const { data, error: updateError } = result;
-
-      console.log('Supabase 응답:', { data, updateError });
-
-      if (updateError) {
-        console.log('업데이트 에러:', updateError);
-        if (updateError.code === '23505' && updateError.message.includes('username')) {
-          setError('이미 사용 중인 사용자 이름입니다. 다른 이름을 선택해주세요.');
-        } else {
-          setError(`프로필 저장에 실패했습니다: ${updateError.message}`);
-        }
-        setIsSaving(false);
+      if (!result.success) {
+        setError(result.error || '프로필 저장에 실패했습니다.');
         return;
       }
 
-      // RLS로 인해 data가 빈 배열일 수 있음 - 이 경우도 처리
-      if (!data || data.length === 0) {
-        console.log('data가 비어있음 - RLS 문제');
-        setError('프로필 저장 권한이 없습니다. 다시 로그인해주세요.');
-        setIsSaving(false);
-        return;
-      }
-
-      console.log('저장 성공!');
       setProfile(prev => prev ? {
         ...prev,
         nickname: editNickname,
@@ -632,7 +592,6 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       setSuccess('프로필이 저장되었습니다.');
       setIsEditing(false);
     } catch (err: any) {
-      console.error('catch 에러:', err);
       setError(err.message || '프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
@@ -2695,22 +2654,14 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   >
                     취소
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      alert('버튼 클릭됨! isSaving=' + isSaving);
-                      console.log('저장 버튼 클릭! isSaving:', isSaving);
-                      handleSaveProfile();
-                    }}
-                    className="flex-1 bg-accent hover:bg-cta-hover text-white py-2 px-4 rounded-lg flex items-center justify-center"
+                  <Button
+                    onClick={handleSaveProfile}
+                    isLoading={isSaving}
+                    className="flex-1 bg-accent hover:bg-cta-hover"
                   >
-                    {isSaving ? (
-                      <span className="animate-spin mr-2">⏳</span>
-                    ) : (
-                      <Check className="w-4 h-4 mr-2" />
-                    )}
-                    저장 (isSaving: {String(isSaving)})
-                  </button>
+                    <Check className="w-4 h-4 mr-2" />
+                    저장
+                  </Button>
                 </div>
               </div>
             </motion.div>
