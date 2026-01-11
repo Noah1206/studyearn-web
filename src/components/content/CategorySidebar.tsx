@@ -72,21 +72,24 @@ export function CategorySidebar({
 
   return (
     <aside className={cn('w-52 flex-shrink-0', className)}>
-      {/* 메인 카테고리 배너 - 크몽 스타일 */}
-      <div className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl p-5 mb-6 overflow-hidden">
+      {/* 메인 배너 - StudyEarn 스타일 */}
+      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 mb-6 overflow-hidden">
         {/* 배경 장식 */}
         <div className="absolute top-3 right-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-purple-400">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
           </svg>
         </div>
         <div className="absolute bottom-0 right-0 w-20 h-20 opacity-80">
           <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
-            <rect x="20" y="30" width="35" height="45" rx="3" fill="#1a1a2e" />
-            <rect x="25" y="35" width="25" height="3" rx="1" fill="#4a4a6a" />
-            <rect x="25" y="42" width="20" height="2" rx="1" fill="#4a4a6a" />
-            <rect x="25" y="48" width="22" height="2" rx="1" fill="#4a4a6a" />
-            <rect x="45" y="20" width="8" height="50" rx="2" fill="#e91e8c" />
+            {/* 책/노트 아이콘 */}
+            <rect x="20" y="25" width="35" height="45" rx="3" fill="#3B82F6" />
+            <rect x="25" y="32" width="25" height="3" rx="1" fill="#93C5FD" />
+            <rect x="25" y="39" width="20" height="2" rx="1" fill="#93C5FD" />
+            <rect x="25" y="45" width="22" height="2" rx="1" fill="#93C5FD" />
+            {/* 연필 */}
+            <rect x="48" y="18" width="6" height="40" rx="2" fill="#F59E0B" />
+            <polygon points="51,58 48,65 54,65" fill="#F59E0B" />
           </svg>
         </div>
 
@@ -94,13 +97,13 @@ export function CategorySidebar({
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <h2 className="font-bold text-gray-900 text-lg leading-tight">
-              IT·프로그래밍<br />포트폴리오
+              인기 학습자료<br />모아보기
             </h2>
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">IT</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+              <span className="text-white text-xs font-bold">TOP</span>
             </div>
           </div>
-          <span className="text-sm text-gray-500">바로가기 &gt;</span>
+          <span className="text-sm text-gray-500 hover:text-blue-600 cursor-pointer transition-colors">바로가기 &gt;</span>
         </div>
       </div>
 
