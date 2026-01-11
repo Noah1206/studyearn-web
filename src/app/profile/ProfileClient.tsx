@@ -564,31 +564,40 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
 
   const handleSaveProfile = async () => {
-    if (!user || !supabase) return;
+    if (!user || !supabase) {
+      console.error('handleSaveProfile: user or supabase is null', { user: !!user, supabase: !!supabase });
+      return;
+    }
 
     setIsSaving(true);
     setError('');
     setSuccess('');
 
     try {
-      const { error: updateError } = await supabase
+      console.log('Saving profile...', { userId: user.id, editNickname, editUsername, editBio, editSchool });
+
+      const { data, error: updateError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
+        .update({
           nickname: editNickname,
           username: editUsername,
           bio: editBio,
           school: editSchool,
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq('id', user.id)
+        .select();
+
+      console.log('Profile update response:', { data, error: updateError });
 
       if (updateError) {
         if (updateError.code === '23505' && updateError.message.includes('username')) {
           setError('이미 사용 중인 사용자 이름입니다. 다른 이름을 선택해주세요.');
         } else {
-          setError('프로필 저장에 실패했습니다.');
+          setError(`프로필 저장에 실패했습니다: ${updateError.message}`);
           console.error('Profile update error:', updateError);
         }
+        setIsSaving(false);
         return;
       }
 
@@ -601,7 +610,8 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       } : null);
       setSuccess('프로필이 저장되었습니다.');
       setIsEditing(false);
-    } catch {
+    } catch (err) {
+      console.error('Profile save exception:', err);
       setError('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
