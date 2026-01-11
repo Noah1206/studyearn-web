@@ -22,6 +22,8 @@ import {
   Loader2,
   Flame,
   ExternalLink,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
@@ -279,12 +281,15 @@ export default function StudyanPage() {
   const router = useRouter();
   const [users, setUsers] = useState<StudyanUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedRoutineId, setCopiedRoutineId] = useState<string | null>(null);
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
 
   useEffect(() => {
     loadCurrentUser();
@@ -326,21 +331,26 @@ export default function StudyanPage() {
     }
   };
 
-  const loadUsersWithRoutines = async () => {
+  const loadUsersWithRoutines = async (retry = 0) => {
     setIsLoading(true);
+    setError(null);
+
+    // 타임아웃 설정 (10초)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('요청 시간이 초과되었습니다')), 10000)
+    );
+
     try {
       const supabase = createClient();
 
       // Get all profiles first (with follower_count, streak_days, total_study_minutes)
-      const { data: profilesData, error: profilesError } = await supabase
+      const profilesPromise = supabase
         .from('profiles')
         .select('id, nickname, avatar_url, follower_count, streak_days, total_study_minutes')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
-
       // Get all public routines only
-      const { data: routinesData, error: routinesError } = await supabase
+      const routinesPromise = supabase
         .from('routines')
         .select(`
           id,
@@ -353,9 +363,19 @@ export default function StudyanPage() {
           created_at
         `)
         .eq('is_active', true)
-        .eq('is_public', true)  // 공개 루틴만
+        .eq('is_public', true)
         .order('created_at', { ascending: false });
 
+      // 병렬 요청 + 타임아웃
+      const [profilesResult, routinesResult] = await Promise.race([
+        Promise.all([profilesPromise, routinesPromise]),
+        timeoutPromise.then(() => { throw new Error('timeout'); })
+      ]) as [Awaited<typeof profilesPromise>, Awaited<typeof routinesPromise>];
+
+      const { data: profilesData, error: profilesError } = profilesResult;
+      const { data: routinesData, error: routinesError } = routinesResult;
+
+      if (profilesError) throw profilesError;
       if (routinesError) throw routinesError;
 
       // Combine data - all profiles
@@ -392,11 +412,29 @@ export default function StudyanPage() {
 
       // Show all users (including those without routines)
       setUsers(Array.from(usersMap.values()));
-    } catch (error) {
-      console.error('Failed to load users with routines:', error);
-    } finally {
+      setError(null);
+      setRetryCount(0);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Failed to load users with routines:', err);
+
+      // 자동 재시도
+      if (retry < MAX_RETRIES) {
+        console.log(`Retrying... (${retry + 1}/${MAX_RETRIES})`);
+        setRetryCount(retry + 1);
+        setTimeout(() => loadUsersWithRoutines(retry + 1), 1500);
+        return;
+      }
+
+      // 최대 재시도 후 에러 표시
+      setError('데이터를 불러오지 못했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
       setIsLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    loadUsersWithRoutines(0);
   };
 
   const copyRoutineToMyProfile = async (routine: UserRoutine, userName: string) => {
@@ -558,11 +596,39 @@ export default function StudyanPage() {
       {/* Users Grid */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         {isLoading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <UserSkeleton key={i} />
-            ))}
+          <div>
+            {retryCount > 0 && (
+              <div className="text-center mb-4 text-sm text-gray-500">
+                <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                재시도 중... ({retryCount}/{MAX_RETRIES})
+              </div>
+            )}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <UserSkeleton key={i} />
+              ))}
+            </div>
           </div>
+        ) : error ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              데이터를 불러오지 못했습니다
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              {error}
+            </p>
+            <Button onClick={handleRetry} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              다시 시도
+            </Button>
+          </motion.div>
         ) : filteredUsers.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

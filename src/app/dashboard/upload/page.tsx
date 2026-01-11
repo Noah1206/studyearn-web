@@ -583,7 +583,7 @@ function UploadPageContent() {
         const thumbnailPath = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         const { error: thumbnailUploadError } = await supabase.storage
-          .from('creator-content')
+          .from('contents')
           .upload(thumbnailPath, thumbnailFile, {
             cacheControl: '3600',
             upsert: false
@@ -594,7 +594,7 @@ function UploadPageContent() {
           // 썸네일 업로드 실패는 무시하고 계속 진행
         } else {
           const { data: { publicUrl } } = supabase.storage
-            .from('creator-content')
+            .from('contents')
             .getPublicUrl(thumbnailPath);
           uploadedThumbnailUrl = publicUrl;
         }
@@ -655,7 +655,7 @@ function UploadPageContent() {
         const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('creator-content')
+          .from('contents')
           .upload(filePath, file!, {
             cacheControl: '3600',
             upsert: false
@@ -674,7 +674,7 @@ function UploadPageContent() {
 
         // 공개 URL 가져오기
         const { data: { publicUrl } } = supabase.storage
-          .from('creator-content')
+          .from('contents')
           .getPublicUrl(filePath);
 
         // 썸네일 URL 설정 (업로드된 썸네일 > 이미지인 경우 원본 URL)
@@ -710,7 +710,7 @@ function UploadPageContent() {
         if (insertError) {
           console.error('Upload error:', insertError);
           // 실패 시 업로드된 파일 삭제 시도
-          await supabase.storage.from('creator-content').remove([filePath]);
+          await supabase.storage.from('contents').remove([filePath]);
           setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
           return;
         }
