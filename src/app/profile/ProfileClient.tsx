@@ -564,8 +564,13 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
 
   const handleSaveProfile = async () => {
+    console.log('=== handleSaveProfile CALLED ===');
+    console.log('user:', user);
+    console.log('supabase:', supabase);
+
     if (!user || !supabase) {
       console.error('handleSaveProfile: user or supabase is null', { user: !!user, supabase: !!supabase });
+      alert('사용자 정보를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
       return;
     }
 
