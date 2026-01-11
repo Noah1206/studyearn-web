@@ -564,13 +564,8 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
 
   const handleSaveProfile = async () => {
-    console.log('=== handleSaveProfile CALLED ===');
-    console.log('user:', user);
-    console.log('supabase:', supabase);
-
     if (!user || !supabase) {
-      console.error('handleSaveProfile: user or supabase is null', { user: !!user, supabase: !!supabase });
-      alert('사용자 정보를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
+      setError('사용자 정보를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
       return;
     }
 
@@ -579,8 +574,6 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     setSuccess('');
 
     try {
-      console.log('Saving profile...', { userId: user.id, editNickname, editUsername, editBio, editSchool });
-
       const { data, error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -593,15 +586,19 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         .eq('id', user.id)
         .select();
 
-      console.log('Profile update response:', { data, error: updateError });
-
       if (updateError) {
         if (updateError.code === '23505' && updateError.message.includes('username')) {
           setError('이미 사용 중인 사용자 이름입니다. 다른 이름을 선택해주세요.');
         } else {
           setError(`프로필 저장에 실패했습니다: ${updateError.message}`);
-          console.error('Profile update error:', updateError);
         }
+        setIsSaving(false);
+        return;
+      }
+
+      // RLS로 인해 data가 빈 배열일 수 있음 - 이 경우도 처리
+      if (!data || data.length === 0) {
+        setError('프로필 저장 권한이 없습니다. 다시 로그인해주세요.');
         setIsSaving(false);
         return;
       }
@@ -616,7 +613,6 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       setSuccess('프로필이 저장되었습니다.');
       setIsEditing(false);
     } catch (err) {
-      console.error('Profile save exception:', err);
       setError('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
@@ -1991,7 +1987,16 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   <p className="text-sm text-gray-400">{profile.school}</p>
                 )}
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => {
+                    // 모달 열 때 현재 profile 값으로 edit 상태 초기화
+                    setEditNickname(profile?.nickname || '');
+                    setEditUsername(profile?.username || '');
+                    setEditBio(profile?.bio || '');
+                    setEditSchool(profile?.school || '');
+                    setError('');
+                    setSuccess('');
+                    setIsEditing(true);
+                  }}
                   className="mt-4 w-full py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   프로필 수정
@@ -2670,25 +2675,14 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   >
                     취소
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.alert('버튼 클릭됨!');
-                      console.log('=== BUTTON CLICKED ===');
-                      handleSaveProfile();
-                    }}
-                    disabled={isSaving}
-                    className="flex-1 bg-accent hover:bg-cta-hover text-white px-4 py-2 rounded-lg flex items-center justify-center"
+                  <Button
+                    onClick={handleSaveProfile}
+                    isLoading={isSaving}
+                    className="flex-1 bg-accent hover:bg-cta-hover"
                   >
-                    {isSaving ? (
-                      <span>저장 중...</span>
-                    ) : (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        저장
-                      </>
-                    )}
-                  </button>
+                    <Check className="w-4 h-4 mr-2" />
+                    저장
+                  </Button>
                 </div>
               </div>
             </motion.div>
