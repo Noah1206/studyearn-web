@@ -2673,6 +2673,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => {
+                      window.alert('버튼 클릭됨!');
                       console.log('=== BUTTON CLICKED ===');
                       handleSaveProfile();
                     }}
