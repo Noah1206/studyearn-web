@@ -298,7 +298,7 @@ async function QAContent({ searchParams }: { searchParams: Record<string, string
     .from('creator_settings')
     .select('id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!creatorCheck) {
     redirect('/dashboard');

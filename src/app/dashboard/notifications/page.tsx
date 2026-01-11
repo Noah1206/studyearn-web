@@ -146,7 +146,7 @@ export default function NotificationsPage() {
           .from('user_preferences')
           .select('creator_notification_settings')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (preferences?.creator_notification_settings) {
           const saved = preferences.creator_notification_settings;

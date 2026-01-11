@@ -96,7 +96,7 @@ async function getContentDetail(contentId: string, userId: string) {
     .select('*')
     .eq('id', contentId)
     .eq('creator_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error || !content) return null;
 

@@ -76,7 +76,7 @@ async function getStatsData(creatorId: string) {
       .from('creator_balances')
       .select('total_earned')
       .eq('creator_id', creatorId)
-      .single(),
+      .maybeSingle(),
     supabase
       .from('contents')
       .select('id, view_count')
@@ -137,7 +137,7 @@ async function getPayoutData(creatorId: string) {
       .from('creator_balances')
       .select('available_balance, pending_balance')
       .eq('creator_id', creatorId)
-      .single(),
+      .maybeSingle(),
     // Use payout_requests table instead of creator_payouts
     supabase
       .from('payout_requests')
@@ -626,7 +626,7 @@ export default async function DashboardPage() {
     .from('creator_settings')
     .select('id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!creatorCheck) {
     redirect('/');

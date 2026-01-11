@@ -311,7 +311,7 @@ async function ContentsContent({ searchParams }: { searchParams: Promise<Record<
     .from('creator_settings')
     .select('id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!creatorCheck) {
     redirect('/dashboard');

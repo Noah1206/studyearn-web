@@ -149,7 +149,7 @@ export default function PayoutPage() {
         .from('profiles')
         .select('nickname')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.nickname) {
         setUserNickname(profile.nickname);
@@ -168,7 +168,7 @@ export default function PayoutPage() {
         .from('user_preferences')
         .select('bank_accounts')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (preferences?.bank_accounts) {
         const accounts = preferences.bank_accounts as BankAccount[];

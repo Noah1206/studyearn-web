@@ -296,7 +296,7 @@ async function SalesContent({ searchParams }: { searchParams: Record<string, str
     .from('creator_settings')
     .select('id, payment_method')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!creatorCheck) {
     redirect('/dashboard');

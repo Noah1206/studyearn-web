@@ -119,7 +119,7 @@ export default function ContentEditPage() {
       .select('*')
       .eq('id', contentId)
       .eq('creator_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (error || !contentData) {
       router.push('/dashboard/contents');

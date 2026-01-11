@@ -163,7 +163,7 @@ export default function CreatorProfilePage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
