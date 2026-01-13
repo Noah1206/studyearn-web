@@ -7,7 +7,7 @@ import { BankCode, TransferInfo, DeeplinkResult, BankInfo } from './types';
 import { BANKS, TOSS_BANK_CODES, getBankInfo } from './banks';
 
 /**
- * 토스 송금 딥링크 생성
+ * 토스 송금 딥링크 생성 (계좌번호 방식)
  *
  * 토스 앱에서 송금 화면을 바로 열어주는 딥링크를 생성합니다.
  *
@@ -33,6 +33,33 @@ export function generateTossDeeplink(
   }
 
   // origin 추가 (트래킹용)
+  url += '&origin=studyearn';
+
+  return url;
+}
+
+/**
+ * 토스 아이디 송금 딥링크 생성
+ *
+ * 토스 아이디로 송금하는 딥링크를 생성합니다.
+ * 예금주명 대신 토스아이디가 표시됩니다.
+ *
+ * @param tossId - 수취인 토스 아이디
+ * @param amount - 송금 금액
+ * @param memo - 송금 메모 (선택)
+ * @returns 토스 딥링크 URL
+ */
+export function generateTossIdDeeplink(
+  tossId: string,
+  amount: number,
+  memo?: string
+): string {
+  let url = `supertoss://send?tossId=${encodeURIComponent(tossId)}&amount=${amount}`;
+
+  if (memo) {
+    url += `&memo=${encodeURIComponent(memo)}`;
+  }
+
   url += '&origin=studyearn';
 
   return url;

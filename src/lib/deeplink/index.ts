@@ -54,6 +54,7 @@ export {
 // Deeplink generators
 export {
   generateTossDeeplink,
+  generateTossIdDeeplink,
   generateKakaobankDeeplink,
   generateBankDeeplink,
   generateDeeplinkOptions,
