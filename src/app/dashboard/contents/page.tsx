@@ -5,27 +5,13 @@ import {
   ArrowLeft,
   Plus,
   FileText,
-  Eye,
-  Heart,
-  Edit3,
-  BarChart2,
-  Clock,
-  CheckCircle,
-  Calendar,
-  Download,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { formatCurrency, formatNumber, formatRelativeTime } from '@/lib/utils';
 import { Button, LoadingSection } from '@/components/ui';
 import type { Content } from '@/types/database';
+import { ContentCard, type ContentWithStats } from './ContentCard';
 
 export const dynamic = 'force-dynamic';
-
-interface ContentWithStats extends Content {
-  purchase_count?: number;
-  revenue?: number;
-  tags?: string[];
-}
 
 async function getCreatorContents(userId: string) {
   const supabase = await createClient();
@@ -40,33 +26,39 @@ async function getCreatorContents(userId: string) {
     .eq('creator_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error || !contents) {
+  if (error || !contents || contents.length === 0) {
     return { contents: [], stats: { total: 0, published: 0, draft: 0, scheduled: 0 } };
   }
 
-  const contentsWithStats: ContentWithStats[] = [];
+  // 한 번에 모든 구매 데이터 가져오기 (N+1 문제 해결)
+  const contentIds = contents.map(c => c.id);
+  const { data: allPurchases } = await supabase
+    .from('content_purchases')
+    .select('content_id, creator_revenue')
+    .in('content_id', contentIds)
+    .eq('status', 'completed');
 
-  for (const content of contents) {
-    const { count: purchaseCount } = await supabase
-      .from('content_purchases')
-      .select('*', { count: 'exact', head: true })
-      .eq('content_id', content.id)
-      .eq('status', 'completed');
-
-    const { data: purchases } = await supabase
-      .from('content_purchases')
-      .select('creator_revenue')
-      .eq('content_id', content.id)
-      .eq('status', 'completed');
-
-    const revenue = purchases?.reduce((sum: number, p: { creator_revenue: number | null }) => sum + (p.creator_revenue || 0), 0) || 0;
-
-    contentsWithStats.push({
-      ...content,
-      purchase_count: purchaseCount || 0,
-      revenue,
-    });
+  // 콘텐츠별로 구매 데이터 집계
+  const purchaseMap = new Map<string, { count: number; revenue: number }>();
+  if (allPurchases) {
+    for (const purchase of allPurchases) {
+      const existing = purchaseMap.get(purchase.content_id) || { count: 0, revenue: 0 };
+      purchaseMap.set(purchase.content_id, {
+        count: existing.count + 1,
+        revenue: existing.revenue + (purchase.creator_revenue || 0),
+      });
+    }
   }
+
+  // 콘텐츠에 통계 데이터 매핑
+  const contentsWithStats: ContentWithStats[] = contents.map(content => {
+    const stats = purchaseMap.get(content.id) || { count: 0, revenue: 0 };
+    return {
+      ...content,
+      purchase_count: stats.count,
+      revenue: stats.revenue,
+    };
+  });
 
   const now = new Date();
   const stats = {
@@ -77,155 +69,6 @@ async function getCreatorContents(userId: string) {
   };
 
   return { contents: contentsWithStats, stats };
-}
-
-// 과목 색상
-function getSubjectStyle(subject?: string | null) {
-  const styles: Record<string, { bg: string; text: string }> = {
-    '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
-    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
-    '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
-    '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
-    '사회': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
-    '한국사': { bg: 'bg-orange-50', text: 'text-orange-600' },
-    '루틴': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-    '플래너': { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-  };
-  return styles[subject || ''] || { bg: 'bg-gray-50', text: 'text-gray-600' };
-}
-
-// Content Card Component - 탐색 페이지와 동일한 리스트 스타일
-function ContentCard({ content }: { content: ContentWithStats }) {
-  const now = new Date();
-  const publishedAt = content.published_at ? new Date(content.published_at) : null;
-  const isScheduled = content.is_published && publishedAt && publishedAt > now;
-  const isDraft = !content.is_published;
-  const subjectStyle = getSubjectStyle(content.subject);
-
-  const getStatusBadge = () => {
-    if (isDraft) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600">
-          <Clock className="w-3 h-3" />
-          임시저장
-        </span>
-      );
-    }
-    if (isScheduled) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-600">
-          <Calendar className="w-3 h-3" />
-          예약됨
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600">
-        <CheckCircle className="w-3 h-3" />
-        발행중
-      </span>
-    );
-  };
-
-  return (
-    <div className="group">
-      <Link href={`/content/${content.id}`} className="block">
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:border-gray-300 transition-colors duration-200">
-          <div className="flex gap-5">
-            {/* 콘텐츠 정보 */}
-            <div className="flex-1 min-w-0">
-              {/* 태그 라인 */}
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold ${subjectStyle.bg} ${subjectStyle.text}`}>
-                  {content.subject || '학습자료'}
-                </span>
-                {content.grade && (
-                  <span className="px-2.5 py-1.5 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg">
-                    {content.grade}
-                  </span>
-                )}
-                {getStatusBadge()}
-                <span className="text-xs text-gray-400">• {formatRelativeTime(content.created_at)}</span>
-              </div>
-
-              {/* 제목 */}
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-1.5 line-clamp-1">
-                {content.title}
-              </h3>
-
-              {/* 설명 */}
-              {content.description && (
-                <p className="text-sm text-gray-500 mb-4 line-clamp-1">
-                  {content.description}
-                </p>
-              )}
-
-              {/* 하단: 통계 + 판매 정보 */}
-              <div className="flex items-center justify-between">
-                {/* 통계 */}
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="flex items-center gap-1 text-gray-400">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-medium">{formatNumber(content.view_count || 0)}</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-gray-400">
-                    <Heart className="w-4 h-4" />
-                    <span className="font-medium">{formatNumber(content.like_count || 0)}</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-gray-400">
-                    <Download className="w-4 h-4" />
-                    <span className="font-medium">{formatNumber(content.download_count || 0)}</span>
-                  </span>
-                </div>
-
-                {/* 판매 정보 */}
-                {(content.purchase_count || 0) > 0 && (
-                  <span className="text-sm text-orange-600 font-semibold">
-                    {formatNumber(content.purchase_count || 0)}건 판매 • {formatCurrency(content.revenue || 0)} 수익
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* 우측: 가격 + 액션 */}
-            <div className="flex flex-col items-end justify-between pl-5 border-l border-gray-200 min-w-[120px]">
-              {/* 가격 */}
-              <div className="text-right">
-                {content.price === 0 ? (
-                  <span className="inline-block px-4 py-2 bg-blue-50 text-blue-600 text-lg font-bold rounded-xl">
-                    무료
-                  </span>
-                ) : (
-                  <div>
-                    <span className="block text-xs text-gray-400 mb-0.5">가격</span>
-                    <span className="text-xl font-bold text-gray-900">{formatCurrency(content.price || 0)}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* 액션 버튼 */}
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/dashboard/contents/${content.id}/edit`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </Link>
-                <Link
-                  href={`/dashboard/analytics?content=${content.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-2 rounded-lg text-gray-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-                >
-                  <BarChart2 className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
 }
 
 // Empty State

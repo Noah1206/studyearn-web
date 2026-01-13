@@ -24,9 +24,11 @@ export async function checkTodayAttendance(userId: string): Promise<boolean> {
   const supabase = createClient();
 
   if (!supabase) {
-    console.error('Supabase client not available');
+    console.error('[Attendance] Supabase client not available');
     return false;
   }
+
+  console.log('[Attendance] Checking today attendance for user:', userId);
 
   try {
     const { data, error } = await supabase.rpc('check_today_attendance', {
@@ -34,13 +36,19 @@ export async function checkTodayAttendance(userId: string): Promise<boolean> {
     });
 
     if (error) {
-      console.error('Error checking today attendance:', error);
+      console.error('[Attendance] check_today_attendance RPC Error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return false;
     }
 
+    console.log('[Attendance] check_today_attendance result:', data);
     return data ?? false;
   } catch (err) {
-    console.error('Failed to check attendance:', err);
+    console.error('[Attendance] check_today_attendance Exception:', err);
     return false;
   }
 }
@@ -54,9 +62,11 @@ export async function recordAttendance(userId: string): Promise<AttendanceResult
   const supabase = createClient();
 
   if (!supabase) {
-    console.error('Supabase client not available');
+    console.error('[Attendance] Supabase client not available');
     return null;
   }
+
+  console.log('[Attendance] Recording attendance for user:', userId);
 
   try {
     const { data, error } = await supabase.rpc('record_attendance', {
@@ -64,13 +74,19 @@ export async function recordAttendance(userId: string): Promise<AttendanceResult
     });
 
     if (error) {
-      console.error('Error recording attendance:', error);
+      console.error('[Attendance] RPC Error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return null;
     }
 
+    console.log('[Attendance] RPC Success:', data);
     return data as AttendanceResult;
   } catch (err) {
-    console.error('Failed to record attendance:', err);
+    console.error('[Attendance] Exception:', err);
     return null;
   }
 }
@@ -98,8 +114,8 @@ export async function getConsecutiveDays(userId: string): Promise<number> {
       .single();
 
     if (error) {
-      // No records found is not an error for us
-      if (error.code === 'PGRST116') {
+      // No records found or table not found is not an error for us
+      if (error.code === 'PGRST116' || error.code === 'PGRST205') {
         return 0;
       }
       console.error('Error getting consecutive days:', error);
@@ -208,19 +224,62 @@ export async function processPendingAttendance(userId: string): Promise<Attendan
     const alreadyChecked = await checkTodayAttendance(userId);
     if (alreadyChecked) {
       clearAttendancePending();
-      return null;
+      // Already checked today - dismiss modal for the day
+      dismissForToday();
+      // Return a success result to indicate we handled it
+      return {
+        success: true,
+        consecutive_days: await getConsecutiveDays(userId),
+        already_checked: true,
+      };
     }
 
     // Record attendance
     const result = await recordAttendance(userId);
 
-    // Clear pending flag regardless of result
-    clearAttendancePending();
+    if (result && result.success) {
+      // Only clear pending and dismiss if successful
+      clearAttendancePending();
+      dismissForToday();
+      console.log('Auto attendance recorded successfully:', result.consecutive_days, 'days');
+      return result;
+    }
 
-    return result;
+    // If failed, keep the pending flag so modal shows and user can try manually
+    // But clear it after a few attempts to avoid infinite loops
+    const retryCount = getAttendanceRetryCount();
+    if (retryCount >= 3) {
+      console.error('Auto attendance failed after 3 retries, clearing pending flag');
+      clearAttendancePending();
+      clearAttendanceRetryCount();
+    } else {
+      incrementAttendanceRetryCount();
+      console.error('Auto attendance failed, will retry. Attempt:', retryCount + 1);
+    }
+
+    return null;
   } catch (error) {
     console.error('Error processing pending attendance:', error);
-    clearAttendancePending();
+    // Don't clear pending on error - let user try manually via modal
     return null;
   }
+}
+
+// Retry count helpers for auto-attendance
+const ATTENDANCE_RETRY_KEY = 'studyearn_attendance_retry_count';
+
+function getAttendanceRetryCount(): number {
+  if (typeof window === 'undefined') return 0;
+  return parseInt(localStorage.getItem(ATTENDANCE_RETRY_KEY) || '0', 10);
+}
+
+function incrementAttendanceRetryCount(): void {
+  if (typeof window === 'undefined') return;
+  const count = getAttendanceRetryCount();
+  localStorage.setItem(ATTENDANCE_RETRY_KEY, String(count + 1));
+}
+
+function clearAttendanceRetryCount(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ATTENDANCE_RETRY_KEY);
 }

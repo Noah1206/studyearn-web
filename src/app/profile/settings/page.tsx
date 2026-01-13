@@ -20,9 +20,9 @@ import {
   LogOut,
   Trash2,
   User,
-  CreditCard,
   AlertTriangle,
   Settings,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -43,8 +43,8 @@ interface PrivacySettings {
   showSchool: boolean;
 }
 
-type SettingsSection = 'notifications' | 'privacy' | 'payment' | 'help' | 'account';
-const validSections: SettingsSection[] = ['notifications', 'privacy', 'payment', 'help', 'account'];
+type SettingsSection = 'notifications' | 'privacy' | 'help' | 'account';
+const validSections: SettingsSection[] = ['notifications', 'privacy', 'help', 'account'];
 
 // useSearchParams를 사용하는 내부 컴포넌트
 function SettingsContent() {
@@ -174,10 +174,65 @@ function SettingsContent() {
   }, [supabase, router]);
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    clearUser();
-    router.push('/');
+    console.log('🔴 [Settings] Logout button clicked');
+
+    if (!supabase) {
+      console.error('❌ Supabase client not available');
+      return;
+    }
+
+    console.log('🔄 Starting logout process...');
+
+    try {
+      // localStorage/sessionStorage 클리어
+      if (typeof window !== 'undefined') {
+        const localStorageKeys = Object.keys(localStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
+        );
+        console.log('🗑️ Clearing localStorage keys:', localStorageKeys);
+        localStorageKeys.forEach(key => localStorage.removeItem(key));
+
+        const sessionStorageKeys = Object.keys(sessionStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase')
+        );
+        console.log('🗑️ Clearing sessionStorage keys:', sessionStorageKeys);
+        sessionStorageKeys.forEach(key => sessionStorage.removeItem(key));
+      }
+
+      // 클라이언트 signOut with timeout
+      console.log('📤 Calling supabase.auth.signOut...');
+      try {
+        const signOutPromise = supabase.auth.signOut({ scope: 'global' });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('SignOut timeout')), 2000)
+        );
+
+        const { error: signOutError } = await Promise.race([signOutPromise, timeoutPromise]);
+        if (signOutError) {
+          console.error('❌ SignOut error:', signOutError);
+        } else {
+          console.log('✅ Client signOut successful');
+        }
+      } catch (err) {
+        console.warn('⚠️ SignOut timed out or failed, continuing with logout...', err);
+      }
+
+      // 서버 API 호출
+      console.log('📤 Calling /api/auth/logout...');
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('✅ Server logout response:', response.status, response.statusText);
+
+      // User store 클리어
+      console.log('🗑️ Clearing user store...');
+      clearUser();
+      console.log('✅ User store cleared');
+    } catch (err) {
+      console.error('❌ Logout error:', err);
+    }
+
+    // 홈으로 리다이렉트
+    console.log('🏠 Redirecting to home...');
+    window.location.href = '/';
   };
 
   const handleDeleteAccount = async () => {
@@ -280,7 +335,6 @@ function SettingsContent() {
   const menuItems = [
     { id: 'notifications' as const, icon: Bell, label: '알림', description: '푸시, 이메일 알림 설정' },
     { id: 'privacy' as const, icon: Shield, label: '개인정보 및 보안', description: '프로필 공개, 비밀번호' },
-    ...(userType === 'creator' ? [{ id: 'payment' as const, icon: CreditCard, label: '결제 및 정산', description: '정산 계좌 관리' }] : []),
     { id: 'help' as const, icon: HelpCircle, label: '도움말', description: 'FAQ, 문의하기' },
     { id: 'account' as const, icon: AlertTriangle, label: '계정 관리', description: '로그아웃, 탈퇴' },
   ];
@@ -463,40 +517,6 @@ function SettingsContent() {
                       <ChevronRight className="w-5 h-5 text-gray-300" />
                     </Link>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.div>
-        );
-
-      case 'payment':
-        return (
-          <motion.div
-            key="payment"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900">결제 및 정산</h2>
-              <p className="text-sm text-gray-500 mt-1">수익 정산과 결제 정보를 관리합니다</p>
-            </div>
-            <div className="space-y-4">
-              <Card variant="outlined">
-                <CardContent className="p-0">
-                  <Link
-                    href="/dashboard/payout/settings"
-                    className="flex items-center gap-4 p-4"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-accent" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">정산 계좌 관리</p>
-                      <p className="text-xs text-gray-400">수익 정산 받을 계좌 설정</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-300" />
-                  </Link>
                 </CardContent>
               </Card>
             </div>
@@ -797,6 +817,7 @@ function SettingsContent() {
           </motion.div>
         </motion.div>
       )}
+
     </motion.div>
   );
 }

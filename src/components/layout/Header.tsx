@@ -57,9 +57,16 @@ export function Header() {
   // 크리에이터 상태는 SessionProvider에서 자동으로 동기화됨
 
   const handleLogout = async () => {
+    console.log('🔴 Logout button clicked');
+
     // 중복 클릭 방지
-    if (isLoggingOut) return;
+    if (isLoggingOut) {
+      console.log('⏭️ Already logging out, skipping...');
+      return;
+    }
+
     setIsLoggingOut(true);
+    console.log('🔄 Starting logout process...');
 
     // 즉시 UI 닫기
     setIsProfileOpen(false);
@@ -68,28 +75,52 @@ export function Header() {
     try {
       // localStorage/sessionStorage 클리어
       if (typeof window !== 'undefined') {
-        Object.keys(localStorage).filter(
+        const localStorageKeys = Object.keys(localStorage).filter(
           key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
-        ).forEach(key => localStorage.removeItem(key));
+        );
+        console.log('🗑️ Clearing localStorage keys:', localStorageKeys);
+        localStorageKeys.forEach(key => localStorage.removeItem(key));
 
-        Object.keys(sessionStorage).filter(
+        const sessionStorageKeys = Object.keys(sessionStorage).filter(
           key => key.startsWith('sb-') || key.includes('supabase')
-        ).forEach(key => sessionStorage.removeItem(key));
+        );
+        console.log('🗑️ Clearing sessionStorage keys:', sessionStorageKeys);
+        sessionStorageKeys.forEach(key => sessionStorage.removeItem(key));
       }
 
-      // 클라이언트 signOut
-      await supabase?.auth.signOut({ scope: 'global' });
+      // 클라이언트 signOut with timeout
+      console.log('📤 Calling supabase.auth.signOut...');
+      try {
+        const signOutPromise = supabase?.auth.signOut({ scope: 'global' });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('SignOut timeout')), 2000)
+        );
+
+        const { error: signOutError } = await Promise.race([signOutPromise, timeoutPromise]) || {};
+        if (signOutError) {
+          console.error('❌ SignOut error:', signOutError);
+        } else {
+          console.log('✅ Client signOut successful');
+        }
+      } catch (err) {
+        console.warn('⚠️ SignOut timed out or failed, continuing with logout...', err);
+      }
 
       // 서버 API 호출
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('📤 Calling /api/auth/logout...');
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('✅ Server logout response:', response.status, response.statusText);
 
       // User store 클리어
+      console.log('🗑️ Clearing user store...');
       clearUser();
+      console.log('✅ User store cleared');
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error('❌ Logout error:', err);
     }
 
     // 홈으로 리다이렉트
+    console.log('🏠 Redirecting to home...');
     window.location.href = '/';
   };
 
@@ -211,15 +242,16 @@ export function Header() {
                     <div className="border-t border-gray-100 pt-1">
                       <button
                         type="button"
-                        onMouseDown={(e) => {
+                        onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleLogout();
                         }}
-                        className="flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error/5 w-full text-left transition-colors cursor-pointer"
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error/5 w-full text-left transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span className="text-sm">로그아웃</span>
+                        <span className="text-sm">{isLoggingOut ? '로그아웃 중...' : '로그아웃'}</span>
                       </button>
                     </div>
                   </div>
@@ -324,14 +356,15 @@ export function Header() {
                   )}
                   <button
                     type="button"
-                    onMouseDown={(e) => {
+                    onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleLogout();
                     }}
-                    className="block w-full text-left px-4 py-3 text-error hover:bg-error/5 rounded-lg cursor-pointer"
+                    disabled={isLoggingOut}
+                    className="block w-full text-left px-4 py-3 text-error hover:bg-error/5 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    로그아웃
+                    {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
                   </button>
                 </div>
               ) : (

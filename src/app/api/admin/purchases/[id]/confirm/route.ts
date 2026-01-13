@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendPurchaseConfirmEmail } from '@/lib/email';
+import { requireAdmin, checkIsAdmin } from '@/lib/auth';
 
 /**
  * POST /api/admin/purchases/[id]/confirm
@@ -11,33 +12,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Check admin permission (environment variable based)
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
     const { id } = await params;
     const supabase = await createClient();
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
+    // Get admin user ID for tracking
+    const { user } = await checkIsAdmin();
 
     // Get the purchase with buyer and content info for email
     const { data: purchase, error: purchaseError } = await supabase
@@ -70,7 +54,7 @@ export async function POST(
       .update({
         status: 'completed',
         platform_confirmed_at: new Date().toISOString(),
-        platform_confirmed_by: user.id,
+        platform_confirmed_by: user?.id || null,
       })
       .eq('id', id);
 
@@ -162,33 +146,16 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Check admin permission (environment variable based)
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
     const { id } = await params;
     const supabase = await createClient();
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
+    // Get admin user ID for tracking
+    const { user } = await checkIsAdmin();
 
     // Get the purchase
     const { data: purchase, error: purchaseError } = await supabase
@@ -217,7 +184,7 @@ export async function DELETE(
       .update({
         status: 'rejected',
         platform_confirmed_at: new Date().toISOString(),
-        platform_confirmed_by: user.id,
+        platform_confirmed_by: user?.id || null,
       })
       .eq('id', id);
 

@@ -9,3 +9,4 @@ export {
   calculatePlatformFee,
   calculateNetAmount,
 } from './format';
+export { generateOrderNumber, isValidOrderNumber } from './order';

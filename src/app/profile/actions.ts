@@ -18,28 +18,28 @@ export async function updateProfile(data: UpdateProfileData) {
     return { success: false, error: '로그인이 필요합니다.' };
   }
 
+  // upsert를 사용하여 프로필이 없으면 생성, 있으면 업데이트
   const { data: updatedProfile, error: updateError } = await supabase
     .from('profiles')
-    .update({
+    .upsert({
+      id: user.id,
       nickname: data.nickname,
       username: data.username,
       bio: data.bio,
       school: data.school,
       updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'id',
     })
-    .eq('id', user.id)
     .select()
     .single();
 
   if (updateError) {
+    console.error('[Profile] Update error:', updateError);
     if (updateError.code === '23505' && updateError.message.includes('username')) {
       return { success: false, error: '이미 사용 중인 사용자 이름입니다.' };
     }
     return { success: false, error: `저장 실패: ${updateError.message}` };
-  }
-
-  if (!updatedProfile) {
-    return { success: false, error: '프로필 저장 권한이 없습니다.' };
   }
 
   return { success: true, data: updatedProfile };

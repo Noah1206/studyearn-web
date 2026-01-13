@@ -75,6 +75,9 @@ export function AttendanceModal({
       setConsecutiveDays(result.consecutive_days);
       setStage('stamped');
 
+      // Mark as completed for today so modal won't show again
+      dismissForToday();
+
       setTimeout(() => {
         setStage('success');
       }, 600);

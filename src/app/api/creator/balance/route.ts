@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
       .from('creator_balances')
       .select('*')
       .eq('creator_id', user.id)
-      .single();
+      .maybeSingle();
 
     // If no balance record exists, return zero balance
-    if (balanceError && balanceError.code === 'PGRST116') {
+    if (!balance) {
       return NextResponse.json({
         balance: {
           available_balance: 0,
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       .from('platform_settings')
       .select('value')
       .eq('key', 'payout_settings')
-      .single();
+      .maybeSingle();
 
     return NextResponse.json({
       balance: {

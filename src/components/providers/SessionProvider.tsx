@@ -120,27 +120,33 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
 
     // 서버에서 전달받은 초기 세션이 있으면 사용
     if (initialSession) {
+      console.log('🔑 [SessionProvider] Using initial session for:', initialSession.user?.email);
       setSession(initialSession);
       setIsLoading(false);
       // 초기 세션이 있으면 유저 데이터 로드
       if (initialSession.user) {
         loadUserData(initialSession.user);
       }
+    } else {
+      console.log('⚠️ [SessionProvider] No initial session provided');
     }
 
     // Auth 상태 변경 구독
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, currentSession: Session | null) => {
+        console.log('🔐 [SessionProvider] Auth state changed:', event, 'Has session:', !!currentSession);
         setSession(currentSession);
         setIsLoading(false);
 
         // 로그인 이벤트 시 유저 데이터 로드
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && currentSession?.user) {
+          console.log('✅ [SessionProvider] Loading user data for:', currentSession.user.email);
           await loadUserData(currentSession.user);
         }
 
         // 로그아웃 시 유저 스토어 클리어
         if (event === 'SIGNED_OUT') {
+          console.log('🚪 [SessionProvider] SIGNED_OUT event - clearing user');
           clearUser();
         }
       }

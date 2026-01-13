@@ -21,6 +21,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, LoadingSection } from '@/components/ui';
+import { ContentThumbnail } from '@/components/content';
 import { PayoutCard } from './PayoutCard';
 import { RevenueChart } from './RevenueChart';
 
@@ -44,6 +45,8 @@ interface ContentStats {
   price: number;
   revenue: number;
   createdAt: string;
+  thumbnailUrl?: string | null;
+  subject?: string | null;
 }
 
 interface PayoutInfo {
@@ -200,6 +203,8 @@ interface ContentRecord {
   like_count: number;
   price: number;
   created_at: string;
+  thumbnail_url?: string | null;
+  subject?: string | null;
 }
 
 async function getContentStatsData(creatorId: string) {
@@ -207,7 +212,7 @@ async function getContentStatsData(creatorId: string) {
 
   const { data: contents } = await supabase
     .from('contents')
-    .select('id, title, content_type, access_level, view_count, like_count, price, created_at')
+    .select('id, title, content_type, access_level, view_count, like_count, price, created_at, thumbnail_url, subject')
     .eq('creator_id', creatorId)
     .eq('is_published', true)
     .order('created_at', { ascending: false })
@@ -246,6 +251,8 @@ async function getContentStatsData(creatorId: string) {
         price: content.price || 0,
         revenue: purchaseInfo.revenue,
         createdAt: content.created_at,
+        thumbnailUrl: content.thumbnail_url,
+        subject: content.subject,
       };
     });
   }
@@ -502,15 +509,19 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
           {contentStats.length > 0 ? (
             <div className="space-y-3">
               {contentStats.slice(0, 5).map((content: ContentStats) => {
-                const ContentIcon = getContentTypeIcon(content.contentType);
                 return (
                   <Link
                     key={content.id}
                     href={`/content/${content.id}`}
                     className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100">
-                      <ContentIcon className="w-6 h-6 text-gray-500" />
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                      <ContentThumbnail
+                        thumbnailUrl={content.thumbnailUrl}
+                        subject={content.subject}
+                        title={content.title}
+                        aspectRatio="1/1"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 truncate">

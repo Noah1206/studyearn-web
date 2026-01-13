@@ -85,13 +85,6 @@ const CREATOR_MENUS = [
     href: '/dashboard/contents',
   },
   {
-    id: 'earnings',
-    title: '수익 관리',
-    description: '수익 현황 및 정산',
-    icon: DollarSign,
-    href: '/dashboard/payout',
-  },
-  {
     id: 'subscribers',
     title: '구독자',
     description: '구독자 관리',
@@ -355,10 +348,65 @@ export default function CreatorProfilePage() {
   };
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    clearUser();
-    router.push('/');
+    console.log('🔴 [Creator Profile] Logout button clicked');
+
+    if (!supabase) {
+      console.error('❌ Supabase client not available');
+      return;
+    }
+
+    console.log('🔄 Starting logout process...');
+
+    try {
+      // localStorage/sessionStorage 클리어
+      if (typeof window !== 'undefined') {
+        const localStorageKeys = Object.keys(localStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
+        );
+        console.log('🗑️ Clearing localStorage keys:', localStorageKeys);
+        localStorageKeys.forEach(key => localStorage.removeItem(key));
+
+        const sessionStorageKeys = Object.keys(sessionStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase')
+        );
+        console.log('🗑️ Clearing sessionStorage keys:', sessionStorageKeys);
+        sessionStorageKeys.forEach(key => sessionStorage.removeItem(key));
+      }
+
+      // 클라이언트 signOut with timeout
+      console.log('📤 Calling supabase.auth.signOut...');
+      try {
+        const signOutPromise = supabase.auth.signOut({ scope: 'global' });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('SignOut timeout')), 2000)
+        );
+
+        const { error: signOutError } = await Promise.race([signOutPromise, timeoutPromise]);
+        if (signOutError) {
+          console.error('❌ SignOut error:', signOutError);
+        } else {
+          console.log('✅ Client signOut successful');
+        }
+      } catch (err) {
+        console.warn('⚠️ SignOut timed out or failed, continuing with logout...', err);
+      }
+
+      // 서버 API 호출
+      console.log('📤 Calling /api/auth/logout...');
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('✅ Server logout response:', response.status, response.statusText);
+
+      // User store 클리어
+      console.log('🗑️ Clearing user store...');
+      clearUser();
+      console.log('✅ User store cleared');
+    } catch (err) {
+      console.error('❌ Logout error:', err);
+    }
+
+    // 홈으로 리다이렉트
+    console.log('🏠 Redirecting to home...');
+    window.location.href = '/';
   };
 
   const handleSwitchToRunner = () => {

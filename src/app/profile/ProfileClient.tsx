@@ -33,6 +33,7 @@ import {
   EyeOff,
   Globe,
   Lock,
+  CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -42,6 +43,7 @@ import { updateProfile } from './actions';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 import { ensureHttps } from '@/lib/utils/url';
+import { type PaymentAccount, BANKS, maskAccountNumber } from '@/lib/deeplink';
 
 // 루틴 관련 상수
 const ROUTINE_TYPES = [
@@ -116,15 +118,7 @@ interface PurchasedContent {
   type: 'document' | 'video' | 'audio';
 }
 
-interface StudyStats {
-  todayMinutes: number;
-  weekMinutes: number;
-  monthMinutes: number;
-  totalMinutes: number;
-  totalAttendance: number;
-  bestStreak: number;
-  joinedRooms: number;
-}
+// 출석 횟수만 관리
 
 // 설정 메뉴 아이템
 const CONTENT_MENUS = [
@@ -176,13 +170,6 @@ const CREATOR_MENUS = [
     description: '업로드한 콘텐츠 관리',
     icon: FileText,
     href: '/dashboard/contents',
-  },
-  {
-    id: 'earnings',
-    title: '수익',
-    description: '수익 현황 및 정산',
-    icon: DollarSign,
-    href: '/dashboard/payout',
   },
 ];
 
@@ -242,18 +229,13 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       current_session_minutes: prefetchedData.currentSession.current_session_minutes,
     } : null
   );
-  const [studyStats, setStudyStats] = useState<StudyStats>({
-    todayMinutes: 0,
-    weekMinutes: 0,
-    monthMinutes: 0,
-    totalMinutes: 0,
-    totalAttendance: 0,
-    bestStreak: 0,
-    joinedRooms: 0,
-  });
+  const [totalAttendance, setTotalAttendance] = useState(0);
 
   // 구매한 콘텐츠
   const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
+
+  // 결제 계좌
+  const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
 
   // 내 루틴
   const [userRoutines, setUserRoutines] = useState<UserRoutine[]>([]);
@@ -446,11 +428,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       if (!supabase) return;
 
       // Run all secondary queries in parallel
-      const [participationsResult, purchasesResult, routinesResult] = await Promise.all([
-        // 스터디 참여 기록
-        supabase.from('study_with_me_participants')
-          .select('room_id, current_session_minutes, joined_at')
-          .eq('user_id', userId),
+      const [purchasesResult, routinesResult, attendanceResult] = await Promise.all([
         // 구매 내역
         fetch('/api/me/purchases').then(res => res.ok ? res.json() : null).catch(() => null),
         // 루틴
@@ -458,74 +436,18 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
           .select('id, title, description, routine_type, routine_days, routine_items, is_public, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false }),
+        // 출석 횟수
+        supabase.from('attendance_stamps')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId),
       ]);
 
-      // Process study stats
-      if (participationsResult.data) {
-        const allParticipations = participationsResult.data;
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-        type Participation = { room_id: string; current_session_minutes: number | null; joined_at: string };
-
-        if (allParticipations.length > 0) {
-          const todayMinutes = allParticipations
-            .filter((p: Participation) => p.joined_at >= todayStart)
-            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-          const weekMinutes = allParticipations
-            .filter((p: Participation) => p.joined_at >= weekStart)
-            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-          const monthMinutes = allParticipations
-            .filter((p: Participation) => p.joined_at >= monthStart)
-            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-          const totalMinutes = allParticipations
-            .reduce((sum: number, p: Participation) => sum + (p.current_session_minutes || 0), 0);
-          const uniqueRooms = new Set(allParticipations.map((p: Participation) => p.room_id));
-
-          const studyDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
-            new Date(p.joined_at).toISOString().split('T')[0]
-          ))).sort((a, b) => b.localeCompare(a));
-
-          let streak = 0;
-          let checkDate = new Date();
-          checkDate.setHours(0, 0, 0, 0);
-          for (const dateStr of studyDates) {
-            const studyDate = new Date(dateStr);
-            studyDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.floor((checkDate.getTime() - studyDate.getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays === 0 || diffDays === 1) { streak++; checkDate = studyDate; } else break;
-          }
-
-          let bestStreak = 0, currentStreak = 0;
-          const sortedDates: string[] = Array.from(new Set<string>(allParticipations.map((p: Participation) =>
-            new Date(p.joined_at).toISOString().split('T')[0]
-          ))).sort();
-          for (let i = 0; i < sortedDates.length; i++) {
-            if (i === 0) { currentStreak = 1; } else {
-              const diffDays = Math.floor((new Date(sortedDates[i]).getTime() - new Date(sortedDates[i - 1]).getTime()) / (1000 * 60 * 60 * 24));
-              currentStreak = diffDays === 1 ? currentStreak + 1 : 1;
-            }
-            bestStreak = Math.max(bestStreak, currentStreak);
-          }
-
-          // Get attendance count
-          let totalAttendance = studyDates.length;
-          try {
-            const { count } = await supabase.from('user_attendance').select('*', { count: 'exact', head: true }).eq('user_id', userId);
-            if (typeof count === 'number' && count > totalAttendance) totalAttendance = count;
-          } catch {}
-
-          setStudyStats({ todayMinutes, weekMinutes, monthMinutes, totalMinutes, totalAttendance, bestStreak: Math.max(bestStreak, streak), joinedRooms: uniqueRooms.size });
-        } else {
-          let totalAttendance = 0;
-          try {
-            const { count } = await supabase.from('user_attendance').select('*', { count: 'exact', head: true }).eq('user_id', userId);
-            if (typeof count === 'number') totalAttendance = count;
-          } catch {}
-          setStudyStats({ todayMinutes: 0, weekMinutes: 0, monthMinutes: 0, totalMinutes: 0, totalAttendance, bestStreak: 0, joinedRooms: 0 });
-        }
+      // Process attendance count
+      if (attendanceResult.count !== null && typeof attendanceResult.count === 'number') {
+        setTotalAttendance(attendanceResult.count);
+        console.log('[Profile] Attendance count:', attendanceResult.count);
+      } else {
+        console.log('[Profile] Attendance result error:', attendanceResult.error);
       }
 
       // Process purchases
@@ -542,6 +464,19 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
           type: 'document' as const,
         }));
         setPurchasedContents(mappedPurchases);
+      }
+
+      // Fetch payment accounts
+      try {
+        const paymentResponse = await fetch('/api/me/payment-accounts');
+        if (paymentResponse.ok) {
+          const paymentData = await paymentResponse.json();
+          if (paymentData.success && paymentData.accounts) {
+            setPaymentAccounts(paymentData.accounts);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch payment accounts:', err);
       }
 
       // Process routines
@@ -686,10 +621,65 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   };
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    clearUser();
-    router.push('/');
+    console.log('🔴 [Profile] Logout button clicked');
+
+    if (!supabase) {
+      console.error('❌ Supabase client not available');
+      return;
+    }
+
+    console.log('🔄 Starting logout process...');
+
+    try {
+      // localStorage/sessionStorage 클리어
+      if (typeof window !== 'undefined') {
+        const localStorageKeys = Object.keys(localStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase') || key === 'user-storage'
+        );
+        console.log('🗑️ Clearing localStorage keys:', localStorageKeys);
+        localStorageKeys.forEach(key => localStorage.removeItem(key));
+
+        const sessionStorageKeys = Object.keys(sessionStorage).filter(
+          key => key.startsWith('sb-') || key.includes('supabase')
+        );
+        console.log('🗑️ Clearing sessionStorage keys:', sessionStorageKeys);
+        sessionStorageKeys.forEach(key => sessionStorage.removeItem(key));
+      }
+
+      // 클라이언트 signOut with timeout
+      console.log('📤 Calling supabase.auth.signOut...');
+      try {
+        const signOutPromise = supabase.auth.signOut({ scope: 'global' });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('SignOut timeout')), 2000)
+        );
+
+        const { error: signOutError } = await Promise.race([signOutPromise, timeoutPromise]);
+        if (signOutError) {
+          console.error('❌ SignOut error:', signOutError);
+        } else {
+          console.log('✅ Client signOut successful');
+        }
+      } catch (err) {
+        console.warn('⚠️ SignOut timed out or failed, continuing with logout...', err);
+      }
+
+      // 서버 API 호출
+      console.log('📤 Calling /api/auth/logout...');
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('✅ Server logout response:', response.status, response.statusText);
+
+      // User store 클리어
+      console.log('🗑️ Clearing user store...');
+      clearUser();
+      console.log('✅ User store cleared');
+    } catch (err) {
+      console.error('❌ Logout error:', err);
+    }
+
+    // 홈으로 리다이렉트
+    console.log('🏠 Redirecting to home...');
+    window.location.href = '/';
   };
 
   // Handle mode switching
@@ -1985,7 +1975,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
               {/* 통계 */}
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{studyStats.totalAttendance}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalAttendance}</p>
                   <p className="text-xs text-gray-500">출석</p>
                 </div>
                 <div className="text-center">
@@ -2488,6 +2478,69 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-orange-500" />
                 </Link>
               </div>
+            </motion.div>
+
+            {/* 결제 계좌 */}
+            <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">결제 계좌</p>
+                <Link
+                  href="/profile/payment-accounts"
+                  className="text-xs text-orange-500 hover:text-orange-600"
+                >
+                  {paymentAccounts.length > 0 ? '관리하기' : '등록하기'}
+                </Link>
+              </div>
+              {paymentAccounts.length > 0 ? (
+                <div className="space-y-3">
+                  {paymentAccounts.slice(0, 2).map((account) => (
+                    <div
+                      key={account.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm text-white font-bold text-xs"
+                        style={{ backgroundColor: BANKS[account.bankCode]?.color || '#6B7280' }}
+                      >
+                        {BANKS[account.bankCode]?.shortName || '은행'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            {account.bankName}
+                          </p>
+                          {account.isPrimary && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded-full font-medium">
+                              기본
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {maskAccountNumber(account.accountNumber)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {paymentAccounts.length > 2 && (
+                    <p className="text-xs text-gray-400 text-center">
+                      외 {paymentAccounts.length - 2}개의 계좌
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/profile/payment-accounts"
+                  className="block p-4 border-2 border-dashed border-gray-200 rounded-xl text-center hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                >
+                  <CreditCard className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    계좌를 등록해주세요
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    정산금과 환불금을 안전하게 받을 수 있어요
+                  </p>
+                </Link>
+              )}
             </motion.div>
 
             {/* 설정 */}

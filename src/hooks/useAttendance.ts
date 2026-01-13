@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
   checkTodayAttendance,
@@ -41,6 +41,7 @@ export function useAttendance(): UseAttendanceResult {
   const [hasCheckedToday, setHasCheckedToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const pendingProcessedRef = useRef(false);
 
   const openModal = useCallback(() => {
     setIsModalOpen(true);
@@ -50,61 +51,70 @@ export function useAttendance(): UseAttendanceResult {
     setIsModalOpen(false);
   }, []);
 
+  // Process pending attendance for a user
+  const handlePendingAttendance = useCallback(async (user: { id: string }) => {
+    // Prevent duplicate processing
+    if (pendingProcessedRef.current) return false;
+
+    if (hasAttendancePending()) {
+      pendingProcessedRef.current = true;
+      console.log('[Attendance] Processing pending attendance for user:', user.id);
+
+      const pendingResult = await processPendingAttendance(user.id);
+      if (pendingResult && pendingResult.success) {
+        console.log('[Attendance] Pending attendance processed successfully:', pendingResult.consecutive_days, 'days');
+        setHasCheckedToday(true);
+        setConsecutiveDays(pendingResult.consecutive_days);
+        return true;
+      }
+      console.log('[Attendance] Pending attendance failed, will show modal for manual check');
+      pendingProcessedRef.current = false; // Allow retry
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
-    const checkAttendanceStatus = async () => {
-      const supabase = createClient();
-      if (!supabase) {
+    const supabase = createClient();
+    if (!supabase) {
+      setIsLoading(false);
+      if (!isDismissedToday()) {
+        setTimeout(() => setIsModalOpen(true), 300);
+      }
+      return;
+    }
+
+    const checkAttendanceStatus = async (user: { id: string; email?: string; user_metadata?: Record<string, string> } | null) => {
+      if (!user) {
+        // User not logged in - show modal if not dismissed
+        setIsLoggedIn(false);
         setIsLoading(false);
-        // Show modal for non-logged in users if not dismissed
         if (!isDismissedToday()) {
-          setTimeout(() => {
-            setIsModalOpen(true);
-          }, 300);
+          setTimeout(() => setIsModalOpen(true), 300);
         }
         return;
       }
 
+      // User is logged in
+      setIsLoggedIn(true);
+      setUserId(user.id);
+
+      // Get user name from metadata or email
+      const displayName = user.user_metadata?.name
+        || user.user_metadata?.full_name
+        || user.user_metadata?.user_name
+        || user.email?.split('@')[0]
+        || '회원';
+      setUserName(displayName);
+
+      // Check if there's a pending attendance from before login
+      const pendingHandled = await handlePendingAttendance(user);
+      if (pendingHandled) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user already checked today
       try {
-        // Get current session (getSession은 로컬에서 읽어서 빠름)
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
-
-        if (!user) {
-          // User not logged in - still show modal if not dismissed
-          setIsLoggedIn(false);
-          setIsLoading(false);
-          if (!isDismissedToday()) {
-            setTimeout(() => {
-              setIsModalOpen(true);
-            }, 300);
-          }
-          return;
-        }
-
-        // User is logged in
-        setIsLoggedIn(true);
-        setUserId(user.id);
-
-        // Get user name from metadata or email
-        const displayName = user.user_metadata?.name
-          || user.user_metadata?.full_name
-          || user.email?.split('@')[0]
-          || '회원';
-        setUserName(displayName);
-
-        // Check if there's a pending attendance from before login
-        if (hasAttendancePending()) {
-          const pendingResult = await processPendingAttendance(user.id);
-          if (pendingResult && pendingResult.success) {
-            // Pending attendance was processed successfully
-            setHasCheckedToday(true);
-            setConsecutiveDays(pendingResult.consecutive_days);
-            // Don't show modal since we just auto-checked
-            return;
-          }
-        }
-
-        // Check if user already checked today
         const [hasChecked, days] = await Promise.all([
           checkTodayAttendance(user.id),
           getConsecutiveDays(user.id),
@@ -115,26 +125,94 @@ export function useAttendance(): UseAttendanceResult {
 
         // Show modal if not checked today and not dismissed
         if (!hasChecked && !isDismissedToday()) {
-          // Reduced delay for faster UX (300ms instead of 1000ms)
-          setTimeout(() => {
-            setIsModalOpen(true);
-          }, 300);
+          setTimeout(() => setIsModalOpen(true), 300);
         }
       } catch (error) {
-        console.error('Error checking attendance status:', error);
-        // On error, still show modal for engagement if not dismissed
+        console.error('[Attendance] Error checking attendance status:', error);
         if (!isDismissedToday()) {
-          setTimeout(() => {
-            setIsModalOpen(true);
-          }, 300);
+          setTimeout(() => setIsModalOpen(true), 300);
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAttendanceStatus();
-  }, []);
+    // Initial check with getSession
+    const initCheck = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await checkAttendanceStatus(session?.user ?? null);
+      } catch (error) {
+        console.error('[Attendance] Error getting session:', error);
+        setIsLoading(false);
+        if (!isDismissedToday()) {
+          setTimeout(() => setIsModalOpen(true), 300);
+        }
+      }
+    };
+
+    initCheck();
+
+    // Subscribe to auth state changes - handles OAuth callback (Kakao login)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[Attendance] Auth state changed:', event, 'Has session:', !!session);
+
+        // When user signs in (especially after OAuth), process pending attendance
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('[Attendance] SIGNED_IN event detected, checking pending attendance');
+
+          // Update user info
+          setIsLoggedIn(true);
+          setUserId(session.user.id);
+          const displayName = session.user.user_metadata?.name
+            || session.user.user_metadata?.full_name
+            || session.user.user_metadata?.user_name
+            || session.user.email?.split('@')[0]
+            || '회원';
+          setUserName(displayName);
+
+          // Process pending attendance after sign-in (OAuth callback)
+          const pendingHandled = await handlePendingAttendance(session.user);
+          if (pendingHandled) {
+            setIsLoading(false);
+            return;
+          }
+
+          // If no pending, check attendance status
+          try {
+            const [hasChecked, days] = await Promise.all([
+              checkTodayAttendance(session.user.id),
+              getConsecutiveDays(session.user.id),
+            ]);
+            setHasCheckedToday(hasChecked);
+            setConsecutiveDays(days);
+
+            if (!hasChecked && !isDismissedToday()) {
+              setTimeout(() => setIsModalOpen(true), 300);
+            }
+          } catch (error) {
+            console.error('[Attendance] Error after SIGNED_IN:', error);
+          }
+          setIsLoading(false);
+        }
+
+        // When user signs out, reset state
+        if (event === 'SIGNED_OUT') {
+          setIsLoggedIn(false);
+          setUserId(null);
+          setUserName(null);
+          setHasCheckedToday(false);
+          setConsecutiveDays(0);
+          pendingProcessedRef.current = false;
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [handlePendingAttendance]);
 
   return {
     isModalOpen,

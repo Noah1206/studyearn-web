@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { generateOrderNumber } from '@/lib/utils';
 
 // Platform fee rate (20%)
 const PLATFORM_FEE_RATE = 0.20;
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Check if there's already a pending purchase
     const { data: pendingPurchase } = await supabase
       .from('content_purchases')
-      .select('id, status')
+      .select('id, status, order_number, amount')
       .eq('content_id', contentId)
       .eq('buyer_id', user.id)
       .in('status', ['pending_payment', 'pending_confirm'])
@@ -109,12 +110,17 @@ export async function POST(request: NextRequest) {
         success: true,
         message: '결제 확인 요청이 전송되었습니다.',
         purchaseId: pendingPurchase.id,
+        orderNumber: pendingPurchase.order_number,
+        amount: pendingPurchase.amount,
       });
     }
 
     // Calculate platform fee (20%) and creator revenue (80%)
     const platformFee = Math.floor(content.price * PLATFORM_FEE_RATE);
     const creatorRevenue = content.price - platformFee;
+
+    // Generate unique order number for payment tracking
+    const orderNumber = generateOrderNumber();
 
     // Create new purchase record with pending_confirm status
     const { data: newPurchase, error: insertError } = await supabase
@@ -129,8 +135,9 @@ export async function POST(request: NextRequest) {
         buyer_note: buyerNote || null,
         creator_revenue: creatorRevenue,
         platform_fee: platformFee,
+        order_number: orderNumber,
       })
-      .select('id')
+      .select('id, order_number')
       .single();
 
     if (insertError) {
@@ -147,6 +154,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '결제 확인 요청이 전송되었습니다.',
       purchaseId: newPurchase.id,
+      orderNumber: newPurchase.order_number,
+      amount: content.price,
     });
   } catch (error) {
     console.error('P2P purchase API error:', error);

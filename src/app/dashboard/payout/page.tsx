@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -113,6 +114,7 @@ const MINIMUM_PAYOUT = 10000;
 const PAYOUT_FEE_RATE = 0.20; // platform fee
 
 export default function PayoutPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [balanceData, setBalanceData] = useState<BalanceData | null>(null);
@@ -142,7 +144,12 @@ export default function PayoutPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+
+      if (!user) {
+        setIsLoading(false);
+        router.push('/login?redirectTo=/dashboard/payout');
+        return;
+      }
 
       // Load user profile for auto-fill
       const { data: profile } = await supabase
@@ -157,6 +164,7 @@ export default function PayoutPage() {
 
       // Load balance and payout data from API
       const response = await fetch('/api/creator/balance');
+
       if (response.ok) {
         const data = await response.json();
         setBalanceData(data.balance);

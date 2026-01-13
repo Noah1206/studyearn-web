@@ -26,6 +26,7 @@ interface Purchase {
   seller_id: string;
   amount: number;
   status: string;
+  order_number: string | null;
   buyer_note: string | null;
   payment_confirmed_at: string | null;
   platform_confirmed_at: string | null;
@@ -289,9 +290,16 @@ export default function AdminPurchasesPage() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
-                      {purchase.content.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {purchase.content.title}
+                      </h3>
+                      {purchase.order_number && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono font-medium rounded">
+                          {purchase.order_number}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
