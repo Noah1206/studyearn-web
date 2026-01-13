@@ -31,7 +31,7 @@ async function getCreatorContents(userId: string) {
   }
 
   // 한 번에 모든 구매 데이터 가져오기 (N+1 문제 해결)
-  const contentIds = contents.map(c => c.id);
+  const contentIds = contents.map((c: Content) => c.id);
   const { data: allPurchases } = await supabase
     .from('content_purchases')
     .select('content_id, creator_revenue')

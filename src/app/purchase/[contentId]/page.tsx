@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
-  Smartphone,
   AlertCircle,
   Clock,
   ChevronRight,
@@ -566,7 +565,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Smartphone className="w-5 h-5" />
+              {/* 토스 로고 */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm0-8H9V7h6v2z"/>
+              </svg>
               토스로 송금하기
             </motion.button>
             <motion.button
@@ -576,7 +578,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Smartphone className="w-5 h-5" />
+              {/* 카카오뱅크 로고 */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.73L5.5 21l4.1-2.47c.78.15 1.58.22 2.4.22 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+              </svg>
               카카오뱅크로 송금하기
             </motion.button>
           </div>
