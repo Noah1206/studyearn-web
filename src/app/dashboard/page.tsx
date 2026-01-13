@@ -518,7 +518,7 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       <ContentThumbnail
                         thumbnailUrl={content.thumbnailUrl}
-                        subject={content.subject}
+                        subject={content.subject ?? undefined}
                         title={content.title}
                         aspectRatio="1/1"
                       />
