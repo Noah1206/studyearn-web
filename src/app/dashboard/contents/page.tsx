@@ -51,7 +51,7 @@ async function getCreatorContents(userId: string) {
   }
 
   // 콘텐츠에 통계 데이터 매핑
-  const contentsWithStats: ContentWithStats[] = contents.map(content => {
+  const contentsWithStats: ContentWithStats[] = contents.map((content: Content) => {
     const stats = purchaseMap.get(content.id) || { count: 0, revenue: 0 };
     return {
       ...content,
