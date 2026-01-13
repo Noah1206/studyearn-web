@@ -26,12 +26,8 @@ export function generateTossDeeplink(
   const tossBankCode = TOSS_BANK_CODES[recipientBankCode] || recipientBankCode;
   const cleanAccountNumber = accountNumber.replace(/[^0-9]/g, '');
 
-  // 토스 송금 딥링크 - transfer 스킴 사용
-  let url = `supertoss://transfer?bankCode=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
-
-  if (memo) {
-    url += `&message=${encodeURIComponent(memo)}`;
-  }
+  // 토스 송금 딥링크 - 최소 파라미터
+  const url = `supertoss://send?bank=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
 
   return url;
 }
