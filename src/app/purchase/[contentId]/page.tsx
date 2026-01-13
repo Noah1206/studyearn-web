@@ -165,10 +165,16 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   }, [productId, router, user, isSessionLoading]);
 
   const handleOpenTossDeeplink = () => {
-    if (!product || !PLATFORM_TOSS_ID) return;
+    if (!product || !PLATFORM_TOSS_ID) {
+      console.log('[Deeplink] Missing:', { product: !!product, tossId: PLATFORM_TOSS_ID });
+      alert(`토스 아이디가 설정되지 않았습니다. 현재값: "${PLATFORM_TOSS_ID}"`);
+      return;
+    }
 
     const memo = `스터플 ${product.title.substring(0, 20)}`;
     const deeplinkUrl = generateTossIdDeeplink(PLATFORM_TOSS_ID, product.price, memo);
+    console.log('[Deeplink] Generated URL:', deeplinkUrl);
+    alert(`생성된 URL: ${deeplinkUrl}`);
     window.location.href = deeplinkUrl;
   };
 
