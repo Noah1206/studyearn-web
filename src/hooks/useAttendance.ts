@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import {
   checkTodayAttendance,
   getConsecutiveDays,
@@ -155,7 +156,7 @@ export function useAttendance(): UseAttendanceResult {
 
     // Subscribe to auth state changes - handles OAuth callback (Kakao login)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         console.log('[Attendance] Auth state changed:', event, 'Has session:', !!session);
 
         // When user signs in (especially after OAuth), process pending attendance
