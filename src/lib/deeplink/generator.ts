@@ -26,10 +26,21 @@ export function generateTossDeeplink(
   const tossBankCode = TOSS_BANK_CODES[recipientBankCode] || recipientBankCode;
   const cleanAccountNumber = accountNumber.replace(/[^0-9]/g, '');
 
-  // 토스 송금 딥링크 - 최소 파라미터
+  // 토스 앱 딥링크
   const url = `supertoss://send?bank=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
 
   return url;
+}
+
+/**
+ * 토스 송금 링크 생성 (toss.me)
+ * 토스아이디 기반 웹 링크 - 금액 미리 입력 가능
+ */
+export function generateTossMeLink(
+  tossId: string,
+  amount: number
+): string {
+  return `https://toss.me/${tossId}/${amount}`;
 }
 
 /**

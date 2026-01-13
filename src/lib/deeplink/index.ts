@@ -55,6 +55,7 @@ export {
 export {
   generateTossDeeplink,
   generateTossIdDeeplink,
+  generateTossMeLink,
   generateKakaobankDeeplink,
   generateBankDeeplink,
   generateDeeplinkOptions,
