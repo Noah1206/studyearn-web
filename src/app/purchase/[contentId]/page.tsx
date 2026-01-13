@@ -20,10 +20,12 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
-import { generateTossMeLink } from '@/lib/deeplink';
+import { generateTossDeeplink } from '@/lib/deeplink';
+import type { BankCode } from '@/lib/deeplink';
 
-// 플랫폼 토스 아이디 (환경 변수에서 로드)
-const PLATFORM_TOSS_ID = process.env.NEXT_PUBLIC_PLATFORM_TOSS_ID || '';
+// 플랫폼 계좌 정보 (환경 변수에서 로드)
+const PLATFORM_BANK_CODE = (process.env.NEXT_PUBLIC_PLATFORM_BANK_CODE || 'busan') as BankCode;
+const PLATFORM_ACCOUNT_NUMBER = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER || '';
 
 interface Product {
   id: string;
@@ -164,16 +166,21 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     fetchData();
   }, [productId, router, user, isSessionLoading]);
 
-  const handleOpenTossMe = () => {
-    if (!product || !PLATFORM_TOSS_ID) {
-      alert('토스 아이디가 설정되지 않았습니다.');
+  const handleOpenToss = () => {
+    if (!product || !PLATFORM_ACCOUNT_NUMBER) {
+      alert('플랫폼 계좌 정보가 설정되지 않았습니다.');
       return;
     }
 
-    const url = generateTossMeLink(PLATFORM_TOSS_ID, product.price);
+    // 토스 QR 형식 딥링크 생성 (bank=은행명, origin=qr)
+    const url = generateTossDeeplink(
+      PLATFORM_BANK_CODE,
+      PLATFORM_ACCOUNT_NUMBER,
+      product.price
+    );
 
     // 디버깅용
-    console.log('[TossMe]', { url, tossId: PLATFORM_TOSS_ID });
+    console.log('[TossDeeplink]', { url, bank: PLATFORM_BANK_CODE, account: PLATFORM_ACCOUNT_NUMBER });
     alert(`URL: ${url}`);
 
     window.location.href = url;
@@ -540,7 +547,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           </div>
 
           <motion.button
-            onClick={handleOpenTossMe}
+            onClick={handleOpenToss}
             className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold text-white text-lg"
             style={{ backgroundColor: '#0064FF' }}
             whileHover={{ scale: 1.02 }}
