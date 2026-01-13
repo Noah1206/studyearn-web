@@ -26,14 +26,12 @@ export function generateTossDeeplink(
   const tossBankCode = TOSS_BANK_CODES[recipientBankCode] || recipientBankCode;
   const cleanAccountNumber = accountNumber.replace(/[^0-9]/g, '');
 
-  let url = `supertoss://send?bank=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
+  // 토스 송금 딥링크 - transfer 스킴 사용
+  let url = `supertoss://transfer?bankCode=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
 
   if (memo) {
-    url += `&memo=${encodeURIComponent(memo)}`;
+    url += `&message=${encodeURIComponent(memo)}`;
   }
-
-  // origin 추가 (트래킹용)
-  url += '&origin=studyearn';
 
   return url;
 }
