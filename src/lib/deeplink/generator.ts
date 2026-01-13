@@ -10,6 +10,7 @@ import { BANKS, TOSS_BANK_CODES, getBankInfo } from './banks';
  * 토스 송금 딥링크 생성 (계좌번호 방식)
  *
  * 토스 앱에서 송금 화면을 바로 열어주는 딥링크를 생성합니다.
+ * 토스 QR 코드와 동일한 형식 사용: bank 파라미터는 은행명(코드 아님)
  *
  * @param recipientBankCode - 수취인 은행 코드
  * @param accountNumber - 수취인 계좌번호
@@ -23,11 +24,13 @@ export function generateTossDeeplink(
   amount: number,
   memo?: string
 ): string {
-  const tossBankCode = TOSS_BANK_CODES[recipientBankCode] || recipientBankCode;
+  // 은행 정보 가져오기 - 은행명 사용 (코드 아님!)
+  const bankInfo = getBankInfo(recipientBankCode);
+  const bankName = bankInfo?.name || recipientBankCode;
   const cleanAccountNumber = accountNumber.replace(/[^0-9]/g, '');
 
-  // 토스 앱 딥링크
-  const url = `supertoss://send?bank=${tossBankCode}&accountNo=${cleanAccountNumber}&amount=${amount}`;
+  // 토스 QR 형식과 동일하게: bank=은행명, origin=qr
+  const url = `supertoss://send?amount=${amount}&bank=${encodeURIComponent(bankName)}&accountNo=${cleanAccountNumber}&origin=qr`;
 
   return url;
 }
