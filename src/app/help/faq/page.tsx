@@ -46,7 +46,7 @@ const faqData: FAQCategory[] = [
       },
       {
         question: '모바일 앱도 있나요?',
-        answer: '현재 웹 서비스로 운영 중이며, iOS 및 Android 앱은 곧 출시 예정입니다. 모바일 웹에서도 최적화된 경험을 제공합니다.',
+        answer: '현재 웹 서비스로 운영 중이며, Android 앱은 곧 Google Play에서 출시 예정입니다. 모바일 웹에서도 최적화된 경험을 제공합니다.',
       },
     ],
   },
