@@ -23,6 +23,26 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 
+// 세션에서 access token 가져오기
+const getAccessToken = async () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // localStorage에서 세션 토큰 가져오기
+  const storageKey = `sb-${supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
+  const sessionStr = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+
+  if (sessionStr) {
+    try {
+      const session = JSON.parse(sessionStr);
+      return session?.access_token || supabaseKey;
+    } catch {
+      return supabaseKey;
+    }
+  }
+  return supabaseKey;
+};
+
 // 콘텐츠 타입
 const CONTENT_TYPES = [
   { id: 'material', label: '일반 자료', icon: FileText, description: 'PDF, 이미지 등 학습 자료' },
@@ -687,27 +707,43 @@ function UploadPageContent() {
           published_at: new Date().toISOString(),
         };
 
-        console.log('[Upload] 6-1. 루틴 DB insert 시작...');
+        console.log('[Upload] 6-1. 루틴 DB insert 시작 (직접 fetch)...');
 
-        // 15초 타임아웃으로 DB insert
-        const routineInsertPromise = supabase
-          .from('contents')
-          .insert(routineData);
-
-        const routineTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('루틴 저장 타임아웃 (15초)')), 15000)
-        );
+        // 직접 fetch로 DB insert (SDK 대신 - SDK가 hang 되는 문제 해결)
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const accessToken = await getAccessToken();
+        console.log('[Upload] 6-1-1. Access token 획득:', accessToken ? 'OK' : 'FAILED');
 
         let insertError;
         try {
-          const result = await Promise.race([
-            routineInsertPromise,
-            routineTimeoutPromise
-          ]) as Awaited<typeof routineInsertPromise>;
-          insertError = result.error;
-        } catch (timeoutErr) {
-          console.error('[Upload] 루틴 저장 타임아웃:', timeoutErr);
-          setError('저장이 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
+          const insertResponse = await fetch(
+            `${supabaseUrl}/rest/v1/contents`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey!,
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal',
+              },
+              body: JSON.stringify(routineData),
+            }
+          );
+
+          console.log('[Upload] 6-1-2. 루틴 insert 응답:', {
+            status: insertResponse.status,
+            statusText: insertResponse.statusText
+          });
+
+          if (!insertResponse.ok) {
+            const errorData = await insertResponse.json().catch(() => ({}));
+            console.error('[Upload] 루틴 insert 실패:', errorData);
+            insertError = { message: errorData.message || `HTTP ${insertResponse.status}` };
+          }
+        } catch (fetchErr) {
+          console.error('[Upload] 루틴 insert fetch 에러:', fetchErr);
+          setError('루틴 저장에 실패했어요. 다시 시도해주세요.');
           return;
         }
 
@@ -745,6 +781,10 @@ function UploadPageContent() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+        // 사용자 access token 가져오기
+        const accessToken = await getAccessToken();
+        console.log('[Upload] 8-0. Access token 획득:', accessToken ? 'OK' : 'FAILED');
+
         let uploadError;
         try {
           const uploadResponse = await fetch(
@@ -753,7 +793,7 @@ function UploadPageContent() {
               method: 'POST',
               headers: {
                 'apikey': supabaseKey!,
-                'Authorization': `Bearer ${supabaseKey}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': file!.type || 'application/octet-stream',
                 'x-upsert': 'false',
                 'cache-control': 'max-age=3600',
@@ -823,7 +863,7 @@ function UploadPageContent() {
 
         console.log('[Upload] 10. DB insert 시작 (직접 fetch)...', { title: contentData.title });
 
-        // 직접 fetch로 DB insert
+        // 직접 fetch로 DB insert (accessToken 사용)
         try {
           const insertResponse = await fetch(
             `${supabaseUrl}/rest/v1/contents`,
@@ -831,7 +871,7 @@ function UploadPageContent() {
               method: 'POST',
               headers: {
                 'apikey': supabaseKey!,
-                'Authorization': `Bearer ${supabaseKey}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal',
               },
