@@ -23,25 +23,6 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 
-// 세션에서 access token 가져오기
-const getAccessToken = async () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // localStorage에서 세션 토큰 가져오기
-  const storageKey = `sb-${supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
-  const sessionStr = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
-
-  if (sessionStr) {
-    try {
-      const session = JSON.parse(sessionStr);
-      return session?.access_token || supabaseKey;
-    } catch {
-      return supabaseKey;
-    }
-  }
-  return supabaseKey;
-};
 
 // 콘텐츠 타입
 const CONTENT_TYPES = [
@@ -140,7 +121,7 @@ const ROUTINE_COLORS = [
 function UploadPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user: sessionUser, isLoading: isSessionLoading } = useSession();
+  const { user: sessionUser, session, isLoading: isSessionLoading } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -712,8 +693,11 @@ function UploadPageContent() {
         // 직접 fetch로 DB insert (SDK 대신 - SDK가 hang 되는 문제 해결)
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const accessToken = await getAccessToken();
-        console.log('[Upload] 6-1-1. Access token 획득:', accessToken ? 'OK' : 'FAILED');
+        const accessToken = session?.access_token || supabaseKey;
+        console.log('[Upload] 6-1-1. Access token:', {
+          hasSessionToken: !!session?.access_token,
+          tokenPreview: accessToken?.substring(0, 20) + '...'
+        });
 
         let insertError;
         try {
@@ -781,9 +765,12 @@ function UploadPageContent() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        // 사용자 access token 가져오기
-        const accessToken = await getAccessToken();
-        console.log('[Upload] 8-0. Access token 획득:', accessToken ? 'OK' : 'FAILED');
+        // 사용자 access token (SessionProvider에서 직접 가져옴)
+        const accessToken = session?.access_token || supabaseKey;
+        console.log('[Upload] 8-0. Access token:', {
+          hasSessionToken: !!session?.access_token,
+          tokenPreview: accessToken?.substring(0, 20) + '...'
+        });
 
         let uploadError;
         try {
