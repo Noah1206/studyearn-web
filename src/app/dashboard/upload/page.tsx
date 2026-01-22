@@ -599,22 +599,37 @@ function UploadPageContent() {
         // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
         const thumbnailPath = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
-        const { error: thumbnailUploadError } = await supabase.storage
-          .from('contents')
-          .upload(thumbnailPath, thumbnailFile, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (thumbnailUploadError) {
-          console.error('[Upload] 4-2. 썸네일 업로드 실패:', thumbnailUploadError);
-          // 썸네일 업로드 실패는 무시하고 계속 진행
-        } else {
-          const { data: { publicUrl } } = supabase.storage
+        try {
+          // 10초 타임아웃으로 썸네일 업로드
+          const uploadPromise = supabase.storage
             .from('contents')
-            .getPublicUrl(thumbnailPath);
-          uploadedThumbnailUrl = publicUrl;
-          console.log('[Upload] 4-3. 썸네일 업로드 성공:', uploadedThumbnailUrl);
+            .upload(thumbnailPath, thumbnailFile, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('썸네일 업로드 타임아웃 (10초)')), 10000)
+          );
+
+          const { error: thumbnailUploadError } = await Promise.race([
+            uploadPromise,
+            timeoutPromise
+          ]) as Awaited<typeof uploadPromise>;
+
+          if (thumbnailUploadError) {
+            console.error('[Upload] 4-2. 썸네일 업로드 실패:', thumbnailUploadError);
+            // 썸네일 업로드 실패는 무시하고 계속 진행
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('contents')
+              .getPublicUrl(thumbnailPath);
+            uploadedThumbnailUrl = publicUrl;
+            console.log('[Upload] 4-3. 썸네일 업로드 성공:', uploadedThumbnailUrl);
+          }
+        } catch (thumbnailError) {
+          console.error('[Upload] 4-2. 썸네일 업로드 에러:', thumbnailError);
+          // 썸네일 업로드 실패는 무시하고 계속 진행
         }
       }
 
@@ -645,9 +660,31 @@ function UploadPageContent() {
           published_at: new Date().toISOString(),
         };
 
-        const { error: insertError } = await supabase
+        console.log('[Upload] 6-1. 루틴 DB insert 시작...');
+
+        // 15초 타임아웃으로 DB insert
+        const routineInsertPromise = supabase
           .from('contents')
           .insert(routineData);
+
+        const routineTimeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('루틴 저장 타임아웃 (15초)')), 15000)
+        );
+
+        let insertError;
+        try {
+          const result = await Promise.race([
+            routineInsertPromise,
+            routineTimeoutPromise
+          ]) as Awaited<typeof routineInsertPromise>;
+          insertError = result.error;
+        } catch (timeoutErr) {
+          console.error('[Upload] 루틴 저장 타임아웃:', timeoutErr);
+          setError('저장이 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
+          return;
+        }
+
+        console.log('[Upload] 6-2. 루틴 DB insert 결과:', { error: insertError });
 
         if (insertError) {
           console.error('Upload error:', insertError);
@@ -678,12 +715,30 @@ function UploadPageContent() {
         const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         console.log('[Upload] 8. Storage 업로드 시작:', filePath);
 
-        const { error: uploadError } = await supabase.storage
+        // 30초 타임아웃으로 파일 업로드
+        const fileUploadPromise = supabase.storage
           .from('contents')
           .upload(filePath, file!, {
             cacheControl: '3600',
             upsert: false
           });
+
+        const fileTimeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('파일 업로드 타임아웃 (30초)')), 30000)
+        );
+
+        let uploadError;
+        try {
+          const result = await Promise.race([
+            fileUploadPromise,
+            fileTimeoutPromise
+          ]) as Awaited<typeof fileUploadPromise>;
+          uploadError = result.error;
+        } catch (timeoutErr) {
+          console.error('[Upload] 파일 업로드 타임아웃:', timeoutErr);
+          setError('파일 업로드가 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
+          return;
+        }
 
         console.log('[Upload] 9. Storage 업로드 결과:', { error: uploadError });
 
@@ -730,16 +785,41 @@ function UploadPageContent() {
         };
 
         console.log('[Upload] 10. DB insert 시작...', { title: contentData.title });
-        const { error: insertError } = await supabase
+
+        // 15초 타임아웃으로 DB insert
+        const contentInsertPromise = supabase
           .from('contents')
           .insert(contentData);
 
-        console.log('[Upload] 11. DB insert 결과:', { error: insertError });
+        const contentTimeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('콘텐츠 저장 타임아웃 (15초)')), 15000)
+        );
 
-        if (insertError) {
-          console.error('[Upload] DB insert error:', insertError);
+        let contentInsertError;
+        try {
+          const result = await Promise.race([
+            contentInsertPromise,
+            contentTimeoutPromise
+          ]) as Awaited<typeof contentInsertPromise>;
+          contentInsertError = result.error;
+        } catch (timeoutErr) {
+          console.error('[Upload] 콘텐츠 저장 타임아웃:', timeoutErr);
           // 실패 시 업로드된 파일 삭제 시도
-          await supabase.storage.from('contents').remove([filePath]);
+          try {
+            await supabase.storage.from('contents').remove([filePath]);
+          } catch {}
+          setError('저장이 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
+          return;
+        }
+
+        console.log('[Upload] 11. DB insert 결과:', { error: contentInsertError });
+
+        if (contentInsertError) {
+          console.error('[Upload] DB insert error:', contentInsertError);
+          // 실패 시 업로드된 파일 삭제 시도
+          try {
+            await supabase.storage.from('contents').remove([filePath]);
+          } catch {}
           setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
           return;
         }
