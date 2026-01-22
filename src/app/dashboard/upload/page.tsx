@@ -585,14 +585,24 @@ function UploadPageContent() {
       console.log('[Upload] 3. Supabase 클라이언트 생성...');
       const supabase = createClient();
 
-      // Supabase 세션 확인 (디버깅용)
-      console.log('[Upload] 3-0. Supabase 세션 확인...');
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log('[Upload] 3-0. Supabase 세션 결과:', {
-        hasSession: !!sessionData?.session,
-        userId: sessionData?.session?.user?.id,
-        error: sessionError?.message
-      });
+      // Supabase 연결 테스트 (DB 쿼리)
+      console.log('[Upload] 3-0. Supabase DB 연결 테스트...');
+      try {
+        const testStart = Date.now();
+        const { data: testData, error: testError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        const testTime = Date.now() - testStart;
+        console.log('[Upload] 3-0. DB 테스트 결과:', {
+          success: !testError,
+          time: testTime + 'ms',
+          error: testError?.message
+        });
+      } catch (dbTestErr) {
+        console.error('[Upload] 3-0. DB 테스트 에러:', dbTestErr);
+      }
 
       // subject와 grade 값 계산
       console.log('[Upload] 3-1. subject/grade 계산...');
