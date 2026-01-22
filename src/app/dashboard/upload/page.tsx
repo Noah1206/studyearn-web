@@ -567,8 +567,25 @@ function UploadPageContent() {
     try {
       console.log('[Upload] 2. Supabase 클라이언트 생성...');
       const supabase = createClient();
-      console.log('[Upload] 3. 사용자 정보 요청...');
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      // 환경변수 확인
+      console.log('[Upload] 2-1. Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('[Upload] 2-2. Supabase Key 존재:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+      console.log('[Upload] 3. 사용자 정보 요청 (5초 타임아웃)...');
+
+      // 타임아웃 추가
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Supabase 요청 타임아웃 (5초)')), 5000)
+      );
+
+      const getUserPromise = supabase.auth.getUser();
+
+      const { data: { user }, error: userError } = await Promise.race([
+        getUserPromise,
+        timeoutPromise
+      ]) as Awaited<typeof getUserPromise>;
+
       console.log('[Upload] 4. 사용자 정보 결과:', { user: user?.email, error: userError });
 
       if (!user) {
