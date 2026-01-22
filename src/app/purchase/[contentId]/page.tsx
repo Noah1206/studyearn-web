@@ -228,6 +228,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     setError('');
 
     try {
+      console.log('[Payment] 1. 결제 초기화 시작...');
+
       // 1. 서버에서 결제 정보 생성
       const initResponse = await fetch('/api/purchase/portone', {
         method: 'POST',
@@ -235,14 +237,19 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         body: JSON.stringify({ contentId: product.id }),
       });
 
+      console.log('[Payment] 1-1. API 응답 상태:', initResponse.status);
+
       if (!initResponse.ok) {
         const errorData = await initResponse.json();
+        console.error('[Payment] 1-2. API 에러:', errorData);
         throw new Error(errorData.message || '결제 초기화에 실패했습니다.');
       }
 
       const { paymentId, orderName, amount } = await initResponse.json();
+      console.log('[Payment] 2. 결제 정보:', { paymentId, orderName, amount });
 
       // 2. PortOne 결제창 호출
+      console.log('[Payment] 3. PortOne SDK 호출 중...');
       const paymentResult = await requestCardPayment(
         paymentId,
         orderName,
@@ -253,15 +260,20 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           email: user.email,
         }
       );
+      console.log('[Payment] 4. PortOne 결과:', paymentResult);
 
       if (paymentResult.code) {
         // 결제 실패 또는 취소
-        if (paymentResult.code === 'FAILURE_TYPE_PG') {
-          throw new Error(paymentResult.message || '결제가 실패했습니다.');
+        console.error('[PortOne Error]', paymentResult.code, paymentResult.message);
+
+        if (paymentResult.code === 'USER_CANCEL') {
+          // 사용자가 직접 취소한 경우 - 에러 메시지 없이 종료
+          setIsProcessing(false);
+          return;
         }
-        // 사용자 취소
-        setIsProcessing(false);
-        return;
+
+        // 그 외 모든 에러는 사용자에게 표시
+        throw new Error(paymentResult.message || `결제 오류: ${paymentResult.code}`);
       }
 
       // 3. 결제 검증
