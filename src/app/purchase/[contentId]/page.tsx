@@ -17,11 +17,15 @@ import {
   FileText,
   CreditCard,
   Building2,
+  Wallet,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 import { generateTossDeeplink } from '@/lib/deeplink';
 import type { BankCode } from '@/lib/deeplink';
+import { requestCardPayment } from '@/lib/portone/client';
+
+type PaymentMethod = 'card' | 'transfer';
 
 // 플랫폼 계좌 정보 (환경 변수에서 로드)
 const PLATFORM_BANK_CODE = (process.env.NEXT_PUBLIC_PLATFORM_BANK_CODE || 'busan') as BankCode;
@@ -106,6 +110,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   const [error, setError] = useState('');
   const [alreadyPurchased, setAlreadyPurchased] = useState(false);
   const [pendingPurchase, setPendingPurchase] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
   useEffect(() => {
     if (isSessionLoading) return;
@@ -211,6 +216,81 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     } catch (err) {
       console.error('Purchase error:', err);
       setError(err instanceof Error ? err.message : '구매 처리 중 오류가 발생했습니다.');
+      setIsProcessing(false);
+    }
+  };
+
+  // 카드 결제 처리 (PortOne)
+  const handleCardPayment = async () => {
+    if (!product || !user) return;
+
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      // 1. 서버에서 결제 정보 생성
+      const initResponse = await fetch('/api/purchase/portone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: product.id }),
+      });
+
+      if (!initResponse.ok) {
+        const errorData = await initResponse.json();
+        throw new Error(errorData.message || '결제 초기화에 실패했습니다.');
+      }
+
+      const { paymentId, orderName, amount } = await initResponse.json();
+
+      // 2. PortOne 결제창 호출
+      const paymentResult = await requestCardPayment(
+        paymentId,
+        orderName,
+        amount,
+        {
+          fullName: user.user_metadata?.name || user.email?.split('@')[0] || '구매자',
+          phoneNumber: user.user_metadata?.phone || '01000000000',
+          email: user.email,
+        }
+      );
+
+      if (paymentResult.code) {
+        // 결제 실패 또는 취소
+        if (paymentResult.code === 'FAILURE_TYPE_PG') {
+          throw new Error(paymentResult.message || '결제가 실패했습니다.');
+        }
+        // 사용자 취소
+        setIsProcessing(false);
+        return;
+      }
+
+      // 3. 결제 검증
+      const verifyResponse = await fetch('/api/payments/portone/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId: paymentResult.paymentId,
+          amount,
+        }),
+      });
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.message || '결제 검증에 실패했습니다.');
+      }
+
+      const verifyResult = await verifyResponse.json();
+
+      if (verifyResult.status === 'completed') {
+        // 결제 완료 - 콘텐츠 페이지로 이동
+        router.push(`/content/${productId}?purchased=true`);
+      } else if (verifyResult.status === 'awaiting_deposit') {
+        // 가상계좌 입금 대기 (이 경우는 카드결제에서는 발생하지 않음)
+        router.push(`/purchase/${productId}/pending`);
+      }
+    } catch (err) {
+      console.error('Card payment error:', err);
+      setError(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.');
       setIsProcessing(false);
     }
   };
@@ -531,89 +611,193 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           </div>
         </motion.div>
 
-        {/* 송금 방법 */}
+        {/* 결제 방법 선택 */}
         <motion.div
           className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
           variants={itemVariants}
         >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">간편 송금하기</p>
-              <p className="text-sm text-gray-500">버튼을 누르면 바로 송금화면으로 이동해요</p>
-            </div>
+          <p className="font-semibold text-gray-900 mb-4">결제 방법</p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* 카드 결제 */}
+            <motion.button
+              onClick={() => setPaymentMethod('card')}
+              className={`relative p-4 rounded-2xl border-2 transition-all ${
+                paymentMethod === 'card'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {paymentMethod === 'card' && (
+                <motion.div
+                  className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                >
+                  <Check className="w-3 h-3 text-white" />
+                </motion.div>
+              )}
+              <CreditCard className={`w-8 h-8 mx-auto mb-2 ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <p className={`text-sm font-medium ${paymentMethod === 'card' ? 'text-blue-900' : 'text-gray-700'}`}>카드결제</p>
+              <p className="text-xs text-gray-400 mt-1">즉시 이용</p>
+            </motion.button>
+
+            {/* 토스 송금 */}
+            <motion.button
+              onClick={() => setPaymentMethod('transfer')}
+              className={`relative p-4 rounded-2xl border-2 transition-all ${
+                paymentMethod === 'transfer'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {paymentMethod === 'transfer' && (
+                <motion.div
+                  className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                >
+                  <Check className="w-3 h-3 text-white" />
+                </motion.div>
+              )}
+              <Wallet className={`w-8 h-8 mx-auto mb-2 ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <p className={`text-sm font-medium ${paymentMethod === 'transfer' ? 'text-blue-900' : 'text-gray-700'}`}>토스 송금</p>
+              <p className="text-xs text-gray-400 mt-1">입금 확인 후</p>
+            </motion.button>
           </div>
-
-          <motion.button
-            onClick={handleOpenToss}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold text-white text-lg"
-            style={{ backgroundColor: '#0064FF' }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm0-8H9V7h6v2z"/>
-            </svg>
-            토스로 송금하기
-          </motion.button>
-          <p className="text-xs text-gray-400 text-center mt-4">
-            &apos;스터플&apos;에게 금액이 자동 입력된 송금 화면이 열려요
-          </p>
         </motion.div>
 
-        {/* 입금자명 입력 */}
-        <motion.div
-          className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
-          variants={itemVariants}
-        >
-          <label className="block font-semibold text-gray-900 mb-3">
-            입금자명
-          </label>
-          <input
-            type="text"
-            value={buyerNote}
-            onChange={(e) => setBuyerNote(e.target.value)}
-            placeholder="송금할 때 입력한 이름"
-            className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-          />
-          <p className="text-xs text-gray-400 mt-2">
-            빠른 입금 확인을 위해 정확히 입력해주세요
-          </p>
-        </motion.div>
+        {/* 카드 결제 UI */}
+        <AnimatePresence mode="wait">
+          {paymentMethod === 'card' && (
+            <motion.div
+              key="card-payment"
+              className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">카드로 결제하기</p>
+                  <p className="text-sm text-gray-500">결제 완료 후 바로 이용할 수 있어요</p>
+                </div>
+              </div>
 
-        {/* 진행 절차 타임라인 */}
-        <motion.div
-          className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
-          variants={itemVariants}
-        >
-          <p className="font-semibold text-gray-900 mb-4">이렇게 진행돼요</p>
-          <div className="flex items-center justify-between text-center">
-            <div className="flex-1">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto mb-2 text-sm font-semibold">1</div>
-              <p className="text-xs text-gray-600">송금하기</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            <div className="flex-1">
-              <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">2</div>
-              <p className="text-xs text-gray-400">확인 요청</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            <div className="flex-1">
-              <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">3</div>
-              <p className="text-xs text-gray-400">입금 확인</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            <div className="flex-1">
-              <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">4</div>
-              <p className="text-xs text-gray-400">콘텐츠 이용</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 text-center mt-4">
-            입금 확인은 보통 24시간 내에 완료돼요
-          </p>
-        </motion.div>
+              <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span>신용카드, 체크카드 모두 가능</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span>결제 즉시 콘텐츠 이용 가능</span>
+                </div>
+              </div>
+
+              {/* 진행 절차 - 카드결제 */}
+              <div className="flex items-center justify-center gap-2 text-center text-xs text-gray-400 mt-4">
+                <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full font-medium">결제</span>
+                <ChevronRight className="w-3 h-3" />
+                <span className="px-2 py-1 bg-gray-100 rounded-full">검증</span>
+                <ChevronRight className="w-3 h-3" />
+                <span className="px-2 py-1 bg-gray-100 rounded-full">완료</span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 토스 송금 UI */}
+          {paymentMethod === 'transfer' && (
+            <motion.div
+              key="transfer-payment"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">토스로 송금하기</p>
+                    <p className="text-sm text-gray-500">버튼을 누르면 바로 송금화면으로 이동해요</p>
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handleOpenToss}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold text-white text-lg"
+                  style={{ backgroundColor: '#0064FF' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm0-8H9V7h6v2z"/>
+                  </svg>
+                  토스로 송금하기
+                </motion.button>
+                <p className="text-xs text-gray-400 text-center mt-4">
+                  &apos;스터플&apos;에게 금액이 자동 입력된 송금 화면이 열려요
+                </p>
+              </div>
+
+              {/* 입금자명 입력 */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+                <label className="block font-semibold text-gray-900 mb-3">
+                  입금자명
+                </label>
+                <input
+                  type="text"
+                  value={buyerNote}
+                  onChange={(e) => setBuyerNote(e.target.value)}
+                  placeholder="송금할 때 입력한 이름"
+                  className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                />
+                <p className="text-xs text-gray-400 mt-2">
+                  빠른 입금 확인을 위해 정확히 입력해주세요
+                </p>
+              </div>
+
+              {/* 진행 절차 타임라인 */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+                <p className="font-semibold text-gray-900 mb-4">이렇게 진행돼요</p>
+                <div className="flex items-center justify-between text-center">
+                  <div className="flex-1">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto mb-2 text-sm font-semibold">1</div>
+                    <p className="text-xs text-gray-600">송금하기</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">2</div>
+                    <p className="text-xs text-gray-400">확인 요청</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">3</div>
+                    <p className="text-xs text-gray-400">입금 확인</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">4</div>
+                    <p className="text-xs text-gray-400">콘텐츠 이용</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 text-center mt-4">
+                  입금 확인은 보통 24시간 내에 완료돼요
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 에러 메시지 */}
         <AnimatePresence>
@@ -651,36 +835,71 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.5 }}
       >
         <div className="max-w-lg mx-auto">
-          <motion.button
-            onClick={handlePaymentComplete}
-            disabled={!buyerNote.trim() || isProcessing}
-            className={`w-full py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
-              buyerNote.trim() && !isProcessing
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-400'
-            }`}
-            variants={pulseVariants}
-            initial="initial"
-            animate={buyerNote.trim() && !isProcessing ? 'pulse' : 'initial'}
-            whileHover={buyerNote.trim() && !isProcessing ? { scale: 1.02 } : {}}
-            whileTap={buyerNote.trim() && !isProcessing ? { scale: 0.98 } : {}}
-          >
-            {isProcessing ? (
-              <>
-                <motion.div
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                />
-                처리 중...
-              </>
-            ) : (
-              <>
-                송금 완료했어요
-                <ChevronRight className="w-5 h-5" />
-              </>
-            )}
-          </motion.button>
+          {paymentMethod === 'card' ? (
+            /* 카드 결제 버튼 */
+            <motion.button
+              onClick={handleCardPayment}
+              disabled={isProcessing}
+              className={`w-full py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+                !isProcessing
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+              variants={pulseVariants}
+              initial="initial"
+              animate={!isProcessing ? 'pulse' : 'initial'}
+              whileHover={!isProcessing ? { scale: 1.02 } : {}}
+              whileTap={!isProcessing ? { scale: 0.98 } : {}}
+            >
+              {isProcessing ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  결제 처리 중...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5" />
+                  {formatCurrency(product.price)} 결제하기
+                </>
+              )}
+            </motion.button>
+          ) : (
+            /* 토스 송금 확인 버튼 */
+            <motion.button
+              onClick={handlePaymentComplete}
+              disabled={!buyerNote.trim() || isProcessing}
+              className={`w-full py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+                buyerNote.trim() && !isProcessing
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+              variants={pulseVariants}
+              initial="initial"
+              animate={buyerNote.trim() && !isProcessing ? 'pulse' : 'initial'}
+              whileHover={buyerNote.trim() && !isProcessing ? { scale: 1.02 } : {}}
+              whileTap={buyerNote.trim() && !isProcessing ? { scale: 0.98 } : {}}
+            >
+              {isProcessing ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  처리 중...
+                </>
+              ) : (
+                <>
+                  송금 완료했어요
+                  <ChevronRight className="w-5 h-5" />
+                </>
+              )}
+            </motion.button>
+          )}
         </div>
       </motion.div>
     </div>
