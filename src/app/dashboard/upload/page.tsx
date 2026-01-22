@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/components/providers/SessionProvider';
 
 // 콘텐츠 타입
 const CONTENT_TYPES = [
@@ -119,6 +120,7 @@ const ROUTINE_COLORS = [
 function UploadPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: sessionUser, isLoading: isSessionLoading } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -565,34 +567,23 @@ function UploadPageContent() {
     setError(null);
 
     try {
-      console.log('[Upload] 2. Supabase 클라이언트 생성...');
-      const supabase = createClient();
+      // SessionProvider의 세션 사용 (getUser() 호출 대신)
+      console.log('[Upload] 2. 세션 확인:', {
+        user: sessionUser?.email,
+        isLoading: isSessionLoading
+      });
 
-      // 환경변수 확인
-      console.log('[Upload] 2-1. Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log('[Upload] 2-2. Supabase Key 존재:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
-      console.log('[Upload] 3. 사용자 정보 요청 (5초 타임아웃)...');
-
-      // 타임아웃 추가
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Supabase 요청 타임아웃 (5초)')), 5000)
-      );
-
-      const getUserPromise = supabase.auth.getUser();
-
-      const { data: { user }, error: userError } = await Promise.race([
-        getUserPromise,
-        timeoutPromise
-      ]) as Awaited<typeof getUserPromise>;
-
-      console.log('[Upload] 4. 사용자 정보 결과:', { user: user?.email, error: userError });
-
-      if (!user) {
+      if (!sessionUser) {
         console.log('[Upload] 사용자 미인증 - 로그인 페이지로 이동');
         router.push('/login?redirectTo=/dashboard/upload');
         return;
       }
+
+      // user 변수를 sessionUser로 설정 (기존 코드 호환성)
+      const user = sessionUser;
+
+      console.log('[Upload] 3. Supabase 클라이언트 생성...');
+      const supabase = createClient();
 
       // subject와 grade 값 계산
       const subjectValue = getSubjectLabel();
