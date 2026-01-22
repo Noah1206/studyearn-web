@@ -737,33 +737,44 @@ function UploadPageContent() {
           dbContentType = 'video';
         }
 
-        // Supabase Storage에 파일 업로드
+        // Supabase Storage에 파일 업로드 (직접 fetch 사용)
         // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
         const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        console.log('[Upload] 8. Storage 업로드 시작:', filePath);
+        console.log('[Upload] 8. Storage 업로드 시작 (직접 fetch):', filePath);
 
-        // 30초 타임아웃으로 파일 업로드
-        const fileUploadPromise = supabase.storage
-          .from('contents')
-          .upload(filePath, file!, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        const fileTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('파일 업로드 타임아웃 (30초)')), 30000)
-        );
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
         let uploadError;
         try {
-          const result = await Promise.race([
-            fileUploadPromise,
-            fileTimeoutPromise
-          ]) as Awaited<typeof fileUploadPromise>;
-          uploadError = result.error;
-        } catch (timeoutErr) {
-          console.error('[Upload] 파일 업로드 타임아웃:', timeoutErr);
-          setError('파일 업로드가 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
+          const uploadResponse = await fetch(
+            `${supabaseUrl}/storage/v1/object/contents/${filePath}`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey!,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': file!.type || 'application/octet-stream',
+                'x-upsert': 'false',
+                'cache-control': 'max-age=3600',
+              },
+              body: file!,
+            }
+          );
+
+          console.log('[Upload] 8-1. Storage 응답:', {
+            status: uploadResponse.status,
+            statusText: uploadResponse.statusText
+          });
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({}));
+            console.error('[Upload] Storage 업로드 실패:', errorData);
+            uploadError = { message: errorData.message || `HTTP ${uploadResponse.status}` };
+          }
+        } catch (fetchErr) {
+          console.error('[Upload] 파일 업로드 fetch 에러:', fetchErr);
+          setError('파일 업로드에 실패했어요. 다시 시도해주세요.');
           return;
         }
 
@@ -780,10 +791,9 @@ function UploadPageContent() {
           return;
         }
 
-        // 공개 URL 가져오기
-        const { data: { publicUrl } } = supabase.storage
-          .from('contents')
-          .getPublicUrl(filePath);
+        // 공개 URL 생성 (직접 구성)
+        const publicUrl = `${supabaseUrl}/storage/v1/object/public/contents/${filePath}`;
+        console.log('[Upload] 9-1. Public URL:', publicUrl);
 
         // 썸네일 URL 설정 (업로드된 썸네일 > 이미지인 경우 원본 URL)
         let thumbnailUrl = uploadedThumbnailUrl;
@@ -811,43 +821,38 @@ function UploadPageContent() {
           published_at: new Date().toISOString(),
         };
 
-        console.log('[Upload] 10. DB insert 시작...', { title: contentData.title });
+        console.log('[Upload] 10. DB insert 시작 (직접 fetch)...', { title: contentData.title });
 
-        // 15초 타임아웃으로 DB insert
-        const contentInsertPromise = supabase
-          .from('contents')
-          .insert(contentData);
-
-        const contentTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('콘텐츠 저장 타임아웃 (15초)')), 15000)
-        );
-
-        let contentInsertError;
+        // 직접 fetch로 DB insert
         try {
-          const result = await Promise.race([
-            contentInsertPromise,
-            contentTimeoutPromise
-          ]) as Awaited<typeof contentInsertPromise>;
-          contentInsertError = result.error;
-        } catch (timeoutErr) {
-          console.error('[Upload] 콘텐츠 저장 타임아웃:', timeoutErr);
-          // 실패 시 업로드된 파일 삭제 시도
-          try {
-            await supabase.storage.from('contents').remove([filePath]);
-          } catch {}
-          setError('저장이 너무 오래 걸려요. Supabase 연결을 확인해주세요.');
-          return;
-        }
+          const insertResponse = await fetch(
+            `${supabaseUrl}/rest/v1/contents`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey!,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal',
+              },
+              body: JSON.stringify(contentData),
+            }
+          );
 
-        console.log('[Upload] 11. DB insert 결과:', { error: contentInsertError });
+          console.log('[Upload] 11. DB insert 응답:', {
+            status: insertResponse.status,
+            statusText: insertResponse.statusText
+          });
 
-        if (contentInsertError) {
-          console.error('[Upload] DB insert error:', contentInsertError);
-          // 실패 시 업로드된 파일 삭제 시도
-          try {
-            await supabase.storage.from('contents').remove([filePath]);
-          } catch {}
-          setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
+          if (!insertResponse.ok) {
+            const errorData = await insertResponse.json().catch(() => ({}));
+            console.error('[Upload] DB insert error:', errorData);
+            setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
+            return;
+          }
+        } catch (insertErr) {
+          console.error('[Upload] DB insert fetch 에러:', insertErr);
+          setError('저장 중 오류가 발생했어요. 다시 시도해주세요.');
           return;
         }
       }
