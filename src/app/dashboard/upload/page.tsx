@@ -585,6 +585,15 @@ function UploadPageContent() {
       console.log('[Upload] 3. Supabase 클라이언트 생성...');
       const supabase = createClient();
 
+      // Supabase 세션 확인 (디버깅용)
+      console.log('[Upload] 3-0. Supabase 세션 확인...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('[Upload] 3-0. Supabase 세션 결과:', {
+        hasSession: !!sessionData?.session,
+        userId: sessionData?.session?.user?.id,
+        error: sessionError?.message
+      });
+
       // subject와 grade 값 계산
       console.log('[Upload] 3-1. subject/grade 계산...');
       const subjectValue = getSubjectLabel();
