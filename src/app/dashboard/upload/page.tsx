@@ -586,12 +586,16 @@ function UploadPageContent() {
       const supabase = createClient();
 
       // subject와 grade 값 계산
+      console.log('[Upload] 3-1. subject/grade 계산...');
       const subjectValue = getSubjectLabel();
       const gradeValue = getGradeLabel();
+      console.log('[Upload] 3-2. subject/grade 완료:', { subjectValue, gradeValue });
 
       // 썸네일 업로드 (있는 경우)
       let uploadedThumbnailUrl: string | null = null;
+      console.log('[Upload] 4. 썸네일 확인:', { hasThumbnail: !!thumbnailFile });
       if (thumbnailFile) {
+        console.log('[Upload] 4-1. 썸네일 업로드 시작...');
         // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
         const thumbnailPath = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
@@ -603,13 +607,14 @@ function UploadPageContent() {
           });
 
         if (thumbnailUploadError) {
-          console.error('Thumbnail upload error:', thumbnailUploadError);
+          console.error('[Upload] 4-2. 썸네일 업로드 실패:', thumbnailUploadError);
           // 썸네일 업로드 실패는 무시하고 계속 진행
         } else {
           const { data: { publicUrl } } = supabase.storage
             .from('contents')
             .getPublicUrl(thumbnailPath);
           uploadedThumbnailUrl = publicUrl;
+          console.log('[Upload] 4-3. 썸네일 업로드 성공:', uploadedThumbnailUrl);
         }
       }
 
