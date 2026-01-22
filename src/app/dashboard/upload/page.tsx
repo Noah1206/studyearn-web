@@ -585,23 +585,31 @@ function UploadPageContent() {
       console.log('[Upload] 3. Supabase 클라이언트 생성...');
       const supabase = createClient();
 
-      // Supabase 연결 테스트 (DB 쿼리)
-      console.log('[Upload] 3-0. Supabase DB 연결 테스트...');
+      // Supabase 연결 테스트 (직접 fetch)
+      console.log('[Upload] 3-0. Supabase 직접 fetch 테스트...');
       try {
         const testStart = Date.now();
-        const { data: testData, error: testError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        const response = await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=id`,
+          {
+            headers: {
+              'apikey': supabaseKey!,
+              'Authorization': `Bearer ${supabaseKey}`,
+            }
+          }
+        );
         const testTime = Date.now() - testStart;
-        console.log('[Upload] 3-0. DB 테스트 결과:', {
-          success: !testError,
+        const data = await response.json();
+        console.log('[Upload] 3-0. fetch 테스트 결과:', {
+          status: response.status,
           time: testTime + 'ms',
-          error: testError?.message
+          data: data
         });
-      } catch (dbTestErr) {
-        console.error('[Upload] 3-0. DB 테스트 에러:', dbTestErr);
+      } catch (fetchErr) {
+        console.error('[Upload] 3-0. fetch 테스트 에러:', fetchErr);
       }
 
       // subject와 grade 값 계산
