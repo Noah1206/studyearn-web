@@ -560,14 +560,19 @@ function UploadPageContent() {
   const handleUpload = async () => {
     if (!canUpload) return;
 
+    console.log('[Upload] 1. 업로드 시작...');
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('[Upload] 2. Supabase 클라이언트 생성...');
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('[Upload] 3. 사용자 정보 요청...');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('[Upload] 4. 사용자 정보 결과:', { user: user?.email, error: userError });
 
       if (!user) {
+        console.log('[Upload] 사용자 미인증 - 로그인 페이지로 이동');
         router.push('/login?redirectTo=/dashboard/upload');
         return;
       }
@@ -600,7 +605,10 @@ function UploadPageContent() {
         }
       }
 
+      console.log('[Upload] 5. 콘텐츠 타입:', contentType);
+
       if (contentType === 'routine') {
+        console.log('[Upload] 6. 루틴 데이터 준비...');
         // 루틴 데이터 (content_data JSONB에 모든 추가 정보 저장)
         const routineData = {
           creator_id: user.id,
@@ -634,8 +642,10 @@ function UploadPageContent() {
           return;
         }
       } else {
+        console.log('[Upload] 6. 파일 업로드 준비...');
         // 파일 타입 결정
         const ext = file!.name.split('.').pop()?.toLowerCase();
+        console.log('[Upload] 7. 파일 정보:', { name: file!.name, ext, size: file!.size });
         let fileType: 'video' | 'pdf' | 'image' = 'pdf';
         // DB content_type은 CHECK constraint가 있음: 'post', 'video', 'audio', 'document', 'image', 'live'
         let dbContentType: 'video' | 'document' | 'image' = 'document';
@@ -653,6 +663,7 @@ function UploadPageContent() {
         // Supabase Storage에 파일 업로드
         // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
         const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        console.log('[Upload] 8. Storage 업로드 시작:', filePath);
 
         const { error: uploadError } = await supabase.storage
           .from('contents')
@@ -661,8 +672,10 @@ function UploadPageContent() {
             upsert: false
           });
 
+        console.log('[Upload] 9. Storage 업로드 결과:', { error: uploadError });
+
         if (uploadError) {
-          console.error('Storage upload error:', uploadError);
+          console.error('[Upload] Storage upload error:', uploadError);
           // 버킷이 없는 경우 처리
           if (uploadError.message?.includes('Bucket not found')) {
             setError('파일 저장소가 설정되지 않았어요. 관리자에게 문의하세요.');
@@ -703,12 +716,15 @@ function UploadPageContent() {
           published_at: new Date().toISOString(),
         };
 
+        console.log('[Upload] 10. DB insert 시작...', { title: contentData.title });
         const { error: insertError } = await supabase
           .from('contents')
           .insert(contentData);
 
+        console.log('[Upload] 11. DB insert 결과:', { error: insertError });
+
         if (insertError) {
-          console.error('Upload error:', insertError);
+          console.error('[Upload] DB insert error:', insertError);
           // 실패 시 업로드된 파일 삭제 시도
           await supabase.storage.from('contents').remove([filePath]);
           setError('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
@@ -717,11 +733,13 @@ function UploadPageContent() {
       }
 
       // 성공 - 콘텐츠 목록으로 이동
+      console.log('[Upload] 12. 업로드 성공! /content 로 이동');
       router.push('/content');
     } catch (err) {
-      console.error('Upload error:', err);
+      console.error('[Upload] 에러 발생:', err);
       setError('업로드 중 오류가 발생했어요.');
     } finally {
+      console.log('[Upload] 완료 (finally)');
       setIsLoading(false);
     }
   };
