@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { LoadingPage, LoadingInline } from '@/components/ui/Spinner';
 
 interface RoutineItem {
   id: string;
@@ -352,14 +353,7 @@ export default function ProductDetailPage() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">불러오는 중...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage message="불러오는 중..." />;
   }
 
   // Not found state

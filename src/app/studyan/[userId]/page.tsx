@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
+import { LoadingPage } from '@/components/ui/Spinner';
 
 interface RoutineItem {
   id: string;
@@ -281,11 +282,7 @@ export default function StudyanUserPage() {
   const isOwnProfile = currentUserId === userId;
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!user) {

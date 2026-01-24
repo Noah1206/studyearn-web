@@ -25,6 +25,7 @@ import {
   defaultCategories,
   defaultGradeFilters,
 } from '@/components/content';
+import { LoadingSection } from '@/components/ui/Spinner';
 
 interface Product {
   id: string;
@@ -680,9 +681,7 @@ export default function ProductsPage() {
 
             {/* 콘텐츠 목록 */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-gray-400">로딩 중...</div>
-              </div>
+              <LoadingSection message="콘텐츠를 불러오는 중..." />
             ) : sortedProducts.length > 0 ? (
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">

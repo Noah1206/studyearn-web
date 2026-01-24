@@ -41,6 +41,7 @@ import {
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, useToastActions } from '@/components/ui';
+import { LoadingPage } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { agoraService, RemoteUser } from '@/lib/agora/agoraService';
 import type { ICameraVideoTrack, IRemoteVideoTrack } from 'agora-rtc-sdk-ng';
@@ -2249,20 +2250,7 @@ export default function StudyRoomPage() {
 
   // 로딩
   if (isLoading || phase === 'loading') {
-    return (
-      <motion.div
-        className="min-h-screen bg-gray-50 flex items-center justify-center"
-        initial="initial"
-        animate="enter"
-        exit="exit"
-        variants={pageVariants}
-      >
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-orange-500 mx-auto mb-4" />
-          <p className="text-gray-500">스터디룸에 입장하는 중...</p>
-        </div>
-      </motion.div>
-    );
+    return <LoadingPage message="스터디룸에 입장하는 중..." />;
   }
 
   // 에러

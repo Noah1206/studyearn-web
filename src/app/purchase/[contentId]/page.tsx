@@ -22,6 +22,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 import { generateTossDeeplink } from '@/lib/deeplink';
+import { LoadingPage } from '@/components/ui/Spinner';
 import type { BankCode } from '@/lib/deeplink';
 import { requestCardPayment } from '@/lib/portone/client';
 
@@ -309,45 +310,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   // 로딩 화면
   if (isSessionLoading || isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        >
-          <motion.div
-            className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center"
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <Building2 className="w-8 h-8 text-white" />
-          </motion.div>
-          <motion.div
-            className="h-1 w-32 mx-auto bg-gray-200 rounded-full overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <motion.div
-              className="h-full bg-blue-500 rounded-full"
-              initial={{ width: '0%' }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </motion.div>
-          <motion.p
-            className="mt-4 text-gray-500 text-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            결제 정보를 불러오고 있어요
-          </motion.p>
-        </motion.div>
-      </div>
-    );
+    return <LoadingPage message="결제 정보를 불러오고 있어요" />;
   }
 
   // 상품 없음

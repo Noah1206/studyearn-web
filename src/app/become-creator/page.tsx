@@ -21,7 +21,8 @@ import {
   X,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Card, CardContent, Input, Badge, Spinner, LoadingInline } from '@/components/ui';
+import { Button, Card, CardContent, Input, Badge, LoadingInline } from '@/components/ui';
+import { LoadingPage } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 
 // 전문분야 옵션
@@ -284,17 +285,7 @@ export default function BecomeCreatorPage() {
   };
 
   if (isLoading) {
-    return (
-      <motion.div
-        className="min-h-screen flex items-center justify-center bg-white"
-        initial="initial"
-        animate="enter"
-        exit="exit"
-        variants={pageVariants}
-      >
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-      </motion.div>
-    );
+    return <LoadingPage />;
   }
 
   // 소개 화면 (Step 0)

@@ -22,6 +22,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
+import { LoadingSection, Spinner } from '@/components/ui/Spinner';
 
 
 // 콘텐츠 타입
@@ -1717,10 +1718,7 @@ function UploadPageContent() {
             {/* 모달 본문 */}
             <div className="max-h-[60vh] overflow-y-auto">
               {isLoadingRoutines ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-orange-500 animate-spin mb-3" />
-                  <p className="text-sm text-gray-500">루틴 불러오는 중...</p>
-                </div>
+                <LoadingSection message="루틴 불러오는 중..." />
               ) : myRoutines.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <Calendar className="w-12 h-12 text-gray-300 mb-3" />
