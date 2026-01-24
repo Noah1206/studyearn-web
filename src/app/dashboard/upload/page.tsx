@@ -583,80 +583,59 @@ function UploadPageContent() {
       // user 변수를 sessionUser로 설정 (기존 코드 호환성)
       const user = sessionUser;
 
-      console.log('[Upload] 3. Supabase 클라이언트 생성...');
-      const supabase = createClient();
-
-      // Supabase 연결 테스트 (직접 fetch)
-      console.log('[Upload] 3-0. Supabase 직접 fetch 테스트...');
-      try {
-        const testStart = Date.now();
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        const response = await fetch(
-          `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=id`,
-          {
-            headers: {
-              'apikey': supabaseKey!,
-              'Authorization': `Bearer ${supabaseKey}`,
-            }
-          }
-        );
-        const testTime = Date.now() - testStart;
-        const data = await response.json();
-        console.log('[Upload] 3-0. fetch 테스트 결과:', {
-          status: response.status,
-          time: testTime + 'ms',
-          data: data
-        });
-      } catch (fetchErr) {
-        console.error('[Upload] 3-0. fetch 테스트 에러:', fetchErr);
-      }
-
       // subject와 grade 값 계산
-      console.log('[Upload] 3-1. subject/grade 계산...');
+      console.log('[Upload] 3. subject/grade 계산...');
       const subjectValue = getSubjectLabel();
       const gradeValue = getGradeLabel();
       console.log('[Upload] 3-2. subject/grade 완료:', { subjectValue, gradeValue });
 
-      // 썸네일 업로드 (있는 경우)
+      // 썸네일 업로드 (있는 경우) - 직접 fetch 사용
       let uploadedThumbnailUrl: string | null = null;
-      console.log('[Upload] 4. 썸네일 확인:', { hasThumbnail: !!thumbnailFile });
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const accessToken = session?.access_token || supabaseKey;
+
+      console.log('[Upload] 4. 세션 토큰 확인:', {
+        hasSessionToken: !!session?.access_token,
+        tokenPreview: accessToken?.substring(0, 30) + '...'
+      });
+      console.log('[Upload] 4-1. 썸네일 확인:', { hasThumbnail: !!thumbnailFile });
+
       if (thumbnailFile) {
-        console.log('[Upload] 4-1. 썸네일 업로드 시작...');
-        // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
+        console.log('[Upload] 4-2. 썸네일 업로드 시작 (직접 fetch)...');
         const thumbnailPath = `${user.id}/thumbnails/${Date.now()}-${thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         try {
-          // 10초 타임아웃으로 썸네일 업로드
-          const uploadPromise = supabase.storage
-            .from('contents')
-            .upload(thumbnailPath, thumbnailFile, {
-              cacheControl: '3600',
-              upsert: false
-            });
-
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('썸네일 업로드 타임아웃 (10초)')), 10000)
+          const thumbnailResponse = await fetch(
+            `${supabaseUrl}/storage/v1/object/contents/${thumbnailPath}`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey!,
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': thumbnailFile.type || 'image/jpeg',
+                'x-upsert': 'false',
+                'cache-control': 'max-age=3600',
+              },
+              body: thumbnailFile,
+            }
           );
 
-          const { error: thumbnailUploadError } = await Promise.race([
-            uploadPromise,
-            timeoutPromise
-          ]) as Awaited<typeof uploadPromise>;
+          console.log('[Upload] 4-3. 썸네일 응답:', {
+            status: thumbnailResponse.status,
+            statusText: thumbnailResponse.statusText
+          });
 
-          if (thumbnailUploadError) {
-            console.error('[Upload] 4-2. 썸네일 업로드 실패:', thumbnailUploadError);
-            // 썸네일 업로드 실패는 무시하고 계속 진행
+          if (thumbnailResponse.ok) {
+            uploadedThumbnailUrl = `${supabaseUrl}/storage/v1/object/public/contents/${thumbnailPath}`;
+            console.log('[Upload] 4-4. 썸네일 업로드 성공:', uploadedThumbnailUrl);
           } else {
-            const { data: { publicUrl } } = supabase.storage
-              .from('contents')
-              .getPublicUrl(thumbnailPath);
-            uploadedThumbnailUrl = publicUrl;
-            console.log('[Upload] 4-3. 썸네일 업로드 성공:', uploadedThumbnailUrl);
+            const errorData = await thumbnailResponse.json().catch(() => ({}));
+            console.error('[Upload] 4-3. 썸네일 업로드 실패:', errorData);
+            // 썸네일 업로드 실패는 무시하고 계속 진행
           }
         } catch (thumbnailError) {
-          console.error('[Upload] 4-2. 썸네일 업로드 에러:', thumbnailError);
+          console.error('[Upload] 4-3. 썸네일 업로드 에러:', thumbnailError);
           // 썸네일 업로드 실패는 무시하고 계속 진행
         }
       }
@@ -689,15 +668,6 @@ function UploadPageContent() {
         };
 
         console.log('[Upload] 6-1. 루틴 DB insert 시작 (직접 fetch)...');
-
-        // 직접 fetch로 DB insert (SDK 대신 - SDK가 hang 되는 문제 해결)
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const accessToken = session?.access_token || supabaseKey;
-        console.log('[Upload] 6-1-1. Access token:', {
-          hasSessionToken: !!session?.access_token,
-          tokenPreview: accessToken?.substring(0, 20) + '...'
-        });
 
         let insertError;
         try {
@@ -761,16 +731,6 @@ function UploadPageContent() {
         // RLS policy expects: (storage.foldername(name))[1] = auth.uid()
         const filePath = `${user.id}/${Date.now()}-${file!.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         console.log('[Upload] 8. Storage 업로드 시작 (직접 fetch):', filePath);
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        // 사용자 access token (SessionProvider에서 직접 가져옴)
-        const accessToken = session?.access_token || supabaseKey;
-        console.log('[Upload] 8-0. Access token:', {
-          hasSessionToken: !!session?.access_token,
-          tokenPreview: accessToken?.substring(0, 20) + '...'
-        });
 
         let uploadError;
         try {
