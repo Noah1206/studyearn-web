@@ -644,23 +644,22 @@ function UploadPageContent() {
 
       if (contentType === 'routine') {
         console.log('[Upload] 6. 루틴 데이터 준비...');
-        // 루틴 데이터 (content_data JSONB에 모든 추가 정보 저장)
+        // 루틴 데이터 (실제 DB 스키마에 맞게 개별 필드 사용)
         const routineData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
-          content_type: 'post',  // DB CHECK constraint: 'post' for routine type
-          content_url: 'routine://placeholder',
+          type: 'pdf' as const,  // Required field (use pdf as default for routine)
+          content_type: 'routine' as const,
+          url: 'routine://data',  // Placeholder URL for routine type
           thumbnail_url: uploadedThumbnailUrl,
-          content_data: {
-            subject: subjectValue,
-            grade: gradeValue,
-            type: 'routine',
-            allow_preview: allowPreview,
-            routine_type: routineType,
-            routine_days: routineType === 'custom' ? customDays : null,
-            routine_items: routineItems,
-          },
+          // Individual fields (not content_data JSONB)
+          subject: subjectValue,
+          grade: gradeValue,
+          allow_preview: allowPreview,
+          routine_type: routineType,
+          routine_days: routineType === 'custom' ? customDays : null,
+          routine_items: routineItems,
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
@@ -713,18 +712,15 @@ function UploadPageContent() {
         // 파일 타입 결정
         const ext = file!.name.split('.').pop()?.toLowerCase();
         console.log('[Upload] 7. 파일 정보:', { name: file!.name, ext, size: file!.size });
+        // DB 스키마: type은 'video' | 'pdf' | 'image' (필수)
+        // content_type은 'video' | 'pdf' | 'image' | 'routine' | null
         let fileType: 'video' | 'pdf' | 'image' = 'pdf';
-        // DB content_type은 CHECK constraint가 있음: 'post', 'video', 'audio', 'document', 'image', 'live'
-        let dbContentType: 'video' | 'document' | 'image' = 'document';
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) {
           fileType = 'image';
-          dbContentType = 'image';
         } else if (ext === 'pdf') {
           fileType = 'pdf';
-          dbContentType = 'document';  // 'pdf' -> 'document' mapping
         } else if (['mp4', 'mov', 'avi', 'webm'].includes(ext || '')) {
           fileType = 'video';
-          dbContentType = 'video';
         }
 
         // Supabase Storage에 파일 업로드 (직접 fetch 사용)
@@ -788,20 +784,19 @@ function UploadPageContent() {
           thumbnailUrl = publicUrl;
         }
 
-        // 콘텐츠 데이터 (content_data JSONB에 추가 정보 저장)
+        // 콘텐츠 데이터 (실제 DB 스키마에 맞게 개별 필드 사용)
         const contentData = {
           creator_id: user.id,
           title: extractTitle(),
           description: extractDescription() || null,
-          content_type: dbContentType,  // Use valid DB constraint value
-          content_url: publicUrl,
+          type: fileType,  // Required: 'video' | 'pdf' | 'image'
+          content_type: fileType,  // Same as type for files
+          url: publicUrl,  // Required: 파일 URL
           thumbnail_url: thumbnailUrl,
-          content_data: {
-            subject: subjectValue,
-            grade: gradeValue,
-            type: fileType,
-            allow_preview: allowPreview,
-          },
+          // Individual fields (not content_data JSONB)
+          subject: subjectValue,
+          grade: gradeValue,
+          allow_preview: allowPreview,
           access_level: price > 0 ? 'paid' : 'public',
           price: price > 0 ? price : null,
           is_published: true,
