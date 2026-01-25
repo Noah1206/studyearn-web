@@ -3,20 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft,
-  Check,
-  AlertCircle,
-  Clock,
-  ChevronRight,
-  Shield,
-  User,
-  FileText,
-  CreditCard,
-  Wallet,
-} from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 import { generateTossDeeplink } from '@/lib/deeplink';
@@ -51,34 +39,21 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
+      staggerChildren: 0.06,
       delayChildren: 0.1,
     },
   },
 } as const;
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       type: 'spring' as const,
-      stiffness: 300,
-      damping: 24,
-    },
-  },
-};
-
-const scaleVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: 'spring' as const,
       stiffness: 400,
-      damping: 25,
+      damping: 30,
     },
   },
 };
@@ -287,26 +262,19 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 상품 없음
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
+      <div className="min-h-screen bg-white flex items-center justify-center px-5">
         <motion.div
-          className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full"
+          className="text-center max-w-sm w-full"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         >
-          <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-10 h-10 text-gray-400" />
-          </div>
+          <p className="text-6xl mb-6">🤔</p>
           <h2 className="text-xl font-bold text-gray-900 mb-2">상품을 찾을 수 없어요</h2>
-          <p className="text-gray-500 mb-6">삭제되었거나 존재하지 않는 상품이에요</p>
+          <p className="text-gray-500 mb-8">삭제되었거나 존재하지 않는 상품이에요</p>
           <Link href="/content">
-            <motion.button
-              className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
               상품 둘러보기
-            </motion.button>
+            </button>
           </Link>
         </motion.div>
       </div>
@@ -316,68 +284,27 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 이미 구매함
   if (alreadyPurchased) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
+      <div className="min-h-screen bg-white flex items-center justify-center px-5">
         <motion.div
-          className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full overflow-hidden relative"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="text-center max-w-sm w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <motion.div
-            className="w-24 h-24 mx-auto mb-6 bg-orange-500 rounded-full flex items-center justify-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: 'spring', stiffness: 500 }}
-            >
-              <Check className="w-12 h-12 text-white" />
-            </motion.div>
-          </motion.div>
-          <motion.h2
-            className="text-2xl font-bold text-gray-900 mb-2"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            이미 구매했어요!
-          </motion.h2>
-          <motion.p
-            className="text-gray-500 mb-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            지금 바로 콘텐츠를 확인해보세요
-          </motion.p>
-          <motion.div
-            className="space-y-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+          <p className="text-6xl mb-6">✅</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">이미 구매한 콘텐츠예요</h2>
+          <p className="text-gray-500 mb-8">지금 바로 확인해보세요</p>
+          <div className="space-y-3">
             <Link href={`/content/${productId}`}>
-              <motion.button
-                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                콘텐츠 보러가기
-              </motion.button>
+              <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
+                콘텐츠 보기
+              </button>
             </Link>
             <Link href="/my/purchases">
-              <motion.button
-                className="w-full py-4 bg-gray-100 text-gray-700 rounded-2xl font-semibold"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                구매 내역 보기
-              </motion.button>
+              <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold">
+                구매 내역
+              </button>
             </Link>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     );
@@ -408,51 +335,38 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 대기 중
   if (pendingPurchase) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
+      <div className="min-h-screen bg-white flex items-center justify-center px-5">
         <motion.div
-          className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="text-center max-w-sm w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <motion.div
-            className="w-24 h-24 mx-auto mb-6 bg-orange-500 rounded-full flex items-center justify-center"
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          <motion.p
+            className="text-6xl mb-6"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
           >
-            <Clock className="w-12 h-12 text-white" />
-          </motion.div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">입금 확인 중이에요</h2>
-          <p className="text-gray-500 mb-8">
-            확인되면 바로 알려드릴게요!
-          </p>
+            ⏳
+          </motion.p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">입금 확인 중</h2>
+          <p className="text-gray-500 mb-8">확인되면 바로 알려드릴게요</p>
           <div className="space-y-3">
             <Link href="/my/purchases">
-              <motion.button
-                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
+              <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
                 구매 내역 확인
-              </motion.button>
+              </button>
             </Link>
             <Link href={`/content/${productId}`}>
-              <motion.button
-                className="w-full py-4 bg-gray-100 text-gray-700 rounded-2xl font-semibold"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
+              <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold">
                 상품 페이지로
-              </motion.button>
+              </button>
             </Link>
-            <motion.button
+            <button
               onClick={handleCancelPending}
-              className="w-full py-4 text-gray-400 text-sm font-medium"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 text-gray-400 text-sm"
             >
-              대기 중인 구매 취소하기
-            </motion.button>
+              구매 취소
+            </button>
           </div>
         </motion.div>
       </div>
@@ -461,223 +375,105 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   // 메인 결제 화면
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* 헤더 */}
-      <motion.header
-        className="sticky top-0 z-50 bg-white border-b border-gray-100"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      >
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-5 py-4 flex items-center">
           <Link href={`/content/${productId}`}>
-            <motion.button
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
+            <button className="p-2 -ml-2">
               <ArrowLeft className="w-6 h-6 text-gray-900" />
-            </motion.button>
+            </button>
           </Link>
-          <h1 className="flex-1 text-center font-bold text-gray-900">결제하기</h1>
+          <h1 className="flex-1 text-center font-bold text-gray-900">결제</h1>
           <div className="w-10" />
         </div>
-      </motion.header>
+      </header>
 
       <motion.main
-        className="max-w-lg mx-auto px-5 py-6 pb-40"
+        className="max-w-lg mx-auto px-5 py-6 pb-36"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* 상품 정보 카드 */}
-        <motion.div
-          className="bg-white rounded-2xl p-5 mb-4 flex gap-4 shadow-sm"
-          variants={itemVariants}
-        >
-          <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
-            {product.thumbnail_url ? (
-              <Image
-                src={product.thumbnail_url}
-                alt={product.title}
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <FileText className="w-8 h-8 text-gray-300" />
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 line-clamp-2 mb-1">{product.title}</p>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <User className="w-4 h-4" />
-              <span>{product.creator.name}</span>
-            </div>
+        {/* 상품 정보 */}
+        <motion.div className="mb-8" variants={itemVariants}>
+          <p className="text-sm text-gray-500 mb-1">{product.creator.name}</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{product.title}</h2>
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
           </div>
         </motion.div>
 
-        {/* 결제 금액 */}
-        <motion.div
-          className="bg-white rounded-2xl p-6 mb-4 shadow-sm"
-          variants={scaleVariants}
-        >
-          <p className="text-gray-500 text-sm mb-2">결제 금액</p>
-          <motion.p
-            className="text-4xl font-bold text-gray-900 tracking-tight"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.2 }}
-          >
-            {formatCurrency(product.price)}
-          </motion.p>
-        </motion.div>
+        {/* 구분선 */}
+        <motion.hr className="border-gray-100 mb-6" variants={itemVariants} />
 
-        {/* 안전 거래 안내 */}
-        <motion.div
-          className="bg-orange-50 rounded-2xl p-5 mb-4 border border-orange-100"
-          variants={itemVariants}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <p className="font-semibold text-gray-900">안전하게 보호돼요</p>
-          </div>
-          <div className="space-y-2 text-sm text-gray-600 ml-[52px]">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-              <span>에스크로 보관</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-              <span>문제시 100% 환불</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 결제 방법 선택 */}
-        <motion.div
-          className="bg-white rounded-2xl p-5 shadow-sm mb-4"
-          variants={itemVariants}
-        >
-          <p className="font-semibold text-gray-900 mb-4">결제 방법</p>
-          <div className="grid grid-cols-2 gap-3">
-            {/* 카드 결제 */}
-            <motion.button
+        {/* 결제 방법 */}
+        <motion.div className="mb-6" variants={itemVariants}>
+          <p className="text-sm font-medium text-gray-900 mb-3">결제 방법</p>
+          <div className="flex gap-2">
+            <button
               onClick={() => setPaymentMethod('card')}
-              className={`relative p-4 rounded-xl border-2 transition-all ${
+              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'card'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 bg-white'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-600'
               }`}
-              whileTap={{ scale: 0.98 }}
             >
-              {paymentMethod === 'card' && (
-                <motion.div
-                  className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                >
-                  <Check className="w-3 h-3 text-white" />
-                </motion.div>
-              )}
-              <CreditCard className={`w-7 h-7 mx-auto mb-2 ${paymentMethod === 'card' ? 'text-orange-500' : 'text-gray-400'}`} />
-              <p className={`text-sm font-medium ${paymentMethod === 'card' ? 'text-gray-900' : 'text-gray-600'}`}>카드결제</p>
-              <p className="text-xs text-gray-400 mt-1">즉시 이용</p>
-            </motion.button>
-
-            {/* 토스 송금 */}
-            <motion.button
+              카드결제
+            </button>
+            <button
               onClick={() => setPaymentMethod('transfer')}
-              className={`relative p-4 rounded-xl border-2 transition-all ${
+              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'transfer'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 bg-white'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-600'
               }`}
-              whileTap={{ scale: 0.98 }}
             >
-              {paymentMethod === 'transfer' && (
-                <motion.div
-                  className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                >
-                  <Check className="w-3 h-3 text-white" />
-                </motion.div>
-              )}
-              <Wallet className={`w-7 h-7 mx-auto mb-2 ${paymentMethod === 'transfer' ? 'text-orange-500' : 'text-gray-400'}`} />
-              <p className={`text-sm font-medium ${paymentMethod === 'transfer' ? 'text-gray-900' : 'text-gray-600'}`}>계좌이체</p>
-              <p className="text-xs text-gray-400 mt-1">확인 후 이용</p>
-            </motion.button>
+              계좌이체
+            </button>
           </div>
         </motion.div>
 
-        {/* 카드 결제 UI */}
+        {/* 카드 결제 */}
         <AnimatePresence mode="wait">
           {paymentMethod === 'card' && (
             <motion.div
-              key="card-payment"
-              className="bg-white rounded-2xl p-5 shadow-sm mb-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              key="card"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mb-6"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-gray-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">카드 결제</p>
-                  <p className="text-sm text-gray-500">결제 후 바로 이용</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 text-center text-xs text-gray-400">
-                <span className="px-3 py-1.5 bg-orange-100 text-orange-600 rounded-full font-medium">결제</span>
-                <ChevronRight className="w-3 h-3" />
-                <span className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-full">검증</span>
-                <ChevronRight className="w-3 h-3" />
-                <span className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-full">완료</span>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-sm text-gray-600">
+                  결제 버튼을 누르면 카드 결제창이 열립니다.
+                  <br />
+                  결제 완료 후 바로 콘텐츠를 이용할 수 있어요.
+                </p>
               </div>
             </motion.div>
           )}
 
-          {/* 토스 송금 UI */}
+          {/* 계좌이체 */}
           {paymentMethod === 'transfer' && (
             <motion.div
-              key="transfer-payment"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              key="transfer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4 mb-6"
             >
-              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Wallet className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">계좌이체</p>
-                    <p className="text-sm text-gray-500">토스로 간편 송금</p>
-                  </div>
-                </div>
+              {/* 토스 송금 버튼 */}
+              <button
+                onClick={handleOpenToss}
+                className="w-full py-3.5 rounded-xl font-medium text-white bg-[#0064FF]"
+              >
+                토스로 송금하기
+              </button>
 
-                <motion.button
-                  onClick={handleOpenToss}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-white bg-[#0064FF]"
-                  whileTap={{ scale: 0.98 }}
-                >
-                  토스로 송금하기
-                </motion.button>
-              </div>
-
-              {/* 입금자명 입력 */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
-                <label className="block font-semibold text-gray-900 mb-3">
+              {/* 입금자명 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   입금자명
                 </label>
                 <input
@@ -685,127 +481,86 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                   value={buyerNote}
                   onChange={(e) => setBuyerNote(e.target.value)}
                   placeholder="송금 시 입력한 이름"
-                  className="w-full px-4 py-3.5 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white"
                 />
               </div>
 
-              {/* 진행 절차 */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
-                <p className="font-semibold text-gray-900 mb-4">진행 절차</p>
-                <div className="flex items-center justify-between text-center">
-                  <div className="flex-1">
-                    <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center mx-auto mb-2 text-sm font-semibold">1</div>
-                    <p className="text-xs text-gray-600">송금</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">2</div>
-                    <p className="text-xs text-gray-400">요청</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">3</div>
-                    <p className="text-xs text-gray-400">확인</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">4</div>
-                    <p className="text-xs text-gray-400">이용</p>
-                  </div>
-                </div>
+              {/* 안내 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-sm text-gray-600">
+                  토스로 송금 후 입금자명을 입력하고 완료 버튼을 눌러주세요.
+                  <br />
+                  입금 확인 후 콘텐츠를 이용할 수 있어요.
+                </p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* 구분선 */}
+        <motion.hr className="border-gray-100 mb-6" variants={itemVariants} />
+
+        {/* 안전 거래 안내 */}
+        <motion.div className="mb-6" variants={itemVariants}>
+          <p className="text-sm font-medium text-gray-900 mb-3">안전 거래</p>
+          <ul className="text-sm text-gray-500 space-y-1.5">
+            <li>• 에스크로 방식으로 안전하게 보관돼요</li>
+            <li>• 문제 발생 시 100% 환불 가능해요</li>
+          </ul>
+        </motion.div>
+
         {/* 에러 메시지 */}
         <AnimatePresence>
           {error && (
             <motion.div
-              className="bg-red-50 rounded-xl p-4 mb-4 flex items-center gap-3 border border-red-100"
-              initial={{ opacity: 0, y: -10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="bg-red-50 rounded-xl p-4 mb-4 flex items-start gap-3"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
             >
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-600">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* 주의사항 */}
-        <motion.div
-          className="rounded-xl p-4"
-          variants={itemVariants}
-        >
-          <ul className="text-xs text-gray-400 space-y-1">
-            <li>* 디지털 콘텐츠는 다운로드 후 환불이 제한될 수 있어요</li>
-            <li>* 문제가 있다면 24시간 내에 신고해주세요</li>
-          </ul>
-        </motion.div>
+        <motion.p className="text-xs text-gray-400" variants={itemVariants}>
+          디지털 콘텐츠는 다운로드 후 환불이 제한될 수 있어요.
+          문제가 있다면 24시간 내에 신고해주세요.
+        </motion.p>
       </motion.main>
 
       {/* 하단 고정 버튼 */}
-      <motion.div
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-5 pb-8"
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.5 }}
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-5 pb-8">
         <div className="max-w-lg mx-auto">
           {paymentMethod === 'card' ? (
-            <motion.button
+            <button
               onClick={handleCardPayment}
               disabled={isProcessing}
-              className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+              className={`w-full py-4 rounded-xl font-semibold text-base ${
                 !isProcessing
-                  ? 'bg-gray-900 text-white'
+                  ? 'bg-orange-500 text-white'
                   : 'bg-gray-200 text-gray-400'
               }`}
-              whileTap={!isProcessing ? { scale: 0.98 } : {}}
             >
-              {isProcessing ? (
-                <>
-                  <motion.div
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  />
-                  처리 중...
-                </>
-              ) : (
-                <>
-                  {formatCurrency(product.price)} 결제하기
-                </>
-              )}
-            </motion.button>
+              {isProcessing ? '처리 중...' : `${formatCurrency(product.price)} 결제하기`}
+            </button>
           ) : (
-            <motion.button
+            <button
               onClick={handlePaymentComplete}
               disabled={!buyerNote.trim() || isProcessing}
-              className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+              className={`w-full py-4 rounded-xl font-semibold text-base ${
                 buyerNote.trim() && !isProcessing
-                  ? 'bg-gray-900 text-white'
+                  ? 'bg-orange-500 text-white'
                   : 'bg-gray-200 text-gray-400'
               }`}
-              whileTap={buyerNote.trim() && !isProcessing ? { scale: 0.98 } : {}}
             >
-              {isProcessing ? (
-                <>
-                  <motion.div
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  />
-                  처리 중...
-                </>
-              ) : (
-                '송금 완료했어요'
-              )}
-            </motion.button>
+              {isProcessing ? '처리 중...' : '송금 완료'}
+            </button>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
