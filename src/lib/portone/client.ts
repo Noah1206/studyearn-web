@@ -48,7 +48,14 @@ export async function requestPayment(
   const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
   const channelKey = process.env.NEXT_PUBLIC_KG_INICIS_CHANNEL_KEY;
 
+  console.log('[PortOne Config] storeId:', storeId ? 'SET' : 'MISSING');
+  console.log('[PortOne Config] channelKey:', channelKey ? 'SET' : 'MISSING');
+
   if (!storeId || !channelKey) {
+    console.error('[PortOne Config] Missing environment variables:', {
+      storeId: !!storeId,
+      channelKey: !!channelKey,
+    });
     return {
       success: false,
       code: 'CONFIG_ERROR',

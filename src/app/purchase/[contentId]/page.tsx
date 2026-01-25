@@ -437,6 +437,28 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     );
   }
 
+  // 대기 중인 구매 취소
+  const handleCancelPending = async () => {
+    if (!confirm('대기 중인 구매를 취소하시겠어요?')) return;
+
+    try {
+      const response = await fetch('/api/purchase/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: productId }),
+      });
+
+      if (response.ok) {
+        setPendingPurchase(false);
+      } else {
+        const data = await response.json();
+        alert(data.message || '취소에 실패했습니다.');
+      }
+    } catch {
+      alert('취소 중 오류가 발생했습니다.');
+    }
+  };
+
   // 대기 중
   if (pendingPurchase) {
     return (
@@ -477,6 +499,14 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 상품 페이지로
               </motion.button>
             </Link>
+            <motion.button
+              onClick={handleCancelPending}
+              className="w-full py-4 text-red-500 text-sm font-medium"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              대기 중인 구매 취소하기
+            </motion.button>
           </div>
         </motion.div>
       </div>

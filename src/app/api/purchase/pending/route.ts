@@ -29,13 +29,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if there's a pending purchase
+    // Check if there's a pending purchase (only pending_confirm for P2P transfers)
+    // pending_payment is for card payments and should allow retry
     const { data: pendingPurchase, error } = await supabase
       .from('content_purchases')
       .select('id, status')
       .eq('content_id', contentId)
       .eq('buyer_id', user.id)
-      .in('status', ['pending_payment', 'pending_confirm'])
+      .eq('status', 'pending_confirm')
       .maybeSingle();
 
     if (error) {
