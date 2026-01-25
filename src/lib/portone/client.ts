@@ -64,20 +64,27 @@ export async function requestPayment(
   }
 
   try {
+    // KG이니시스 카드 결제용 기본 옵션
     const paymentOptions: PortOne.PaymentRequest = {
       storeId,
       channelKey,
       paymentId: request.paymentId,
       orderName: request.orderName,
       totalAmount: request.totalAmount,
-      currency: 'CURRENCY_KRW',
+      currency: 'KRW',
       payMethod: request.payMethod,
-      customer: {
+    };
+
+    // 고객 정보 추가 (선택적)
+    if (request.customer.fullName || request.customer.phoneNumber) {
+      paymentOptions.customer = {
         fullName: request.customer.fullName,
         phoneNumber: request.customer.phoneNumber,
-        email: request.customer.email,
-      },
-    };
+      };
+      if (request.customer.email) {
+        paymentOptions.customer.email = request.customer.email;
+      }
+    }
 
     // 간편결제 설정
     if (request.payMethod === 'EASY_PAY' && request.easyPayProvider) {
@@ -94,6 +101,8 @@ export async function requestPayment(
         },
       };
     }
+
+    console.log('[PortOne] Payment options:', JSON.stringify(paymentOptions, null, 2));
 
     const response = await PortOne.requestPayment(paymentOptions);
 
