@@ -78,7 +78,7 @@ export async function requestPayment(
   }
 
   try {
-    // KG이니시스 카드 결제용
+    // KG이니시스 V2 카드 결제
     // https://developers.portone.io/opi/ko/integration/pg/v2/inicis-v2
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentOptions: any = {
@@ -87,14 +87,22 @@ export async function requestPayment(
       paymentId: request.paymentId,
       orderName: request.orderName,
       totalAmount: request.totalAmount,
-      currency: 'CURRENCY_KRW',
-      payMethod: request.payMethod,
-      customer: {
-        fullName: request.customer.fullName || '구매자',
-        phoneNumber: request.customer.phoneNumber,
-        email: request.customer.email,
-      },
+      currency: 'KRW',
+      payMethod: 'CARD',
     };
+
+    // customer 정보 추가 (KG이니시스 필수)
+    if (request.customer?.fullName) {
+      paymentOptions.customer = {
+        fullName: request.customer.fullName,
+      };
+      if (request.customer.phoneNumber) {
+        paymentOptions.customer.phoneNumber = request.customer.phoneNumber;
+      }
+      if (request.customer.email) {
+        paymentOptions.customer.email = request.customer.email;
+      }
+    }
 
     console.log('[PortOne] Payment options:', JSON.stringify(paymentOptions, null, 2));
     console.log('[PortOne] Calling PortOne.requestPayment()...');
