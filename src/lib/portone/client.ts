@@ -64,43 +64,23 @@ export async function requestPayment(
   }
 
   try {
-    // KG이니시스 카드 결제용 기본 옵션
-    const paymentOptions: PortOne.PaymentRequest = {
+    // KG이니시스 카드 결제용
+    // https://developers.portone.io/opi/ko/integration/pg/v2/inicis-v2
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paymentOptions: any = {
       storeId,
       channelKey,
       paymentId: request.paymentId,
       orderName: request.orderName,
       totalAmount: request.totalAmount,
-      currency: 'KRW',
+      currency: 'CURRENCY_KRW',
       payMethod: request.payMethod,
-    };
-
-    // 고객 정보 추가 (선택적)
-    if (request.customer.fullName || request.customer.phoneNumber) {
-      paymentOptions.customer = {
-        fullName: request.customer.fullName,
+      customer: {
+        fullName: request.customer.fullName || '구매자',
         phoneNumber: request.customer.phoneNumber,
-      };
-      if (request.customer.email) {
-        paymentOptions.customer.email = request.customer.email;
-      }
-    }
-
-    // 간편결제 설정
-    if (request.payMethod === 'EASY_PAY' && request.easyPayProvider) {
-      paymentOptions.easyPay = {
-        easyPayProvider: request.easyPayProvider,
-      };
-    }
-
-    // 가상계좌 설정
-    if (request.payMethod === 'VIRTUAL_ACCOUNT') {
-      paymentOptions.virtualAccount = {
-        accountExpiry: {
-          validHours: request.virtualAccountExpiry || 24,
-        },
-      };
-    }
+        email: request.customer.email,
+      },
+    };
 
     console.log('[PortOne] Payment options:', JSON.stringify(paymentOptions, null, 2));
 
