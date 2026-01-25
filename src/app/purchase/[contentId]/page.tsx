@@ -11,12 +11,10 @@ import {
   AlertCircle,
   Clock,
   ChevronRight,
-  Sparkles,
   Shield,
   User,
   FileText,
   CreditCard,
-  Building2,
   Wallet,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -28,7 +26,6 @@ import { requestCardPayment } from '@/lib/portone/client';
 
 type PaymentMethod = 'card' | 'transfer';
 
-// 플랫폼 계좌 정보 (환경 변수에서 로드)
 const PLATFORM_BANK_CODE = (process.env.NEXT_PUBLIC_PLATFORM_BANK_CODE || 'busan') as BankCode;
 const PLATFORM_ACCOUNT_NUMBER = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER || '';
 
@@ -49,7 +46,6 @@ interface PurchasePageProps {
   params: { contentId: string };
 }
 
-// 토스 스타일 애니메이션 variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -83,18 +79,6 @@ const scaleVariants = {
       type: 'spring' as const,
       stiffness: 400,
       damping: 25,
-    },
-  },
-};
-
-const pulseVariants = {
-  initial: { scale: 1 },
-  pulse: {
-    scale: [1, 1.02, 1],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      ease: 'easeInOut' as const,
     },
   },
 };
@@ -178,17 +162,13 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       return;
     }
 
-    // 토스 QR 형식 딥링크 생성 (bank=은행명, origin=qr)
     const url = generateTossDeeplink(
       PLATFORM_BANK_CODE,
       PLATFORM_ACCOUNT_NUMBER,
       product.price
     );
 
-    // 디버깅용
     console.log('[TossDeeplink]', { url, bank: PLATFORM_BANK_CODE, account: PLATFORM_ACCOUNT_NUMBER });
-    alert(`URL: ${url}`);
-
     window.location.href = url;
   };
 
@@ -221,7 +201,6 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     }
   };
 
-  // 카드 결제 처리 (PortOne)
   const handleCardPayment = async () => {
     if (!product || !user) return;
 
@@ -231,7 +210,6 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     try {
       console.log('[Payment] 1. 결제 초기화 시작...');
 
-      // 1. 서버에서 결제 정보 생성
       const initResponse = await fetch('/api/purchase/portone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -249,7 +227,6 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       const { paymentId, orderName, amount } = await initResponse.json();
       console.log('[Payment] 2. 결제 정보:', { paymentId, orderName, amount });
 
-      // 2. PortOne 결제창 호출
       console.log('[Payment] 3. PortOne SDK 호출 중...');
       const paymentResult = await requestCardPayment(
         paymentId,
@@ -264,20 +241,16 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       console.log('[Payment] 4. PortOne 결과:', paymentResult);
 
       if (paymentResult.code) {
-        // 결제 실패 또는 취소
         console.error('[PortOne Error]', paymentResult.code, paymentResult.message);
 
         if (paymentResult.code === 'USER_CANCEL') {
-          // 사용자가 직접 취소한 경우 - 에러 메시지 없이 종료
           setIsProcessing(false);
           return;
         }
 
-        // 그 외 모든 에러는 사용자에게 표시
         throw new Error(paymentResult.message || `결제 오류: ${paymentResult.code}`);
       }
 
-      // 3. 결제 검증
       const verifyResponse = await fetch('/api/payments/portone/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -295,10 +268,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       const verifyResult = await verifyResponse.json();
 
       if (verifyResult.status === 'completed') {
-        // 결제 완료 - 콘텐츠 페이지로 이동
         router.push(`/content/${productId}?purchased=true`);
       } else if (verifyResult.status === 'awaiting_deposit') {
-        // 가상계좌 입금 대기 (이 경우는 카드결제에서는 발생하지 않음)
         router.push(`/purchase/${productId}/pending`);
       }
     } catch (err) {
@@ -316,7 +287,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 상품 없음
   if (!product) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-5">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
         <motion.div
           className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -345,40 +316,15 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 이미 구매함
   if (alreadyPurchased) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-5">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
         <motion.div
           className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full overflow-hidden relative"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         >
-          {/* 축하 파티클 */}
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{ opacity: 0, y: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  y: [-20, -60],
-                  x: [0, (i % 2 === 0 ? 1 : -1) * 20],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: 'easeOut',
-                }}
-                style={{ left: `${20 + i * 12}%`, top: '40%' }}
-              >
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-              </motion.div>
-            ))}
-          </div>
-
           <motion.div
-            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center"
+            className="w-24 h-24 mx-auto mb-6 bg-orange-500 rounded-full flex items-center justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
@@ -415,7 +361,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           >
             <Link href={`/content/${productId}`}>
               <motion.button
-                className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-semibold"
+                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -462,7 +408,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   // 대기 중
   if (pendingPurchase) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-5">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
         <motion.div
           className="text-center bg-white rounded-3xl p-8 shadow-sm max-w-sm w-full"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -470,7 +416,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         >
           <motion.div
-            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center"
+            className="w-24 h-24 mx-auto mb-6 bg-orange-500 rounded-full flex items-center justify-center"
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           >
@@ -501,7 +447,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             </Link>
             <motion.button
               onClick={handleCancelPending}
-              className="w-full py-4 text-red-500 text-sm font-medium"
+              className="w-full py-4 text-gray-400 text-sm font-medium"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -515,10 +461,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   // 메인 결제 화면
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <motion.header
-        className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100"
+        className="sticky top-0 z-50 bg-white border-b border-gray-100"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -533,7 +479,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               <ArrowLeft className="w-6 h-6 text-gray-900" />
             </motion.button>
           </Link>
-          <h1 className="flex-1 text-center font-semibold text-gray-900">결제하기</h1>
+          <h1 className="flex-1 text-center font-bold text-gray-900">결제하기</h1>
           <div className="w-10" />
         </div>
       </motion.header>
@@ -546,10 +492,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       >
         {/* 상품 정보 카드 */}
         <motion.div
-          className="bg-gray-50 rounded-3xl p-5 mb-6 flex gap-4"
+          className="bg-white rounded-2xl p-5 mb-4 flex gap-4 shadow-sm"
           variants={itemVariants}
         >
-          <div className="w-20 h-20 rounded-2xl bg-gray-200 overflow-hidden flex-shrink-0">
+          <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
             {product.thumbnail_url ? (
               <Image
                 src={product.thumbnail_url}
@@ -560,7 +506,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <FileText className="w-8 h-8 text-gray-400" />
+                <FileText className="w-8 h-8 text-gray-300" />
               </div>
             )}
           </div>
@@ -575,12 +521,12 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
         {/* 결제 금액 */}
         <motion.div
-          className="text-center mb-8"
+          className="bg-white rounded-2xl p-6 mb-4 shadow-sm"
           variants={scaleVariants}
         >
           <p className="text-gray-500 text-sm mb-2">결제 금액</p>
           <motion.p
-            className="text-5xl font-bold text-gray-900 tracking-tight"
+            className="text-4xl font-bold text-gray-900 tracking-tight"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.2 }}
@@ -589,36 +535,32 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           </motion.p>
         </motion.div>
 
-        {/* 안전 거래 안내 배지 */}
+        {/* 안전 거래 안내 */}
         <motion.div
-          className="bg-emerald-50 rounded-3xl p-5 mb-6"
+          className="bg-orange-50 rounded-2xl p-5 mb-4 border border-orange-100"
           variants={itemVariants}
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-              <Shield className="w-5 h-5 text-emerald-600" />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
             </div>
-            <p className="font-semibold text-emerald-900">스터플이 안전하게 보호해요</p>
+            <p className="font-semibold text-gray-900">안전하게 보호돼요</p>
           </div>
-          <div className="space-y-2 text-sm text-emerald-700">
+          <div className="space-y-2 text-sm text-gray-600 ml-[52px]">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 flex-shrink-0" />
-              <span>입금 확인 전까지 에스크로 보관</span>
+              <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <span>에스크로 보관</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 flex-shrink-0" />
-              <span>콘텐츠 문제시 100% 환불</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 flex-shrink-0" />
-              <span>24시간 내 입금 확인</span>
+              <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <span>문제시 100% 환불</span>
             </div>
           </div>
         </motion.div>
 
         {/* 결제 방법 선택 */}
         <motion.div
-          className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
+          className="bg-white rounded-2xl p-5 shadow-sm mb-4"
           variants={itemVariants}
         >
           <p className="font-semibold text-gray-900 mb-4">결제 방법</p>
@@ -626,51 +568,49 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             {/* 카드 결제 */}
             <motion.button
               onClick={() => setPaymentMethod('card')}
-              className={`relative p-4 rounded-2xl border-2 transition-all ${
+              className={`relative p-4 rounded-xl border-2 transition-all ${
                 paymentMethod === 'card'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white'
               }`}
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {paymentMethod === 'card' && (
                 <motion.div
-                  className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
+                  className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                 >
                   <Check className="w-3 h-3 text-white" />
                 </motion.div>
               )}
-              <CreditCard className={`w-8 h-8 mx-auto mb-2 ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-400'}`} />
-              <p className={`text-sm font-medium ${paymentMethod === 'card' ? 'text-blue-900' : 'text-gray-700'}`}>카드결제</p>
+              <CreditCard className={`w-7 h-7 mx-auto mb-2 ${paymentMethod === 'card' ? 'text-orange-500' : 'text-gray-400'}`} />
+              <p className={`text-sm font-medium ${paymentMethod === 'card' ? 'text-gray-900' : 'text-gray-600'}`}>카드결제</p>
               <p className="text-xs text-gray-400 mt-1">즉시 이용</p>
             </motion.button>
 
             {/* 토스 송금 */}
             <motion.button
               onClick={() => setPaymentMethod('transfer')}
-              className={`relative p-4 rounded-2xl border-2 transition-all ${
+              className={`relative p-4 rounded-xl border-2 transition-all ${
                 paymentMethod === 'transfer'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white'
               }`}
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {paymentMethod === 'transfer' && (
                 <motion.div
-                  className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
+                  className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                 >
                   <Check className="w-3 h-3 text-white" />
                 </motion.div>
               )}
-              <Wallet className={`w-8 h-8 mx-auto mb-2 ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-gray-400'}`} />
-              <p className={`text-sm font-medium ${paymentMethod === 'transfer' ? 'text-blue-900' : 'text-gray-700'}`}>토스 송금</p>
-              <p className="text-xs text-gray-400 mt-1">입금 확인 후</p>
+              <Wallet className={`w-7 h-7 mx-auto mb-2 ${paymentMethod === 'transfer' ? 'text-orange-500' : 'text-gray-400'}`} />
+              <p className={`text-sm font-medium ${paymentMethod === 'transfer' ? 'text-gray-900' : 'text-gray-600'}`}>계좌이체</p>
+              <p className="text-xs text-gray-400 mt-1">확인 후 이용</p>
             </motion.button>
           </div>
         </motion.div>
@@ -680,40 +620,28 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           {paymentMethod === 'card' && (
             <motion.div
               key="card-payment"
-              className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6"
+              className="bg-white rounded-2xl p-5 shadow-sm mb-4"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">카드로 결제하기</p>
-                  <p className="text-sm text-gray-500">결제 완료 후 바로 이용할 수 있어요</p>
+                  <p className="font-semibold text-gray-900">카드 결제</p>
+                  <p className="text-sm text-gray-500">결제 후 바로 이용</p>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-4 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span>신용카드, 체크카드 모두 가능</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span>결제 즉시 콘텐츠 이용 가능</span>
-                </div>
-              </div>
-
-              {/* 진행 절차 - 카드결제 */}
-              <div className="flex items-center justify-center gap-2 text-center text-xs text-gray-400 mt-4">
-                <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full font-medium">결제</span>
+              <div className="flex items-center justify-center gap-2 text-center text-xs text-gray-400">
+                <span className="px-3 py-1.5 bg-orange-100 text-orange-600 rounded-full font-medium">결제</span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="px-2 py-1 bg-gray-100 rounded-full">검증</span>
+                <span className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-full">검증</span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="px-2 py-1 bg-gray-100 rounded-full">완료</span>
+                <span className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-full">완료</span>
               </div>
             </motion.div>
           )}
@@ -727,36 +655,28 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Wallet className="w-5 h-5 text-blue-600" />
+              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">토스로 송금하기</p>
-                    <p className="text-sm text-gray-500">버튼을 누르면 바로 송금화면으로 이동해요</p>
+                    <p className="font-semibold text-gray-900">계좌이체</p>
+                    <p className="text-sm text-gray-500">토스로 간편 송금</p>
                   </div>
                 </div>
 
                 <motion.button
                   onClick={handleOpenToss}
-                  className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold text-white text-lg"
-                  style={{ backgroundColor: '#0064FF' }}
-                  whileHover={{ scale: 1.02 }}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-white bg-[#0064FF]"
                   whileTap={{ scale: 0.98 }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm0-8H9V7h6v2z"/>
-                  </svg>
                   토스로 송금하기
                 </motion.button>
-                <p className="text-xs text-gray-400 text-center mt-4">
-                  &apos;스터플&apos;에게 금액이 자동 입력된 송금 화면이 열려요
-                </p>
               </div>
 
               {/* 입금자명 입력 */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
                 <label className="block font-semibold text-gray-900 mb-3">
                   입금자명
                 </label>
@@ -764,41 +684,35 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                   type="text"
                   value={buyerNote}
                   onChange={(e) => setBuyerNote(e.target.value)}
-                  placeholder="송금할 때 입력한 이름"
-                  className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  placeholder="송금 시 입력한 이름"
+                  className="w-full px-4 py-3.5 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
                 />
-                <p className="text-xs text-gray-400 mt-2">
-                  빠른 입금 확인을 위해 정확히 입력해주세요
-                </p>
               </div>
 
-              {/* 진행 절차 타임라인 */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-                <p className="font-semibold text-gray-900 mb-4">이렇게 진행돼요</p>
+              {/* 진행 절차 */}
+              <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+                <p className="font-semibold text-gray-900 mb-4">진행 절차</p>
                 <div className="flex items-center justify-between text-center">
                   <div className="flex-1">
-                    <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto mb-2 text-sm font-semibold">1</div>
-                    <p className="text-xs text-gray-600">송금하기</p>
+                    <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center mx-auto mb-2 text-sm font-semibold">1</div>
+                    <p className="text-xs text-gray-600">송금</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">2</div>
-                    <p className="text-xs text-gray-400">확인 요청</p>
+                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">2</div>
+                    <p className="text-xs text-gray-400">요청</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">3</div>
-                    <p className="text-xs text-gray-400">입금 확인</p>
+                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">3</div>
+                    <p className="text-xs text-gray-400">확인</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">4</div>
-                    <p className="text-xs text-gray-400">콘텐츠 이용</p>
+                    <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-2 text-sm font-semibold">4</div>
+                    <p className="text-xs text-gray-400">이용</p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 text-center mt-4">
-                  입금 확인은 보통 24시간 내에 완료돼요
-                </p>
               </div>
             </motion.div>
           )}
@@ -808,7 +722,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         <AnimatePresence>
           {error && (
             <motion.div
-              className="bg-red-50 rounded-2xl p-4 mb-4 flex items-center gap-3"
+              className="bg-red-50 rounded-xl p-4 mb-4 flex items-center gap-3 border border-red-100"
               initial={{ opacity: 0, y: -10, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -10, height: 0 }}
@@ -821,13 +735,12 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
         {/* 주의사항 */}
         <motion.div
-          className="bg-gray-50 rounded-2xl p-4 mb-6"
+          className="rounded-xl p-4"
           variants={itemVariants}
         >
-          <p className="text-xs font-semibold text-gray-500 mb-2">구매 전 확인해주세요</p>
           <ul className="text-xs text-gray-400 space-y-1">
-            <li>• 디지털 콘텐츠는 다운로드 후 환불이 제한될 수 있어요</li>
-            <li>• 콘텐츠에 문제가 있다면 24시간 내에 신고해주세요</li>
+            <li>* 디지털 콘텐츠는 다운로드 후 환불이 제한될 수 있어요</li>
+            <li>* 문제가 있다면 24시간 내에 신고해주세요</li>
           </ul>
         </motion.div>
       </motion.main>
@@ -841,52 +754,15 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       >
         <div className="max-w-lg mx-auto">
           {paymentMethod === 'card' ? (
-            /* 카드 결제 버튼 */
             <motion.button
               onClick={handleCardPayment}
               disabled={isProcessing}
-              className={`w-full py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+              className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
                 !isProcessing
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-gray-900 text-white'
                   : 'bg-gray-200 text-gray-400'
               }`}
-              variants={pulseVariants}
-              initial="initial"
-              animate={!isProcessing ? 'pulse' : 'initial'}
-              whileHover={!isProcessing ? { scale: 1.02 } : {}}
               whileTap={!isProcessing ? { scale: 0.98 } : {}}
-            >
-              {isProcessing ? (
-                <>
-                  <motion.div
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  />
-                  결제 처리 중...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5" />
-                  {formatCurrency(product.price)} 결제하기
-                </>
-              )}
-            </motion.button>
-          ) : (
-            /* 토스 송금 확인 버튼 */
-            <motion.button
-              onClick={handlePaymentComplete}
-              disabled={!buyerNote.trim() || isProcessing}
-              className={`w-full py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
-                buyerNote.trim() && !isProcessing
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-400'
-              }`}
-              variants={pulseVariants}
-              initial="initial"
-              animate={buyerNote.trim() && !isProcessing ? 'pulse' : 'initial'}
-              whileHover={buyerNote.trim() && !isProcessing ? { scale: 1.02 } : {}}
-              whileTap={buyerNote.trim() && !isProcessing ? { scale: 0.98 } : {}}
             >
               {isProcessing ? (
                 <>
@@ -899,9 +775,32 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 </>
               ) : (
                 <>
-                  송금 완료했어요
-                  <ChevronRight className="w-5 h-5" />
+                  {formatCurrency(product.price)} 결제하기
                 </>
+              )}
+            </motion.button>
+          ) : (
+            <motion.button
+              onClick={handlePaymentComplete}
+              disabled={!buyerNote.trim() || isProcessing}
+              className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
+                buyerNote.trim() && !isProcessing
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+              whileTap={buyerNote.trim() && !isProcessing ? { scale: 0.98 } : {}}
+            >
+              {isProcessing ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  처리 중...
+                </>
+              ) : (
+                '송금 완료했어요'
               )}
             </motion.button>
           )}

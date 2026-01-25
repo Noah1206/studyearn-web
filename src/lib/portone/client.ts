@@ -48,8 +48,9 @@ export async function requestPayment(
   const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
   const channelKey = process.env.NEXT_PUBLIC_KG_INICIS_CHANNEL_KEY;
 
-  console.log('[PortOne Config] storeId:', storeId ? 'SET' : 'MISSING');
-  console.log('[PortOne Config] channelKey:', channelKey ? 'SET' : 'MISSING');
+  console.log('[PortOne Config] storeId:', storeId ? `SET (${storeId.substring(0, 10)}...)` : 'MISSING');
+  console.log('[PortOne Config] channelKey:', channelKey ? `SET (${channelKey.substring(0, 15)}...)` : 'MISSING');
+  console.log('[PortOne SDK] PortOne object:', typeof PortOne, Object.keys(PortOne || {}));
 
   if (!storeId || !channelKey) {
     console.error('[PortOne Config] Missing environment variables:', {
@@ -60,6 +61,19 @@ export async function requestPayment(
       success: false,
       code: 'CONFIG_ERROR',
       message: '결제 설정이 올바르지 않습니다.',
+    };
+  }
+
+  // Check if PortOne SDK is loaded
+  if (!PortOne || typeof PortOne.requestPayment !== 'function') {
+    console.error('[PortOne SDK] SDK not properly loaded:', {
+      PortOne: typeof PortOne,
+      requestPayment: typeof PortOne?.requestPayment,
+    });
+    return {
+      success: false,
+      code: 'SDK_ERROR',
+      message: '결제 모듈이 로드되지 않았습니다. 페이지를 새로고침 해주세요.',
     };
   }
 
@@ -83,11 +97,15 @@ export async function requestPayment(
     };
 
     console.log('[PortOne] Payment options:', JSON.stringify(paymentOptions, null, 2));
+    console.log('[PortOne] Calling PortOne.requestPayment()...');
 
     const response = await PortOne.requestPayment(paymentOptions);
 
+    console.log('[PortOne] Response received:', JSON.stringify(response, null, 2));
+
     if (response?.code) {
       // 결제 실패 또는 취소
+      console.log('[PortOne] Payment failed/cancelled:', response.code, response.message);
       return {
         success: false,
         code: response.code,
@@ -96,16 +114,22 @@ export async function requestPayment(
     }
 
     // 결제 성공
+    console.log('[PortOne] Payment success:', response?.paymentId);
     return {
       success: true,
       paymentId: response?.paymentId,
     };
   } catch (error) {
-    console.error('Payment request failed:', error);
+    console.error('[PortOne] Payment request failed with exception:', error);
+    console.error('[PortOne] Error details:', {
+      name: (error as Error)?.name,
+      message: (error as Error)?.message,
+      stack: (error as Error)?.stack,
+    });
     return {
       success: false,
       code: 'PAYMENT_ERROR',
-      message: '결제 요청 중 오류가 발생했습니다.',
+      message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.',
     };
   }
 }
