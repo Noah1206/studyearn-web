@@ -708,80 +708,63 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           >
             {/* 배경 */}
             <motion.div
-              className="absolute inset-0 bg-black/40"
+              className="absolute inset-0 bg-black/30"
               onClick={() => setShowKakaoPayModal(false)}
             />
 
             {/* 모달 */}
             <motion.div
-              className="relative bg-white rounded-3xl w-full max-w-[380px] overflow-hidden shadow-xl"
+              className="relative bg-white rounded-[28px] w-full max-w-[360px] p-10 shadow-lg"
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
             >
-              {/* 카카오페이 헤더 */}
-              <div className="bg-[#FEE500] px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 bg-[#191919] rounded-full flex items-center justify-center">
-                      <span className="text-[#FEE500] font-bold text-[11px]">pay</span>
-                    </div>
-                    <span className="font-bold text-[#191919] text-xl">카카오페이</span>
-                  </div>
-                  <button
-                    onClick={() => setShowKakaoPayModal(false)}
-                    className="text-[#191919]/60 text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
+              {/* 카카오페이 로고 */}
+              <div className="flex items-center gap-1.5 mb-10">
+                <svg width="60" height="20" viewBox="0 0 74 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10.5 0C4.7 0 0 3.6 0 8.1c0 2.9 1.9 5.4 4.8 6.9l-1.4 5.3c-.1.3.2.6.5.4l6.3-3c.2-.1.3-.1.5-.1.5.1 1 .1 1.6.1 5.8 0 10.5-3.6 10.5-8.1S16.3 0 10.5 0z" fill="#FFEB00"/>
+                  <g fill="#1A1A1A">
+                    <path d="M30 8.5c0-1.8-1.2-3-3.2-3h-4.2V16h2.1v-3.6h2c2 0 3.3-1.4 3.3-3.9zm-2.1 0c0 1-.5 1.7-1.5 1.7h-1.7V7.5h1.7c1 0 1.5.6 1.5 1.7zM38.1 16h2.1V5.2h-2.1v1.1c-.6-.8-1.5-1.3-2.6-1.3-2.3 0-4.2 1.9-4.2 4.6 0 2.7 1.8 4.6 4.2 4.6 1.1 0 2-.5 2.6-1.3V16zm-3.4-8.6c1.3 0 2.1.9 2.1 2.6s-.8 2.6-2.1 2.6-2.1-.9-2.1-2.6.8-2.6 2.1-2.6zM50.1 5.2l-3.3 8.6h-.1l-3.2-8.6h-2.3l4.4 10.7-2.2 5.3h2.2l6-15.4h-1.4z"/>
+                  </g>
+                </svg>
+              </div>
+
+              {/* 결제 타이틀 */}
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold text-[#191F28] leading-snug tracking-tight">
+                  {product.title}
+                  <br />
+                  <span className="text-[#4E5968]">{formatCurrency(product.price)}을 결제할까요?</span>
+                </h2>
               </div>
 
               {/* 결제 정보 */}
-              <div className="px-6 pt-6 pb-7">
-                {/* 가맹점 및 상품 정보 */}
-                <div className="text-center pb-5 border-b border-gray-200">
-                  <p className="text-gray-400 text-[15px] mb-1">스터플</p>
-                  <h3 className="font-bold text-[#191919] text-xl">{product.title}</h3>
+              <div className="mb-14 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#8B95A1] text-[15px]">상품 금액</span>
+                  <span className="text-[#191F28] text-[17px] font-bold">{formatCurrency(product.price)}</span>
                 </div>
-
-                {/* 결제 금액 */}
-                <div className="bg-[#F7F7F7] rounded-2xl px-5 py-4 mt-5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#191919] text-[15px]">결제 금액</span>
-                    <span className="text-[28px] font-bold text-[#191919]">{formatCurrency(product.price)}</span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#8B95A1] text-[15px]">결제 수단</span>
+                  <span className="text-[#3182F6] text-[15px] font-semibold">카카오페이 머니</span>
                 </div>
-
-                {/* 결제 수단 */}
-                <div className="border border-gray-200 rounded-2xl px-4 py-4 mt-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
-                      <span className="text-[#191919] font-bold text-sm">pay</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-[#191919] text-[15px]">카카오페이 머니</p>
-                      <p className="text-[13px] text-gray-400">잔액에서 결제</p>
-                    </div>
-                    <div className="w-6 h-6 rounded-full border-2 border-[#FEE500] flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-[#FEE500]" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 안내 문구 */}
-                <p className="text-[13px] text-gray-400 text-center mt-6 mb-5">
-                  결제 버튼을 누르면 카카오페이로 결제가 진행됩니다.
-                </p>
-
-                {/* 결제 버튼 */}
-                <button
-                  onClick={handleKakaoPayConfirm}
-                  className="w-full py-4 bg-[#FEE500] text-[#191919] rounded-2xl font-bold text-[17px]"
-                >
-                  {formatCurrency(product.price)} 결제하기
-                </button>
               </div>
+
+              {/* 결제 버튼 */}
+              <button
+                onClick={handleKakaoPayConfirm}
+                className="w-full h-16 bg-[#FFEB00] text-[#1A1A1A] rounded-[18px] font-bold text-lg active:scale-[0.97] active:bg-[#F7E100] transition-transform"
+              >
+                결제하기
+              </button>
+
+              {/* 취소 버튼 */}
+              <button
+                onClick={() => setShowKakaoPayModal(false)}
+                className="w-full mt-4 text-[#B0B8C1] font-semibold text-base"
+              >
+                취소
+              </button>
             </motion.div>
           </motion.div>
         )}
