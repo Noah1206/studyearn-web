@@ -73,7 +73,7 @@ export default function RefundPolicyPage() {
 
             <h2 className="text-lg font-semibold text-gray-900 mt-8 mb-4">제2조 (환불 절차)</h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-600 mb-4">
-              <li>환불 요청: 서비스 내 &apos;구매내역&apos; 또는 고객센터(support@stuple.kr)를 통해 환불 요청</li>
+              <li>환불 요청: 서비스 내 &apos;구매내역&apos; 또는 고객센터(ab40905045@gmail.com)를 통해 환불 요청</li>
               <li>환불 심사: 환불 요청일로부터 영업일 기준 3일 이내 심사 완료</li>
               <li>환불 처리: 심사 승인 후 영업일 기준 3~7일 이내 환불 처리
                 <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
@@ -157,7 +157,7 @@ export default function RefundPolicyPage() {
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <p className="text-gray-700 font-medium mb-2">환불 문의</p>
               <ul className="space-y-1 text-gray-600 text-sm">
-                <li>이메일: support@stuple.kr</li>
+                <li>이메일: ab40905045@gmail.com</li>
                 <li>운영시간: 평일 10:00 ~ 18:00 (주말/공휴일 휴무)</li>
               </ul>
             </div>

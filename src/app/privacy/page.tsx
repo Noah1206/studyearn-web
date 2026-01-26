@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
               <li>처리정지 요구</li>
             </ol>
             <p className="text-gray-600 leading-relaxed mb-4">
-              위 권리 행사는 서비스 내 설정 페이지 또는 이메일(support@stuple.kr)을 통해 가능합니다.
+              위 권리 행사는 서비스 내 설정 페이지 또는 이메일(ab40905045@gmail.com)을 통해 가능합니다.
             </p>
 
             <h2 className="text-lg font-semibold text-gray-900 mt-8 mb-4">제7조 (개인정보의 파기)</h2>
@@ -170,7 +170,7 @@ export default function PrivacyPolicyPage() {
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <p className="text-gray-700 font-medium">개인정보 보호책임자</p>
               <ul className="mt-2 space-y-1 text-gray-600 text-sm">
-                <li>이메일: support@stuple.kr</li>
+                <li>이메일: ab40905045@gmail.com</li>
               </ul>
             </div>
 

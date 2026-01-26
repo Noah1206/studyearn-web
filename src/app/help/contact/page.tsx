@@ -212,7 +212,7 @@ export default function ContactPage() {
             <CardContent className="p-4 text-center">
               <Mail className="w-6 h-6 text-accent mx-auto mb-2" />
               <p className="text-xs text-gray-500 mb-1">이메일</p>
-              <p className="text-sm font-medium text-gray-900">support@stuple.kr</p>
+              <p className="text-sm font-medium text-gray-900">ab40905045@gmail.com</p>
             </CardContent>
           </Card>
           <Card variant="outlined">
