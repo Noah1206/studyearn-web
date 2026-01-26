@@ -1244,6 +1244,15 @@ export default function ProductDetailPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* 환불 및 이용 안내 */}
+                      <div className="mt-4 pt-3 border-t border-gray-100">
+                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                          디지털 콘텐츠 특성상 다운로드/열람 후 환불이 제한됩니다.
+                          <br />
+                          구매 즉시 이용 가능 · <Link href="/refund" className="underline hover:text-gray-600">환불정책</Link>
+                        </p>
+                      </div>
                     </div>
                   </>
                 )}
