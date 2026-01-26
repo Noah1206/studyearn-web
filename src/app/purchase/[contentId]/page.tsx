@@ -701,36 +701,36 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       <AnimatePresence>
         {showKakaoPayModal && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {/* 배경 */}
             <motion.div
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-black/40"
               onClick={() => setShowKakaoPayModal(false)}
             />
 
             {/* 모달 */}
             <motion.div
-              className="relative bg-white rounded-2xl w-[90%] max-w-[360px] overflow-hidden shadow-2xl"
-              initial={{ scale: 0.9, y: 20 }}
+              className="relative bg-white rounded-3xl w-full max-w-[380px] overflow-hidden shadow-xl"
+              initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.95, y: 10 }}
             >
               {/* 카카오페이 헤더 */}
-              <div className="bg-[#FEE500] px-5 py-4 rounded-t-2xl">
+              <div className="bg-[#FEE500] px-5 py-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#191919] rounded-full flex items-center justify-center">
-                      <span className="text-[#FEE500] font-bold text-[10px]">pay</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-[#191919] rounded-full flex items-center justify-center">
+                      <span className="text-[#FEE500] font-bold text-[11px]">pay</span>
                     </div>
-                    <span className="font-bold text-[#191919] text-lg">카카오페이</span>
+                    <span className="font-bold text-[#191919] text-xl">카카오페이</span>
                   </div>
                   <button
                     onClick={() => setShowKakaoPayModal(false)}
-                    className="text-[#191919]/70 text-2xl font-light leading-none"
+                    className="text-[#191919]/60 text-2xl"
                   >
                     ×
                   </button>
@@ -738,30 +738,30 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               </div>
 
               {/* 결제 정보 */}
-              <div className="px-5 py-6">
+              <div className="px-6 pt-6 pb-7">
                 {/* 가맹점 및 상품 정보 */}
-                <div className="text-center mb-5 pb-5 border-b border-gray-100">
-                  <p className="text-gray-400 text-sm mb-1">스터플</p>
-                  <h3 className="font-bold text-[#191919] text-lg">{product.title}</h3>
+                <div className="text-center pb-5 border-b border-gray-200">
+                  <p className="text-gray-400 text-[15px] mb-1">스터플</p>
+                  <h3 className="font-bold text-[#191919] text-xl">{product.title}</h3>
                 </div>
 
                 {/* 결제 금액 */}
-                <div className="bg-[#F5F5F5] rounded-lg p-4 mb-4">
+                <div className="bg-[#F7F7F7] rounded-2xl px-5 py-4 mt-5">
                   <div className="flex justify-between items-center">
-                    <span className="text-[#191919]">결제 금액</span>
-                    <span className="text-2xl font-bold text-[#191919]">{formatCurrency(product.price)}</span>
+                    <span className="text-[#191919] text-[15px]">결제 금액</span>
+                    <span className="text-[28px] font-bold text-[#191919]">{formatCurrency(product.price)}</span>
                   </div>
                 </div>
 
                 {/* 결제 수단 */}
-                <div className="border border-gray-200 rounded-lg p-4 mb-5">
+                <div className="border border-gray-200 rounded-2xl px-4 py-4 mt-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-[#FEE500] rounded-full flex items-center justify-center">
-                      <span className="text-[#191919] font-bold text-xs">pay</span>
+                    <div className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
+                      <span className="text-[#191919] font-bold text-sm">pay</span>
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-[#191919]">카카오페이 머니</p>
-                      <p className="text-sm text-gray-400">잔액에서 결제</p>
+                      <p className="font-medium text-[#191919] text-[15px]">카카오페이 머니</p>
+                      <p className="text-[13px] text-gray-400">잔액에서 결제</p>
                     </div>
                     <div className="w-6 h-6 rounded-full border-2 border-[#FEE500] flex items-center justify-center">
                       <div className="w-3 h-3 rounded-full bg-[#FEE500]" />
@@ -770,14 +770,14 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 </div>
 
                 {/* 안내 문구 */}
-                <p className="text-sm text-gray-400 text-center mb-5">
+                <p className="text-[13px] text-gray-400 text-center mt-6 mb-5">
                   결제 버튼을 누르면 카카오페이로 결제가 진행됩니다.
                 </p>
 
                 {/* 결제 버튼 */}
                 <button
                   onClick={handleKakaoPayConfirm}
-                  className="w-full py-4 bg-[#FEE500] text-[#191919] rounded-xl font-bold text-base"
+                  className="w-full py-4 bg-[#FEE500] text-[#191919] rounded-2xl font-bold text-[17px]"
                 >
                   {formatCurrency(product.price)} 결제하기
                 </button>
