@@ -5,9 +5,9 @@ export function Footer() {
   return (
     <footer className="bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
           {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-3">
             <div className="flex items-center gap-2.5 mb-5">
               <Image
                 src="/logo-white.svg"
@@ -18,7 +18,7 @@ export function Footer() {
               />
               <span className="text-xl font-bold text-white tracking-tight">StuPle</span>
             </div>
-            <p className="text-gray-400 mb-6 max-w-md leading-relaxed">
+            <p className="text-gray-400 mb-6 max-w-lg leading-relaxed">
               학습 콘텐츠 크리에이터와 학생을 연결하는 플랫폼입니다.
               공부하고, 배우고, 성장하세요.
             </p>
@@ -36,6 +36,9 @@ export function Footer() {
               </a>
             </div>
           </div>
+
+          {/* Spacer for balance */}
+          <div className="hidden md:block" />
 
           {/* Links */}
           <div>
