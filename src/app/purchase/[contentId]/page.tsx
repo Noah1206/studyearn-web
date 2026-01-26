@@ -720,59 +720,57 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               exit={{ scale: 0.9, y: 20 }}
             >
               {/* 카카오페이 헤더 */}
-              <div className="bg-[#FEE500] px-5 py-4">
+              <div className="bg-[#FEE500] px-5 py-4 rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#191919] rounded-lg flex items-center justify-center">
-                      <span className="text-[#FEE500] font-bold text-xs">pay</span>
+                    <div className="w-8 h-8 bg-[#191919] rounded-full flex items-center justify-center">
+                      <span className="text-[#FEE500] font-bold text-[10px]">pay</span>
                     </div>
                     <span className="font-bold text-[#191919] text-lg">카카오페이</span>
                   </div>
                   <button
                     onClick={() => setShowKakaoPayModal(false)}
-                    className="text-[#191919]/60 text-xl font-light"
+                    className="text-[#191919]/70 text-2xl font-light leading-none"
                   >
-                    ✕
+                    ×
                   </button>
                 </div>
               </div>
 
               {/* 결제 정보 */}
-              <div className="p-5">
-                {/* 가맹점 정보 */}
-                <div className="text-center mb-6">
-                  <p className="text-gray-500 text-sm mb-1">스터플</p>
-                  <h3 className="font-semibold text-gray-900 text-lg">{product.title}</h3>
+              <div className="px-5 py-6">
+                {/* 가맹점 및 상품 정보 */}
+                <div className="text-center mb-5 pb-5 border-b border-gray-100">
+                  <p className="text-gray-400 text-sm mb-1">스터플</p>
+                  <h3 className="font-bold text-[#191919] text-lg">{product.title}</h3>
                 </div>
 
-                {/* 금액 */}
-                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                {/* 결제 금액 */}
+                <div className="bg-[#F5F5F5] rounded-lg p-4 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">결제 금액</span>
+                    <span className="text-[#191919]">결제 금액</span>
                     <span className="text-2xl font-bold text-[#191919]">{formatCurrency(product.price)}</span>
                   </div>
                 </div>
 
                 {/* 결제 수단 */}
-                <div className="border border-gray-200 rounded-xl p-4 mb-6">
+                <div className="border border-gray-200 rounded-lg p-4 mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#FEE500] rounded-lg flex items-center justify-center">
+                    <div className="w-11 h-11 bg-[#FEE500] rounded-full flex items-center justify-center">
                       <span className="text-[#191919] font-bold text-xs">pay</span>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">카카오페이 머니</p>
-                      <p className="text-sm text-gray-500">잔액에서 결제</p>
+                    <div className="flex-1">
+                      <p className="font-medium text-[#191919]">카카오페이 머니</p>
+                      <p className="text-sm text-gray-400">잔액에서 결제</p>
                     </div>
-                    <div className="ml-auto">
-                      <div className="w-5 h-5 rounded-full border-2 border-[#FEE500] flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#FEE500]" />
-                      </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-[#FEE500] flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-[#FEE500]" />
                     </div>
                   </div>
                 </div>
 
                 {/* 안내 문구 */}
-                <p className="text-xs text-gray-400 text-center mb-4">
+                <p className="text-sm text-gray-400 text-center mb-5">
                   결제 버튼을 누르면 카카오페이로 결제가 진행됩니다.
                 </p>
 

@@ -93,8 +93,9 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <p>상호명: 스터플</p>
             <p>대표자: 조현웅</p>
-            <p>사업자등록번호: 01040905045</p>
+            <p>사업자등록번호: 508-14-52353</p>
             <p>주소: 경상남도 양산시</p>
+            <p>전화번호: 010-4090-5045</p>
             <p>이메일: ab40905045@gmail.com</p>
           </div>
         </div>
