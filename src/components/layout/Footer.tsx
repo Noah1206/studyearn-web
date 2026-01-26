@@ -10,7 +10,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2.5 mb-5">
               <Image
-                src="/logo.svg"
+                src="/logo-white.svg"
                 alt="StuPle"
                 width={32}
                 height={32}
