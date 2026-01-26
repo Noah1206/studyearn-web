@@ -720,13 +720,13 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               exit={{ scale: 0.95, y: 10 }}
             >
               {/* 카카오페이 로고 */}
-              <div className="flex items-center gap-1.5 mb-10">
-                <svg width="60" height="20" viewBox="0 0 74 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.5 0C4.7 0 0 3.6 0 8.1c0 2.9 1.9 5.4 4.8 6.9l-1.4 5.3c-.1.3.2.6.5.4l6.3-3c.2-.1.3-.1.5-.1.5.1 1 .1 1.6.1 5.8 0 10.5-3.6 10.5-8.1S16.3 0 10.5 0z" fill="#FFEB00"/>
-                  <g fill="#1A1A1A">
-                    <path d="M30 8.5c0-1.8-1.2-3-3.2-3h-4.2V16h2.1v-3.6h2c2 0 3.3-1.4 3.3-3.9zm-2.1 0c0 1-.5 1.7-1.5 1.7h-1.7V7.5h1.7c1 0 1.5.6 1.5 1.7zM38.1 16h2.1V5.2h-2.1v1.1c-.6-.8-1.5-1.3-2.6-1.3-2.3 0-4.2 1.9-4.2 4.6 0 2.7 1.8 4.6 4.2 4.6 1.1 0 2-.5 2.6-1.3V16zm-3.4-8.6c1.3 0 2.1.9 2.1 2.6s-.8 2.6-2.1 2.6-2.1-.9-2.1-2.6.8-2.6 2.1-2.6zM50.1 5.2l-3.3 8.6h-.1l-3.2-8.6h-2.3l4.4 10.7-2.2 5.3h2.2l6-15.4h-1.4z"/>
-                  </g>
+              <div className="flex items-center gap-2 mb-10">
+                {/* 카카오 말풍선 */}
+                <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M14 0C6.268 0 0 4.97 0 11.1c0 3.96 2.576 7.43 6.454 9.398l-1.31 4.864c-.115.427.37.77.736.52l5.81-3.856c.753.082 1.522.124 2.31.124 7.732 0 14-4.97 14-11.1S21.732 0 14 0Z" fill="#FFEB00"/>
                 </svg>
+                {/* pay 텍스트 */}
+                <span className="text-[#191919] font-bold text-[22px] tracking-tight">pay</span>
               </div>
 
               {/* 결제 타이틀 */}
