@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (pendingPurchase) {
-      // Reuse existing pending purchase - generate new payment_id
-      const newPaymentId = `payment-${crypto.randomUUID()}`;
+      // Reuse existing pending purchase - generate new payment_id (max 40 chars for KG Inicis)
+      const newPaymentId = `pay_${crypto.randomUUID().replace(/-/g, '')}`;
 
       const { error: updateError } = await supabase
         .from('content_purchases')
@@ -116,9 +116,9 @@ export async function POST(request: NextRequest) {
     const platformFee = Math.floor(content.price * PLATFORM_FEE_RATE);
     const creatorRevenue = content.price - platformFee;
 
-    // Generate unique order number and payment ID
+    // Generate unique order number and payment ID (max 40 chars for KG Inicis)
     const orderNumber = generateOrderNumber();
-    const paymentId = `payment-${crypto.randomUUID()}`;
+    const paymentId = `pay_${crypto.randomUUID().replace(/-/g, '')}`;
 
     // Create new purchase record with pending_payment status
     const { data: newPurchase, error: insertError } = await supabase

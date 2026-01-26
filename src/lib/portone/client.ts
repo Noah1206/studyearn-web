@@ -33,10 +33,13 @@ export interface PaymentResponse {
 }
 
 /**
- * 결제 ID 생성
+ * 결제 ID 생성 (KG이니시스 최대 40자 제한)
  */
 export function generatePaymentId(): string {
-  return `payment-${crypto.randomUUID()}`;
+  // UUID에서 하이픈 제거: 32자
+  // 접두사 "pay_": 4자
+  // 총 36자 (40자 제한 이내)
+  return `pay_${crypto.randomUUID().replace(/-/g, '')}`;
 }
 
 /**
