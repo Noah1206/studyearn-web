@@ -89,7 +89,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-gray-900 mt-8 mb-4">제6조 (서비스 이용료)</h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-600 mb-4">
               <li>회사가 제공하는 서비스는 기본적으로 무료입니다. 단, 유료 콘텐츠 및 구독 서비스는 별도의 요금이 부과됩니다.</li>
-              <li>크리에이터의 수익에서 회사는 플랫폼 이용료로 15%를 공제합니다.</li>
+              <li>크리에이터의 수익에서 회사는 플랫폼 이용료로 20%를 공제합니다.</li>
               <li>결제 취소 및 환불은 관련 법령 및 회사의 환불 정책에 따릅니다.</li>
             </ol>
 

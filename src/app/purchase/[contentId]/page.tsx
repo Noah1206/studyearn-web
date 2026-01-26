@@ -10,9 +10,9 @@ import { useSession } from '@/components/providers/SessionProvider';
 import { generateTossDeeplink } from '@/lib/deeplink';
 import { LoadingPage } from '@/components/ui/Spinner';
 import type { BankCode } from '@/lib/deeplink';
-import { requestCardPayment } from '@/lib/portone/client';
+import { requestCardPayment, requestKakaoPayPayment } from '@/lib/portone/client';
 
-type PaymentMethod = 'card' | 'transfer';
+type PaymentMethod = 'card' | 'kakaopay' | 'transfer';
 
 const PLATFORM_BANK_CODE = (process.env.NEXT_PUBLIC_PLATFORM_BANK_CODE || 'busan') as BankCode;
 const PLATFORM_ACCOUNT_NUMBER = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER || '';
@@ -254,6 +254,81 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     }
   };
 
+  const handleKakaoPayPayment = async () => {
+    if (!product || !user) return;
+
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      console.log('[KakaoPay] 1. 결제 초기화 시작...');
+
+      const initResponse = await fetch('/api/purchase/portone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: product.id }),
+      });
+
+      if (!initResponse.ok) {
+        const errorData = await initResponse.json();
+        throw new Error(errorData.message || '결제 초기화에 실패했습니다.');
+      }
+
+      const { paymentId, orderName, amount } = await initResponse.json();
+      console.log('[KakaoPay] 2. 결제 정보:', { paymentId, orderName, amount });
+
+      console.log('[KakaoPay] 3. PortOne SDK 호출 중...');
+      const paymentResult = await requestKakaoPayPayment(
+        paymentId,
+        orderName,
+        amount,
+        {
+          fullName: user.user_metadata?.name || user.email?.split('@')[0] || '구매자',
+          phoneNumber: user.user_metadata?.phone || '01000000000',
+          email: user.email,
+        }
+      );
+      console.log('[KakaoPay] 4. PortOne 결과:', paymentResult);
+
+      if (paymentResult.code) {
+        console.error('[KakaoPay Error]', paymentResult.code, paymentResult.message);
+
+        if (paymentResult.code === 'USER_CANCEL') {
+          setIsProcessing(false);
+          return;
+        }
+
+        throw new Error(paymentResult.message || `결제 오류: ${paymentResult.code}`);
+      }
+
+      const verifyResponse = await fetch('/api/payments/portone/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId: paymentResult.paymentId,
+          amount,
+        }),
+      });
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.message || '결제 검증에 실패했습니다.');
+      }
+
+      const verifyResult = await verifyResponse.json();
+
+      if (verifyResult.status === 'completed') {
+        router.push(`/content/${productId}?purchased=true`);
+      } else if (verifyResult.status === 'awaiting_deposit') {
+        router.push(`/purchase/${productId}/pending`);
+      }
+    } catch (err) {
+      console.error('KakaoPay payment error:', err);
+      setError(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.');
+      setIsProcessing(false);
+    }
+  };
+
   // 로딩 화면
   if (isSessionLoading || isLoading) {
     return <LoadingPage message="결제 정보를 불러오고 있어요" />;
@@ -422,6 +497,16 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               카드결제
             </button>
             <button
+              onClick={() => setPaymentMethod('kakaopay')}
+              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+                paymentMethod === 'kakaopay'
+                  ? 'bg-[#FEE500] text-[#191919]'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              카카오페이
+            </button>
+            <button
               onClick={() => setPaymentMethod('transfer')}
               className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'transfer'
@@ -447,6 +532,34 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               <div className="bg-gray-50 rounded-xl p-4">
                 <p className="text-sm text-gray-600">
                   결제 버튼을 누르면 카드 결제창이 열립니다.
+                  <br />
+                  결제 완료 후 바로 콘텐츠를 이용할 수 있어요.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 카카오페이 */}
+          {paymentMethod === 'kakaopay' && (
+            <motion.div
+              key="kakaopay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mb-6"
+            >
+              <div className="bg-[#FEE500]/10 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-[#FEE500] rounded-lg flex items-center justify-center">
+                    <span className="text-[#191919] font-bold text-sm">pay</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">카카오페이</p>
+                    <p className="text-xs text-gray-500">간편하게 결제하세요</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600">
+                  카카오페이로 빠르고 안전하게 결제할 수 있어요.
                   <br />
                   결제 완료 후 바로 콘텐츠를 이용할 수 있어요.
                 </p>
@@ -534,7 +647,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       {/* 하단 고정 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-5 pb-8">
         <div className="max-w-lg mx-auto">
-          {paymentMethod === 'card' ? (
+          {paymentMethod === 'card' && (
             <button
               onClick={handleCardPayment}
               disabled={isProcessing}
@@ -546,7 +659,21 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             >
               {isProcessing ? '처리 중...' : `${formatCurrency(product.price)} 결제하기`}
             </button>
-          ) : (
+          )}
+          {paymentMethod === 'kakaopay' && (
+            <button
+              onClick={handleKakaoPayPayment}
+              disabled={isProcessing}
+              className={`w-full py-4 rounded-xl font-semibold text-base ${
+                !isProcessing
+                  ? 'bg-[#FEE500] text-[#191919]'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+            >
+              {isProcessing ? '처리 중...' : `카카오페이로 ${formatCurrency(product.price)} 결제`}
+            </button>
+          )}
+          {paymentMethod === 'transfer' && (
             <button
               onClick={handlePaymentComplete}
               disabled={!buyerNote.trim() || isProcessing}

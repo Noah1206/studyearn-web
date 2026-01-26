@@ -64,6 +64,16 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  개인정보처리방침
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  환불정책
+                </Link>
+              </li>
+              <li>
                 <a
                   href="mailto:support@stuple.kr"
                   className="text-gray-400 hover:text-white transition-colors text-sm"
@@ -77,13 +87,27 @@ export function Footer() {
 
         <hr className="border-gray-800 my-10" />
 
+        {/* Business Information - Required for Korean E-commerce */}
+        <div className="text-sm text-gray-500 space-y-2 mb-6">
+          <p className="font-medium text-gray-400">사업자 정보</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <p>상호명: 스터플</p>
+            <p>대표자: 조현웅</p>
+            <p>사업자등록번호: 01040905045</p>
+            <p>주소: 경상남도 양산시</p>
+            <p>이메일: ab40905045@gmail.com</p>
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
             &copy; {new Date().getFullYear()} StuPle. All rights reserved.
           </p>
-          <p className="text-sm text-gray-500">
-            사업자등록번호: 000-00-00000 | 대표: 홍길동
-          </p>
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <Link href="/terms" className="hover:text-gray-400 transition-colors">이용약관</Link>
+            <span>|</span>
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">개인정보처리방침</Link>
+          </div>
         </div>
       </div>
     </footer>

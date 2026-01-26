@@ -49,7 +49,19 @@ export async function requestPayment(
   request: PaymentRequest
 ): Promise<PaymentResponse> {
   const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
-  const channelKey = process.env.NEXT_PUBLIC_KG_INICIS_CHANNEL_KEY;
+
+  // 결제 방식에 따라 다른 채널키 사용
+  let channelKey: string | undefined;
+  let payMethodStr: string = 'CARD';
+
+  if (request.payMethod === 'EASY_PAY' && request.easyPayProvider === 'KAKAOPAY') {
+    channelKey = process.env.NEXT_PUBLIC_KAKAOPAY_CHANNEL_KEY;
+    payMethodStr = 'EASY_PAY';
+    console.log('[PortOne] Using Kakao Pay channel');
+  } else {
+    channelKey = process.env.NEXT_PUBLIC_KG_INICIS_CHANNEL_KEY;
+    console.log('[PortOne] Using KG Inicis channel');
+  }
 
   console.log('[PortOne Config] storeId:', storeId ? `SET (${storeId.substring(0, 10)}...)` : 'MISSING');
   console.log('[PortOne Config] channelKey:', channelKey ? `SET (${channelKey.substring(0, 15)}...)` : 'MISSING');
@@ -63,7 +75,7 @@ export async function requestPayment(
     return {
       success: false,
       code: 'CONFIG_ERROR',
-      message: '결제 설정이 올바르지 않습니다.',
+      message: channelKey ? '결제 설정이 올바르지 않습니다.' : '해당 결제 수단이 아직 준비 중입니다.',
     };
   }
 
@@ -81,8 +93,7 @@ export async function requestPayment(
   }
 
   try {
-    // KG이니시스 V2 카드 결제
-    // https://developers.portone.io/opi/ko/integration/pg/v2/inicis-v2
+    // PortOne V2 결제 요청
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentOptions: any = {
       storeId,
@@ -91,10 +102,17 @@ export async function requestPayment(
       orderName: request.orderName,
       totalAmount: request.totalAmount,
       currency: 'KRW',
-      payMethod: 'CARD',
+      payMethod: payMethodStr,
     };
 
-    // customer 정보 추가 (KG이니시스 필수)
+    // 간편결제 시 easyPay 설정 추가
+    if (request.payMethod === 'EASY_PAY' && request.easyPayProvider) {
+      paymentOptions.easyPay = {
+        easyPayProvider: request.easyPayProvider,
+      };
+    }
+
+    // customer 정보 추가
     if (request.customer?.fullName) {
       paymentOptions.customer = {
         fullName: request.customer.fullName,
