@@ -226,14 +226,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   const handleKakaoPayPayment = async () => {
     if (!product || !user) return;
-    setShowKakaoPayModal(true);
-  };
-
-  const handleKakaoPayConfirm = async () => {
-    if (!product || !user) return;
 
     setIsProcessing(true);
-    setShowKakaoPayModal(false);
     setError('');
 
     try {

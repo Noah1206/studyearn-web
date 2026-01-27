@@ -71,13 +71,20 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       });
 
       // 크리에이터 설정 가져오기
-      const { data: creatorSettings } = await supabase
+      const { data: creatorSettings, error: creatorError } = await supabase
         .from('creator_settings')
         .select('display_name, bio, profile_image_url, is_verified')
         .eq('user_id', userId)
         .maybeSingle();
 
+      if (creatorError) {
+        console.error('❌ [SessionProvider] Failed to fetch creator_settings:', creatorError);
+      }
+
+      console.log('👤 [SessionProvider] Creator settings for user:', userId, creatorSettings);
+
       if (creatorSettings) {
+        console.log('✅ [SessionProvider] User is a creator, syncing status');
         syncCreatorStatus(true, {
           display_name: creatorSettings.display_name || '',
           bio: creatorSettings.bio,
@@ -86,6 +93,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
           total_subscribers: 0,
         });
       } else {
+        console.log('ℹ️ [SessionProvider] User is not a creator (no creator_settings found)');
         syncCreatorStatus(false);
       }
     } catch (error) {
@@ -105,6 +113,9 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         nickname: oauthNickname,
         avatar_url: oauthAvatarUrl,
       });
+
+      // 에러 발생 시에도 크리에이터 상태를 명시적으로 false로 설정
+      syncCreatorStatus(false);
     }
   }, [supabase, setProfile, syncCreatorStatus]);
 
