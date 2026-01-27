@@ -1,18 +1,25 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/types/database';
 
+// Singleton instance
+let supabaseClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
+
 /**
  * Create Supabase client for browser/client components
- * Creates a new instance each time (removed singleton for debugging)
+ * Uses singleton pattern to ensure consistent auth state
  */
 export function createClient() {
+  // Return existing instance if available
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  console.log('[Supabase Client] Creating client...', {
+  console.log('[Supabase Client] Creating singleton client...', {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseAnonKey,
-    url: supabaseUrl?.substring(0, 30) + '...'
   });
 
   // During build time, env vars might not be available
@@ -24,7 +31,7 @@ export function createClient() {
     throw new Error('Missing Supabase environment variables');
   }
 
-  const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
-  console.log('[Supabase Client] Client created successfully');
-  return client;
+  supabaseClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  console.log('[Supabase Client] Singleton client created successfully');
+  return supabaseClient;
 }
