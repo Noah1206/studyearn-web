@@ -804,17 +804,20 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                 </div>
               </div>
 
-              {/* 결제 버튼 */}
+              {/* 확인 버튼 */}
               <button
-                onClick={handleKakaoPayConfirm}
+                onClick={() => setShowKakaoPayModal(false)}
                 className="w-full h-16 bg-[#FFEB00] text-[#1A1A1A] rounded-[18px] font-bold text-lg active:scale-[0.97] active:bg-[#F7E100] transition-transform"
               >
-                결제하기
+                확인
               </button>
 
               {/* 취소 버튼 */}
               <button
-                onClick={() => setShowKakaoPayModal(false)}
+                onClick={() => {
+                  setShowKakaoPayModal(false);
+                  setPaymentMethod('card');
+                }}
                 className="w-full mt-4 text-[#B0B8C1] font-semibold text-base"
               >
                 취소
