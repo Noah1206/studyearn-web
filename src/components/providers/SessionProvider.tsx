@@ -132,15 +132,22 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         syncCreatorStatus(false);
       }
 
-      // 프로필도 조회
-      console.log('📡 [SessionProvider] Starting profiles query...');
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, nickname, username, avatar_url, bio')
-        .eq('id', userId)
-        .maybeSingle();
+      // 프로필도 direct fetch로 조회
+      console.log('📡 [SessionProvider] Starting profiles fetch...');
+      const profileFetchUrl = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=id,nickname,username,avatar_url,bio`;
 
-      console.log('📡 [SessionProvider] Profile query completed:', { profile, profileError });
+      const profileResponse = await fetch(profileFetchUrl, {
+        headers: {
+          'apikey': supabaseAnonKey || '',
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const profileData = await profileResponse.json();
+      const profile = Array.isArray(profileData) && profileData.length > 0 ? profileData[0] : null;
+
+      console.log('📡 [SessionProvider] Profile fetch completed:', { profile });
 
       if (profile) {
         setProfile({
