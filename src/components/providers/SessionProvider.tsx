@@ -38,11 +38,16 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
 
   // 유저 프로필 및 크리에이터 정보 로드
   const loadUserData = useCallback(async (user: User) => {
-    if (!supabase || !user) return;
+    console.log('🔄 [SessionProvider] loadUserData called for:', user?.id);
+    if (!supabase || !user) {
+      console.log('⚠️ [SessionProvider] loadUserData early return - no supabase or user');
+      return;
+    }
 
     const userId = user.id;
 
     try {
+      console.log('📝 [SessionProvider] Step 1: Extracting OAuth metadata...');
       // OAuth 메타데이터에서 정보 추출 (Kakao, Google 등)
       const oauthNickname = user.user_metadata?.full_name ||
                            user.user_metadata?.name ||
@@ -53,12 +58,15 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
                             user.user_metadata?.picture ||
                             user.user_metadata?.profile_image;
 
+      console.log('📝 [SessionProvider] Step 2: Fetching profile from DB...');
       // 프로필 정보 가져오기 시도
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, nickname, username, avatar_url, bio')
         .eq('id', userId)
         .maybeSingle();
+
+      console.log('📝 [SessionProvider] Profile result:', { profile, profileError });
 
       // DB 프로필이 있든 없든 항상 setProfile 호출 (OAuth 메타데이터 fallback)
       setProfile({
@@ -70,6 +78,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         bio: profile?.bio,
       });
 
+      console.log('📝 [SessionProvider] Step 3: Fetching creator_settings...');
       // 크리에이터 설정 가져오기
       const { data: creatorSettings, error: creatorError } = await supabase
         .from('creator_settings')
