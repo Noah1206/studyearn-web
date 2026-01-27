@@ -83,18 +83,31 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
     });
 
     try {
-      // 크리에이터 설정 직접 조회 (타임아웃 없이)
-      console.log('📡 [SessionProvider] Starting creator_settings query for user:', userId);
+      // 직접 fetch로 테스트
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      const creatorQuery = supabase
-        .from('creator_settings')
-        .select('display_name, bio, profile_image_url, is_verified')
-        .eq('user_id', userId)
-        .maybeSingle();
+      console.log('📡 [SessionProvider] Testing direct fetch to creator_settings...');
+      console.log('📡 [SessionProvider] URL:', supabaseUrl);
 
-      console.log('📡 [SessionProvider] Query built, executing...');
+      // 직접 REST API 호출
+      const fetchUrl = `${supabaseUrl}/rest/v1/creator_settings?user_id=eq.${userId}&select=display_name,bio,profile_image_url,is_verified`;
+      console.log('📡 [SessionProvider] Fetch URL:', fetchUrl);
 
-      const { data: creatorSettings, error: creatorError } = await creatorQuery;
+      const fetchResponse = await fetch(fetchUrl, {
+        headers: {
+          'apikey': supabaseAnonKey || '',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const fetchData = await fetchResponse.json();
+      console.log('📡 [SessionProvider] Direct fetch result:', fetchData);
+
+      // 배열의 첫 번째 항목 또는 null
+      const creatorSettings = Array.isArray(fetchData) && fetchData.length > 0 ? fetchData[0] : null;
+      const creatorError = fetchResponse.ok ? null : { message: 'Fetch failed', status: fetchResponse.status };
 
       console.log('📡 [SessionProvider] Query completed:', { creatorSettings, creatorError });
 
