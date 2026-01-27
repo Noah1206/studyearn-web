@@ -51,7 +51,7 @@ export default function TermsPage() {
               본 약관에서 사용하는 용어의 정의는 다음과 같습니다.
             </p>
             <ol className="list-decimal list-inside space-y-3 text-gray-600 mb-4">
-              <li><strong>&quot;플랫폼&quot;</strong>이란 회사가 디지털 학습 콘텐츠를 이용자에게 제공하기 위하여 컴퓨터, 모바일 기기 등 정보통신설비를 이용하여 설정한 가상의 영업장을 말하며, 웹사이트(stuple.kr) 및 모바일 애플리케이션을 포함합니다.</li>
+              <li><strong>&quot;플랫폼&quot;</strong>이란 회사가 디지털 학습 콘텐츠를 이용자에게 제공하기 위하여 컴퓨터, 모바일 기기 등 정보통신설비를 이용하여 설정한 가상의 영업장을 말하며, 웹사이트(studyearn-web.vercel.app) 및 모바일 애플리케이션을 포함합니다.</li>
               <li><strong>&quot;이용자&quot;</strong>란 본 약관에 따라 회사가 제공하는 서비스를 이용하는 회원 및 비회원을 말합니다.</li>
               <li><strong>&quot;회원&quot;</strong>이란 회사에 개인정보를 제공하여 회원등록을 한 자로서, 회사가 제공하는 서비스를 지속적으로 이용할 수 있는 자를 말합니다.</li>
               <li><strong>&quot;비회원&quot;</strong>이란 회원에 가입하지 않고 회사가 제공하는 서비스를 이용하는 자를 말합니다.</li>
@@ -60,7 +60,7 @@ export default function TermsPage() {
               <li><strong>&quot;유료 콘텐츠&quot;</strong>란 이용자가 결제를 통해 이용권을 구매해야 이용할 수 있는 콘텐츠를 말합니다.</li>
               <li><strong>&quot;구매&quot;</strong>란 이용자가 유료 콘텐츠의 이용권을 취득하기 위해 대금을 결제하는 행위를 말합니다.</li>
               <li><strong>&quot;다운로드&quot;</strong>란 이용자가 콘텐츠 파일을 자신의 기기에 저장하는 행위를 말합니다.</li>
-              <li><strong>&quot;열람&quot;</strong>란 이용자가 콘텐츠를 스트리밍, 미리보기 등의 방식으로 확인하는 행위를 말합니다.</li>
+              <li><strong>&quot;열람&quot;</strong>이란 이용자가 콘텐츠를 스트리밍, 미리보기 등의 방식으로 확인하는 행위를 말합니다.</li>
             </ol>
 
             <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-4">제3조 (약관의 게시와 개정)</h3>
@@ -75,6 +75,18 @@ export default function TermsPage() {
             <p className="text-gray-600 leading-relaxed mb-4">
               본 약관에서 정하지 아니한 사항과 본 약관의 해석에 관하여는 「전자상거래 등에서의 소비자보호에 관한 법률」, 「약관의 규제에 관한 법률」, 「콘텐츠산업 진흥법」, 공정거래위원회가 정하는 「전자상거래 등에서의 소비자보호지침」 및 관계 법령 또는 상관례에 따릅니다.
             </p>
+
+            <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-4">제4조의2 (개인정보 처리)</h3>
+            <p className="text-gray-600 leading-relaxed mb-4">
+              회사는 이용자의 개인정보를 「개인정보보호법」 및 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 따라 보호하며, 개인정보의 수집·이용·보관·파기 등에 관한 사항은 <Link href="/privacy" className="text-blue-600 hover:underline font-medium">개인정보처리방침</Link>에서 정한 바에 따릅니다.
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 my-4">
+              <p className="text-sm text-gray-700">
+                <strong>개인정보처리방침</strong>은 본 약관과 별도로 관리되며, 개인정보 수집 항목, 이용 목적, 보관 기간, 제3자 제공, 파기 절차, 개인정보 보호책임자 정보 등을 포함합니다.
+                <br />
+                👉 <Link href="/privacy" className="text-blue-600 hover:underline">개인정보처리방침 바로가기</Link>
+              </p>
+            </div>
 
             {/* 제2장 회원가입 및 서비스 이용 */}
             <h2 className="text-xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b">제2장 회원가입 및 서비스 이용</h2>
@@ -92,7 +104,15 @@ export default function TermsPage() {
               </li>
               <li>회원가입계약의 성립 시기는 회사의 승낙이 회원에게 도달한 시점으로 합니다.</li>
               <li>회원은 회원가입 시 등록한 사항에 변경이 있는 경우, 상당한 기간 이내에 회사에 대하여 회원정보 수정 등의 방법으로 그 변경사항을 알려야 합니다.</li>
+              <li>만 14세 이상 만 19세 미만의 미성년자가 유료 서비스를 이용하고자 하는 경우, 법정대리인(부모 등)의 동의가 필요합니다. 미성년자가 결제를 진행하는 경우 법정대리인의 동의를 받은 것으로 간주합니다.</li>
             </ol>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-6">
+              <p className="text-sm text-blue-800 font-medium mb-2">미성년자 이용 안내</p>
+              <p className="text-sm text-blue-700">
+                미성년자가 유료 콘텐츠를 구매하는 경우, 법정대리인이 해당 계약에 동의하지 아니하면 미성년자 본인 또는 법정대리인이 계약을 취소할 수 있습니다. 단, 미성년자가 법정대리인의 동의 없이 결제한 경우라도 법정대리인의 동의가 있었던 것으로 믿게 한 경우(법정대리인 명의 결제수단 사용 등)에는 취소가 제한될 수 있습니다.
+              </p>
+            </div>
 
             <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-4">제6조 (회원 탈퇴 및 자격 상실)</h3>
             <ol className="list-decimal list-inside space-y-3 text-gray-600 mb-4">

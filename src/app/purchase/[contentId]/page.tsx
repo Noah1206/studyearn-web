@@ -72,6 +72,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
   const [pendingPurchase, setPendingPurchase] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [showKakaoPayModal, setShowKakaoPayModal] = useState(false);
+  const [agreedToRefundPolicy, setAgreedToRefundPolicy] = useState(false);
 
   useEffect(() => {
     if (isSessionLoading) return;
@@ -645,9 +646,45 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           )}
         </AnimatePresence>
 
+        {/* 환불 정책 동의 (법적 필수) */}
+        <motion.div className="mb-4" variants={itemVariants}>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <div className="relative flex-shrink-0 mt-0.5">
+              <input
+                type="checkbox"
+                checked={agreedToRefundPolicy}
+                onChange={(e) => setAgreedToRefundPolicy(e.target.checked)}
+                className="peer sr-only"
+              />
+              <div className={`w-5 h-5 rounded border-2 transition-all ${
+                agreedToRefundPolicy
+                  ? 'bg-orange-500 border-orange-500'
+                  : 'border-gray-300 group-hover:border-gray-400'
+              }`}>
+                {agreedToRefundPolicy && (
+                  <svg className="w-full h-full text-white p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-sm text-gray-600 leading-relaxed">
+              본 디지털 콘텐츠는 다운로드/열람 후{' '}
+              <Link href="/refund" className="text-orange-500 underline font-medium">
+                청약철회(환불)가 제한
+              </Link>
+              됨을 확인하고 동의합니다.
+            </span>
+          </label>
+        </motion.div>
+
+        {/* 법정대리인 동의 안내 */}
+        <motion.p className="text-xs text-gray-500 mb-2" variants={itemVariants}>
+          결제 진행 시 법정대리인의 동의를 받은 것으로 간주합니다.
+        </motion.p>
+
         {/* 주의사항 */}
         <motion.p className="text-xs text-gray-400" variants={itemVariants}>
-          디지털 콘텐츠는 다운로드 후 환불이 제한될 수 있어요.
           문제가 있다면 24시간 내에 신고해주세요.
         </motion.p>
       </motion.main>
@@ -658,40 +695,40 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           {paymentMethod === 'card' && (
             <button
               onClick={handleCardPayment}
-              disabled={isProcessing}
-              className={`w-full py-4 rounded-xl font-semibold text-base ${
-                !isProcessing
+              disabled={!agreedToRefundPolicy || isProcessing}
+              className={`w-full py-4 rounded-xl font-semibold text-base transition-all ${
+                agreedToRefundPolicy && !isProcessing
                   ? 'bg-orange-500 text-white'
-                  : 'bg-gray-200 text-gray-400'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {isProcessing ? '처리 중...' : `${formatCurrency(product.price)} 결제하기`}
+              {isProcessing ? '처리 중...' : !agreedToRefundPolicy ? '환불 정책에 동의해주세요' : `${formatCurrency(product.price)} 결제하기`}
             </button>
           )}
           {paymentMethod === 'kakaopay' && (
             <button
               onClick={handleKakaoPayPayment}
-              disabled={isProcessing}
-              className={`w-full py-4 rounded-xl font-semibold text-base ${
-                !isProcessing
+              disabled={!agreedToRefundPolicy || isProcessing}
+              className={`w-full py-4 rounded-xl font-semibold text-base transition-all ${
+                agreedToRefundPolicy && !isProcessing
                   ? 'bg-[#FEE500] text-[#191919]'
-                  : 'bg-gray-200 text-gray-400'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {isProcessing ? '처리 중...' : `카카오페이로 ${formatCurrency(product.price)} 결제`}
+              {isProcessing ? '처리 중...' : !agreedToRefundPolicy ? '환불 정책에 동의해주세요' : `카카오페이로 ${formatCurrency(product.price)} 결제`}
             </button>
           )}
           {paymentMethod === 'transfer' && (
             <button
               onClick={handlePaymentComplete}
-              disabled={!buyerNote.trim() || isProcessing}
-              className={`w-full py-4 rounded-xl font-semibold text-base ${
-                buyerNote.trim() && !isProcessing
+              disabled={!agreedToRefundPolicy || !buyerNote.trim() || isProcessing}
+              className={`w-full py-4 rounded-xl font-semibold text-base transition-all ${
+                agreedToRefundPolicy && buyerNote.trim() && !isProcessing
                   ? 'bg-orange-500 text-white'
-                  : 'bg-gray-200 text-gray-400'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {isProcessing ? '처리 중...' : '송금 완료'}
+              {isProcessing ? '처리 중...' : !agreedToRefundPolicy ? '환불 정책에 동의해주세요' : '송금 완료'}
             </button>
           )}
         </div>
