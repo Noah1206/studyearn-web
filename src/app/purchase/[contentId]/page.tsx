@@ -491,11 +491,29 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         <section className="bg-white rounded-2xl overflow-hidden">
           <button
             onClick={() => setShowPaymentMethodSheet(true)}
-            className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            className="w-full px-4 py-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
           >
-            <div>
-              <p className="text-sm font-bold text-gray-900">결제수단</p>
-              <p className="text-sm text-gray-500 mt-0.5">{getPaymentMethodLabel()}</p>
+            <div className="flex items-center gap-3">
+              {/* 결제수단 아이콘 */}
+              {paymentMethod === 'kakaopay' ? (
+                <div className="w-10 h-10 bg-[#FEE500] rounded-xl flex items-center justify-center">
+                  <span className="text-[#191919] font-bold text-xs">pay</span>
+                </div>
+              ) : paymentMethod === 'transfer' ? (
+                <div className="w-10 h-10 bg-[#0064FF] rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">토스</span>
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-bold text-gray-900 text-left">결제수단</p>
+                <p className="text-sm text-gray-500 mt-0.5 text-left">{getPaymentMethodLabel()}</p>
+              </div>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
