@@ -112,11 +112,18 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         })
       ]) as [{ data: any; error: any }, { data: any; error: any }];
 
+      const profileError = profileResult?.error;
+      const creatorError = creatorResult?.error;
+      const isProfileTimeout = profileError?.message === 'Query timeout';
+      const isCreatorTimeout = creatorError?.message === 'Query timeout';
+
       console.log('📝 [SessionProvider] Query results:', {
         profile: profileResult?.data,
-        profileError: profileResult?.error,
+        profileError,
         creator: creatorResult?.data,
-        creatorError: creatorResult?.error
+        creatorError,
+        isProfileTimeout,
+        isCreatorTimeout
       });
 
       // 프로필 정보 업데이트 (DB 데이터가 있으면)
@@ -132,27 +139,32 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
         });
       }
 
-      // 크리에이터 설정 동기화
-      const creatorSettings = creatorResult?.data;
-      if (creatorSettings) {
-        console.log('✅ [SessionProvider] User is a creator, syncing status');
-        syncCreatorStatus(true, {
-          display_name: creatorSettings.display_name || '',
-          bio: creatorSettings.bio,
-          profile_image_url: creatorSettings.profile_image_url,
-          is_verified: creatorSettings.is_verified || false,
-          total_subscribers: 0,
-        });
+      // 크리에이터 설정 동기화 (타임아웃이 아닌 경우에만)
+      // 타임아웃 시에는 기존 Zustand 상태를 유지 (localStorage에서 복원된 상태)
+      if (isCreatorTimeout) {
+        console.log('⏳ [SessionProvider] Creator query timed out, keeping existing state');
       } else {
-        console.log('ℹ️ [SessionProvider] User is not a creator (no creator_settings found)');
-        syncCreatorStatus(false);
+        const creatorSettings = creatorResult?.data;
+        if (creatorSettings) {
+          console.log('✅ [SessionProvider] User is a creator, syncing status');
+          syncCreatorStatus(true, {
+            display_name: creatorSettings.display_name || '',
+            bio: creatorSettings.bio,
+            profile_image_url: creatorSettings.profile_image_url,
+            is_verified: creatorSettings.is_verified || false,
+            total_subscribers: 0,
+          });
+        } else {
+          console.log('ℹ️ [SessionProvider] User is not a creator (no creator_settings found)');
+          syncCreatorStatus(false);
+        }
       }
 
       lastLoadedUserId.current = userId;
     } catch (error) {
       console.error('❌ [SessionProvider] Failed to load user data:', error);
-      // 에러 시에도 크리에이터 상태를 명시적으로 false로 설정
-      syncCreatorStatus(false);
+      // 전체 실패 시에는 기존 상태 유지 (syncCreatorStatus 호출 안 함)
+      console.log('⚠️ [SessionProvider] Keeping existing creator state due to error');
     } finally {
       isLoadingUserData.current = false;
       console.log('🏁 [SessionProvider] loadUserData completed for:', userId);
