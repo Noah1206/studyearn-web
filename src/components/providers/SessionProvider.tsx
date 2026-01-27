@@ -41,7 +41,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
   const { setProfile, syncCreatorStatus, clearUser } = useUserStore();
 
   // 유저 프로필 및 크리에이터 정보 로드
-  const loadUserData = useCallback(async (user: User, force = false) => {
+  const loadUserData = useCallback(async (user: User, currentSession: Session | null, force = false) => {
     // 중복 호출 방지
     if (isLoadingUserData.current && !force) {
       console.log('⏳ [SessionProvider] loadUserData already in progress, skipping...');
@@ -87,12 +87,11 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      // 현재 세션에서 access_token 가져오기
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token || supabaseAnonKey;
+      // 전달받은 세션에서 access_token 사용 (getSession 호출 없이)
+      const accessToken = currentSession?.access_token || supabaseAnonKey;
 
       console.log('📡 [SessionProvider] Testing direct fetch to creator_settings...');
-      console.log('📡 [SessionProvider] Has access token:', !!sessionData?.session?.access_token);
+      console.log('📡 [SessionProvider] Has access token:', !!currentSession?.access_token);
 
       // 직접 REST API 호출 (인증 토큰 포함)
       const fetchUrl = `${supabaseUrl}/rest/v1/creator_settings?user_id=eq.${userId}&select=display_name,bio,profile_image_url,is_verified`;
@@ -169,9 +168,9 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
   const refreshUserData = useCallback(async () => {
     if (session?.user) {
       lastLoadedUserId.current = null; // 강제 리로드를 위해 리셋
-      await loadUserData(session.user, true);
+      await loadUserData(session.user, session, true);
     }
-  }, [session?.user, loadUserData]);
+  }, [session, loadUserData]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -185,7 +184,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       setIsLoading(false);
       // 초기 세션이 있으면 유저 데이터 로드
       if (initialSession.user && mounted) {
-        loadUserData(initialSession.user);
+        loadUserData(initialSession.user, initialSession);
       }
     } else {
       console.log('⚠️ [SessionProvider] No initial session provided');
@@ -205,7 +204,7 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
           // 초기 세션과 다른 유저인 경우에만 로드
           if (currentSession.user.id !== initialSession?.user?.id) {
             console.log('✅ [SessionProvider] New sign in detected, loading user data for:', currentSession.user.email);
-            await loadUserData(currentSession.user);
+            await loadUserData(currentSession.user, currentSession);
           }
         }
 
