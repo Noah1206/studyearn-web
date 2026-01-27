@@ -83,21 +83,24 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
     });
 
     try {
-      // 직접 fetch로 테스트
+      // 세션 토큰을 포함해서 직접 fetch
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      console.log('📡 [SessionProvider] Testing direct fetch to creator_settings...');
-      console.log('📡 [SessionProvider] URL:', supabaseUrl);
+      // 현재 세션에서 access_token 가져오기
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || supabaseAnonKey;
 
-      // 직접 REST API 호출
+      console.log('📡 [SessionProvider] Testing direct fetch to creator_settings...');
+      console.log('📡 [SessionProvider] Has access token:', !!sessionData?.session?.access_token);
+
+      // 직접 REST API 호출 (인증 토큰 포함)
       const fetchUrl = `${supabaseUrl}/rest/v1/creator_settings?user_id=eq.${userId}&select=display_name,bio,profile_image_url,is_verified`;
-      console.log('📡 [SessionProvider] Fetch URL:', fetchUrl);
 
       const fetchResponse = await fetch(fetchUrl, {
         headers: {
           'apikey': supabaseAnonKey || '',
-          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
