@@ -494,10 +494,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         {/* 결제 방법 */}
         <motion.div className="mb-6" variants={itemVariants}>
           <p className="text-sm font-medium text-gray-900 mb-3">결제 방법</p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <button
               onClick={() => setPaymentMethod('card')}
-              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+              className={`w-full py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'card'
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-600'
@@ -507,7 +507,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             </button>
             <button
               onClick={() => setPaymentMethod('kakaopay')}
-              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+              className={`w-full py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'kakaopay'
                   ? 'bg-[#FEE500] text-[#191919]'
                   : 'bg-gray-100 text-gray-600'
@@ -517,7 +517,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             </button>
             <button
               onClick={() => setPaymentMethod('transfer')}
-              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+              className={`w-full py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                 paymentMethod === 'transfer'
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-600'
