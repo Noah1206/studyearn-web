@@ -124,7 +124,7 @@ const tailwindColorMap: Record<string, string> = {
 // Get hex color from tailwind class or return as-is if already hex
 const getHexColor = (color: string): string => {
   if (color.startsWith('#')) return color;
-  return tailwindColorMap[color] || '#3B82F6';
+  return tailwindColorMap[color] || '#F97316';
 };
 
 const subjectLabels: Record<string, string> = {

@@ -78,13 +78,13 @@ export default function TermsPage() {
 
             <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-4">제4조의2 (개인정보 처리)</h3>
             <p className="text-gray-600 leading-relaxed mb-4">
-              회사는 이용자의 개인정보를 「개인정보보호법」 및 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 따라 보호하며, 개인정보의 수집·이용·보관·파기 등에 관한 사항은 <Link href="/privacy" className="text-blue-600 hover:underline font-medium">개인정보처리방침</Link>에서 정한 바에 따릅니다.
+              회사는 이용자의 개인정보를 「개인정보보호법」 및 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 따라 보호하며, 개인정보의 수집·이용·보관·파기 등에 관한 사항은 <Link href="/privacy" className="text-orange-600 hover:underline font-medium">개인정보처리방침</Link>에서 정한 바에 따릅니다.
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 my-4">
               <p className="text-sm text-gray-700">
                 <strong>개인정보처리방침</strong>은 본 약관과 별도로 관리되며, 개인정보 수집 항목, 이용 목적, 보관 기간, 제3자 제공, 파기 절차, 개인정보 보호책임자 정보 등을 포함합니다.
                 <br />
-                👉 <Link href="/privacy" className="text-blue-600 hover:underline">개인정보처리방침 바로가기</Link>
+                👉 <Link href="/privacy" className="text-orange-600 hover:underline">개인정보처리방침 바로가기</Link>
               </p>
             </div>
 
@@ -107,9 +107,9 @@ export default function TermsPage() {
               <li>만 14세 이상 만 19세 미만의 미성년자가 유료 서비스를 이용하고자 하는 경우, 법정대리인(부모 등)의 동의가 필요합니다. 미성년자가 결제를 진행하는 경우 법정대리인의 동의를 받은 것으로 간주합니다.</li>
             </ol>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-6">
-              <p className="text-sm text-blue-800 font-medium mb-2">미성년자 이용 안내</p>
-              <p className="text-sm text-blue-700">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 my-6">
+              <p className="text-sm text-orange-800 font-medium mb-2">미성년자 이용 안내</p>
+              <p className="text-sm text-orange-700">
                 미성년자가 유료 콘텐츠를 구매하는 경우, 법정대리인이 해당 계약에 동의하지 아니하면 미성년자 본인 또는 법정대리인이 계약을 취소할 수 있습니다. 단, 미성년자가 법정대리인의 동의 없이 결제한 경우라도 법정대리인의 동의가 있었던 것으로 믿게 한 경우(법정대리인 명의 결제수단 사용 등)에는 취소가 제한될 수 있습니다.
               </p>
             </div>
@@ -231,7 +231,7 @@ export default function TermsPage() {
 
             <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-4">제15조 (환불 정책)</h3>
             <p className="text-gray-600 leading-relaxed mb-4">
-              회사의 환불 정책에 관한 상세한 내용은 <Link href="/refund" className="text-blue-600 hover:underline">환불정책</Link> 페이지에서 확인할 수 있습니다.
+              회사의 환불 정책에 관한 상세한 내용은 <Link href="/refund" className="text-orange-600 hover:underline">환불정책</Link> 페이지에서 확인할 수 있습니다.
             </p>
 
             {/* 제5장 크리에이터 */}

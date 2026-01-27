@@ -601,8 +601,8 @@ export default function CreatorProfilePage() {
 
           <Card variant="elevated" className="text-center py-4 hover:shadow-lg transition-shadow">
             <CardContent className="p-0">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <TrendingUp className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <TrendingUp className="w-5 h-5 text-orange-500" />
               </div>
               <p className="text-lg font-bold text-gray-900">{formatCurrency(creatorStats.monthlyEarnings)}</p>
               <p className="text-xs text-gray-500">이번 달</p>

@@ -54,7 +54,7 @@ const CHARACTER_AVATARS = [
   { gradient: 'from-green-300 to-green-500', emoji: '🌿' },
   { gradient: 'from-yellow-300 to-yellow-500', emoji: '🌻' },
   { gradient: 'from-pink-300 to-pink-500', emoji: '🐰' },
-  { gradient: 'from-blue-200 to-blue-400', emoji: '☁️' },
+  { gradient: 'from-orange-200 to-orange-400', emoji: '☁️' },
   { gradient: 'from-cyan-300 to-cyan-500', emoji: '💧' },
   { gradient: 'from-purple-300 to-purple-500', emoji: '🔮' },
   { gradient: 'from-orange-300 to-orange-500', emoji: '🍊' },
@@ -69,7 +69,7 @@ const ROUTINE_TYPE_LABELS: Record<string, string> = {
 };
 
 const COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  blue: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
+  blue: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
   green: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
   purple: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
   orange: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
@@ -475,12 +475,12 @@ export default function StudyanUserPage() {
                                 return (
                                   <div key={day} className="text-center">
                                     <div className={`text-xs font-medium mb-1 ${
-                                      hasItems ? 'text-blue-600' : 'text-gray-400'
+                                      hasItems ? 'text-orange-600' : 'text-gray-400'
                                     }`}>
                                       {day}
                                     </div>
                                     <div className={`h-2 rounded-full ${
-                                      hasItems ? 'bg-blue-500' : 'bg-gray-200'
+                                      hasItems ? 'bg-orange-500' : 'bg-gray-200'
                                     }`} />
                                   </div>
                                 );

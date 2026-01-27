@@ -436,7 +436,7 @@ export default function StudyWithMeMapClient({ initialRooms = [] }: StudyWithMeM
           )}
           disabled={isLocating}
         >
-          <Navigation className={cn('w-5 h-5', userLocation ? 'text-blue-500' : 'text-gray-400')} />
+          <Navigation className={cn('w-5 h-5', userLocation ? 'text-orange-500' : 'text-gray-400')} />
         </button>
 
         {/* Zoom In */}

@@ -49,7 +49,7 @@ const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => i + 6); // 6시 ~ 20시
 // 과목 태그 (빠른 선택용)
 const SUBJECT_TAGS = [
   { id: 'korean', label: '국어', color: 'bg-rose-100 text-rose-700 hover:bg-rose-200' },
-  { id: 'math', label: '수학', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
+  { id: 'math', label: '수학', color: 'bg-orange-100 text-orange-700 hover:bg-orange-200' },
   { id: 'english', label: '영어', color: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
   { id: 'science', label: '과학', color: 'bg-green-100 text-green-700 hover:bg-green-200' },
   { id: 'social', label: '사회', color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
@@ -110,11 +110,11 @@ function getFileIcon(fileName: string) {
 // 색상 팔레트
 const ROUTINE_COLORS = [
   'bg-rose-500',
-  'bg-blue-500',
+  'bg-orange-500',
   'bg-purple-500',
   'bg-green-500',
   'bg-yellow-500',
-  'bg-orange-500',
+  'bg-amber-500',
   'bg-cyan-500',
   'bg-pink-500',
 ];

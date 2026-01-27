@@ -277,7 +277,7 @@ interface StudyRoom {
 const THEME_STYLES: Record<string, { bg: string; accent: string; icon: React.ElementType }> = {
   default: { bg: 'bg-gray-50', accent: 'text-gray-600', icon: BookOpen },
   cozy: { bg: 'bg-amber-50', accent: 'text-amber-600', icon: Coffee },
-  focus: { bg: 'bg-blue-50', accent: 'text-blue-600', icon: Target },
+  focus: { bg: 'bg-orange-50', accent: 'text-orange-600', icon: Target },
   minimal: { bg: 'bg-slate-50', accent: 'text-slate-600', icon: Sparkles },
   nature: { bg: 'bg-green-50', accent: 'text-green-600', icon: BookOpen },
   night: { bg: 'bg-indigo-50', accent: 'text-indigo-600', icon: Moon },
@@ -325,7 +325,7 @@ function Seat({
           ? "bg-gradient-to-b from-gray-200 to-gray-300 border-2 border-dashed border-gray-400 group-hover:from-orange-100 group-hover:to-orange-200 group-hover:border-orange-400"
           : "bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-gray-700",
         isMyself && "ring-3 ring-orange-500 ring-offset-2",
-        isSelected && "ring-3 ring-blue-500 ring-offset-2"
+        isSelected && "ring-3 ring-orange-500 ring-offset-2"
       )}>
         {isEmpty ? (
           // 빈 좌석
@@ -372,7 +372,7 @@ function Seat({
                 HOST
               </div>
             ) : isMyself ? (
-              <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+              <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
                 ME
               </div>
             ) : null}
@@ -558,7 +558,7 @@ function SeatSelectionView({
                 // 새 좌석을 선택한 경우
                 <Button
                   onClick={handleConfirm}
-                  className="w-full h-16 text-lg font-bold bg-blue-500 hover:bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/30"
+                  className="w-full h-16 text-lg font-bold bg-orange-500 hover:bg-orange-600 rounded-2xl shadow-lg shadow-orange-500/30"
                 >
                   <RefreshCw className="w-6 h-6 mr-2" />
                   {selectedSeat}번 좌석으로 변경하기
@@ -755,7 +755,7 @@ function MyStudyScreen({
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">{seatNumber}번 좌석</span>
               {isGoalReached && (
-                <span className="bg-blue-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                <span className="bg-orange-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   목표 달성
                 </span>
@@ -774,7 +774,7 @@ function MyStudyScreen({
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
                 isOnBreak
                   ? "bg-amber-50 text-amber-600 border border-amber-200"
-                  : "bg-blue-50 text-blue-600 border border-blue-200"
+                  : "bg-orange-50 text-orange-600 border border-orange-200"
               )}>
                 {isOnBreak ? <Coffee className="w-3.5 h-3.5" /> : <Target className="w-3.5 h-3.5" />}
                 {isOnBreak ? '휴식 중' : '공부 중'}
@@ -800,7 +800,7 @@ function MyStudyScreen({
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500 ease-out",
-                    isGoalReached ? "bg-blue-500" : "bg-gray-900"
+                    isGoalReached ? "bg-orange-500" : "bg-gray-900"
                   )}
                   style={{ width: `${Math.min(100, progress * 100)}%` }}
                 />
@@ -833,7 +833,7 @@ function MyStudyScreen({
               className={cn(
                 "flex-1 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border",
                 isCameraOn
-                  ? "bg-blue-50 text-blue-600 border-blue-200"
+                  ? "bg-orange-50 text-orange-600 border-orange-200"
                   : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
               )}
             >
@@ -845,7 +845,7 @@ function MyStudyScreen({
               className={cn(
                 "flex-1 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border",
                 isMicOn
-                  ? "bg-blue-50 text-blue-600 border-blue-200"
+                  ? "bg-orange-50 text-orange-600 border-orange-200"
                   : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
               )}
             >
@@ -878,7 +878,7 @@ function MyStudyScreen({
                         ? isSelected
                           ? "bg-gray-900 text-white shadow-sm"
                           : isMyself
-                            ? "bg-blue-100 text-blue-700 border border-blue-200"
+                            ? "bg-orange-100 text-orange-700 border border-orange-200"
                             : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                         : "bg-gray-100 text-gray-300 cursor-not-allowed"
                     )}
@@ -948,7 +948,7 @@ function MyStudyScreen({
                         {selectedParticipant ? selectedParticipant.nickname : `${selectedSeatNumber}번 좌석`}
                       </h2>
                       {isMyself && (
-                        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium border border-blue-200">나</span>
+                        <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium border border-orange-200">나</span>
                       )}
                     </div>
                     <p className="text-sm text-gray-500">
@@ -992,7 +992,7 @@ function MyStudyScreen({
                             "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
                             isOnBreak
                               ? "bg-amber-500 text-white"
-                              : "bg-blue-500 text-white"
+                              : "bg-orange-500 text-white"
                           )}>
                             {isOnBreak ? '휴식 중' : '공부 중'}
                           </span>
@@ -1025,7 +1025,7 @@ function MyStudyScreen({
                             "absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold",
                             selectedParticipant.status === 'break'
                               ? "bg-amber-500 text-white"
-                              : "bg-blue-500 text-white"
+                              : "bg-orange-500 text-white"
                           )}>
                             {selectedParticipant.status === 'break' ? '휴식 중' : '공부 중'}
                           </span>
@@ -1086,7 +1086,7 @@ function MyStudyScreen({
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm font-medium">채팅</span>
               {messages.length > 0 && (
-                <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                   {messages.length}
                 </span>
               )}
@@ -1132,7 +1132,7 @@ function MyStudyScreen({
                         <div className={cn(
                           "inline-block px-3.5 py-2 rounded-2xl text-sm",
                           msg.user_id === currentUserId
-                            ? "bg-blue-500 text-white"
+                            ? "bg-orange-500 text-white"
                             : "bg-gray-100 text-gray-900"
                         )}>
                           {msg.message}
@@ -1152,7 +1152,7 @@ function MyStudyScreen({
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="메시지를 입력하세요..."
-                  className="flex-1 bg-gray-100 text-gray-900 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-400"
+                  className="flex-1 bg-gray-100 text-gray-900 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 placeholder:text-gray-400"
                 />
                 <button
                   onClick={handleSendMessage}
@@ -1160,7 +1160,7 @@ function MyStudyScreen({
                   className={cn(
                     "px-3.5 py-2.5 rounded-xl transition-all",
                     chatMessage.trim()
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
+                      ? "bg-orange-500 text-white hover:bg-orange-600"
                       : "bg-gray-100 text-gray-400"
                   )}
                 >

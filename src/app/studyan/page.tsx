@@ -64,7 +64,7 @@ const CHARACTER_AVATARS = [
   { gradient: 'from-green-300 to-green-500', emoji: '🌿' },
   { gradient: 'from-yellow-300 to-yellow-500', emoji: '🌻' },
   { gradient: 'from-pink-300 to-pink-500', emoji: '🐰' },
-  { gradient: 'from-blue-200 to-blue-400', emoji: '☁️' },
+  { gradient: 'from-orange-200 to-orange-400', emoji: '☁️' },
   { gradient: 'from-cyan-300 to-cyan-500', emoji: '💧' },
   { gradient: 'from-purple-300 to-purple-500', emoji: '🔮' },
   { gradient: 'from-orange-300 to-orange-500', emoji: '🍊' },
@@ -99,7 +99,7 @@ const itemVariants = {
 
 // Color mapping
 const COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  blue: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
+  blue: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
   green: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
   purple: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
   orange: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
@@ -169,7 +169,7 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
                   className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full transition-all ${
                     user.isFollowing
                       ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
                   }`}
                 >
                   {followingUserId === user.id ? (
@@ -188,7 +188,7 @@ function UserCard({ user, onCopyRoutine, copiedRoutineId, onToggleFollow, follow
                 </button>
               )}
               {isOwnProfile && (
-                <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+                <Badge className="bg-orange-50 text-orange-600 border-orange-200">
                   나
                 </Badge>
               )}
@@ -555,7 +555,7 @@ export default function StudyanPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="bg-gradient-to-br from-blue-500 via-blue-600 to-gray-900 text-white"
+        className="bg-gradient-to-br from-orange-500 via-orange-600 to-gray-900 text-white"
       >
         <div className="max-w-6xl mx-auto px-4 py-12 md:py-16">
           <motion.div
@@ -587,7 +587,7 @@ export default function StudyanPage() {
               placeholder="사용자 또는 루틴 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:bg-white transition-all"
             />
           </div>
         </div>
@@ -686,7 +686,7 @@ export default function StudyanPage() {
               다른 스터디언들과 함께 성장하세요
             </p>
             <Link href="/profile">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white gap-2">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white gap-2">
                 <Calendar className="w-4 h-4" />
                 내 프로필에서 루틴 만들기
                 <ChevronRight className="w-4 h-4" />

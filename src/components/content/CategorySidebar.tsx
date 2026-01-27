@@ -73,7 +73,7 @@ export function CategorySidebar({
   return (
     <aside className={cn('w-52 flex-shrink-0', className)}>
       {/* 메인 배너 - StudyEarn 스타일 */}
-      <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 mb-6 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 mb-6 overflow-hidden">
         {/* 배경 장식 */}
         <div className="absolute top-3 right-3">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
@@ -83,10 +83,10 @@ export function CategorySidebar({
         <div className="absolute bottom-0 right-0 w-20 h-20 opacity-80">
           <svg viewBox="0 0 80 80" fill="none" className="w-full h-full">
             {/* 책/노트 아이콘 */}
-            <rect x="20" y="25" width="35" height="45" rx="3" fill="#3B82F6" />
-            <rect x="25" y="32" width="25" height="3" rx="1" fill="#93C5FD" />
-            <rect x="25" y="39" width="20" height="2" rx="1" fill="#93C5FD" />
-            <rect x="25" y="45" width="22" height="2" rx="1" fill="#93C5FD" />
+            <rect x="20" y="25" width="35" height="45" rx="3" fill="#F97316" />
+            <rect x="25" y="32" width="25" height="3" rx="1" fill="#FDBA74" />
+            <rect x="25" y="39" width="20" height="2" rx="1" fill="#FDBA74" />
+            <rect x="25" y="45" width="22" height="2" rx="1" fill="#FDBA74" />
             {/* 연필 */}
             <rect x="48" y="18" width="6" height="40" rx="2" fill="#F59E0B" />
             <polygon points="51,58 48,65 54,65" fill="#F59E0B" />
@@ -99,11 +99,11 @@ export function CategorySidebar({
             <h2 className="font-bold text-gray-900 text-lg leading-tight">
               인기 학습자료<br />모아보기
             </h2>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-white text-xs font-bold">TOP</span>
             </div>
           </div>
-          <span className="text-sm text-gray-500 hover:text-blue-600 cursor-pointer transition-colors">바로가기 &gt;</span>
+          <span className="text-sm text-gray-500 hover:text-orange-600 cursor-pointer transition-colors">바로가기 &gt;</span>
         </div>
       </div>
 
@@ -151,7 +151,7 @@ export function CategorySidebar({
                 <ChevronDown
                   className={cn(
                     'w-3 h-3 transition-transform -rotate-90',
-                    isChecked && 'text-blue-500'
+                    isChecked && 'text-orange-500'
                   )}
                 />
                 {grade.label}
@@ -176,7 +176,7 @@ export function CategorySidebar({
           <ChevronDown
             className={cn(
               'w-3 h-3 transition-transform -rotate-90',
-              filters.freeOnly && 'text-blue-500'
+              filters.freeOnly && 'text-orange-500'
             )}
           />
           무료

@@ -156,7 +156,7 @@ function PaymentFailContent() {
           <div className="mt-8 pt-6 border-t border-gray-100">
             <p className="text-xs text-gray-500">
               결제 문제가 계속되면 다른 결제 수단을 이용하시거나<br />
-              <Link href="/contact" className="text-blue-600 hover:underline">
+              <Link href="/contact" className="text-orange-600 hover:underline">
                 고객센터
               </Link>
               로 문의해주세요.

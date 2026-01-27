@@ -113,12 +113,12 @@ export function PurchaseModal({
             </button>
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-4 text-center">
-            <p className="text-xs text-blue-600 mb-1">결제 금액</p>
-            <p className="font-bold text-lg text-blue-700">{formatAmount(amount)}</p>
+          <div className="bg-orange-50 rounded-xl p-4 text-center">
+            <p className="text-xs text-orange-600 mb-1">결제 금액</p>
+            <p className="font-bold text-lg text-orange-700">{formatAmount(amount)}</p>
             <button
               onClick={() => handleCopy(String(amount), 'amount')}
-              className="mt-2 text-xs text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 mx-auto"
+              className="mt-2 text-xs text-orange-600 hover:text-orange-700 flex items-center justify-center gap-1 mx-auto"
             >
               {copied === 'amount' ? (
                 <>

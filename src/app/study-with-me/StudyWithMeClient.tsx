@@ -95,7 +95,7 @@ function RoomCard({ room }: { room: StudyRoom }) {
   const getThemeGradient = (theme: string | null) => {
     switch (theme) {
       case 'korean': return 'from-rose-100 via-pink-50 to-rose-50';
-      case 'math': return 'from-blue-100 via-indigo-50 to-blue-50';
+      case 'math': return 'from-orange-100 via-amber-50 to-orange-50';
       case 'english': return 'from-emerald-100 via-green-50 to-emerald-50';
       case 'science': return 'from-purple-100 via-violet-50 to-purple-50';
       case 'coding': return 'from-cyan-100 via-sky-50 to-cyan-50';

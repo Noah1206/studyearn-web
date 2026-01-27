@@ -118,7 +118,7 @@ function ProductListCard({ product, index, likedIds, onToggleLike }: { product: 
             {/* 콘텐츠 정보 */}
             <div className="flex-1 min-w-0">
               {/* 제목 - 크몽 스타일로 강조 */}
-              <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2 leading-snug">
+              <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors mb-2 line-clamp-2 leading-snug">
                 {product.title}
               </h3>
 
@@ -140,7 +140,7 @@ function ProductListCard({ product, index, likedIds, onToggleLike }: { product: 
               {/* 가격 */}
               <div className="mb-2">
                 {product.price === 0 ? (
-                  <span className="text-base font-bold text-blue-600">무료</span>
+                  <span className="text-base font-bold text-orange-600">무료</span>
                 ) : (
                   <span className="text-base font-bold text-gray-900">
                     {formatCurrency(product.price)}~

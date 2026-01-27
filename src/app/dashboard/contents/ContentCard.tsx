@@ -24,7 +24,7 @@ export interface ContentWithStats extends Content {
 function getSubjectStyle(subject?: string | null) {
   const styles: Record<string, { bg: string; text: string }> = {
     '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
-    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
+    '수학': { bg: 'bg-orange-50', text: 'text-orange-600' },
     '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
     '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
     '사회': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
@@ -118,7 +118,7 @@ export function ContentCard({ content }: { content: ContentWithStats }) {
           <div className="flex flex-col items-end justify-start min-w-[100px]">
             <div className="text-right">
               {content.price === 0 ? (
-                <span className="text-base font-bold text-blue-600">무료</span>
+                <span className="text-base font-bold text-orange-600">무료</span>
               ) : (
                 <div>
                   <span className="block text-xs text-gray-400 mb-0.5">가격</span>

@@ -87,15 +87,15 @@ const BANK_CODES: Record<string, string> = {
 // Popular banks for quick selection (most used by young creators)
 const POPULAR_BANKS = [
   { code: '090', name: '카카오뱅크', color: 'bg-yellow-400 text-black' },
-  { code: '092', name: '토스뱅크', color: 'bg-blue-500 text-white' },
-  { code: '088', name: '신한', color: 'bg-blue-600 text-white' },
+  { code: '092', name: '토스뱅크', color: 'bg-cyan-500 text-white' },
+  { code: '088', name: '신한', color: 'bg-indigo-600 text-white' },
   { code: '004', name: '국민', color: 'bg-amber-500 text-white' },
 ];
 
 // Payout Status
 const payoutStatusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-  processing: { label: '처리중', color: 'bg-blue-100 text-blue-700', icon: Loader2 },
+  processing: { label: '처리중', color: 'bg-orange-100 text-orange-700', icon: Loader2 },
   completed: { label: '완료', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
   rejected: { label: '거절됨', color: 'bg-red-100 text-red-700', icon: XCircle },
 };
@@ -465,13 +465,13 @@ export default function PayoutPage() {
         </div>
 
         {/* Fee Notice */}
-        <Card className="border-0 shadow-sm mb-8 bg-blue-50 border border-blue-100">
+        <Card className="border-0 shadow-sm mb-8 bg-orange-50 border border-orange-100">
           <CardContent className="p-4">
             <div className="flex gap-3">
-              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800">
+              <Info className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-orange-800">
                 <p className="font-medium mb-1">정산 안내</p>
-                <p className="text-blue-700">
+                <p className="text-orange-700">
                   판매 수익의 80%가 정산 가능 금액에 적립됩니다 (플랫폼 수수료 20%).
                   정산 요청 시 추가 수수료는 없으며, 관리자 확인 후 등록된 계좌로 입금됩니다.
                 </p>
@@ -885,7 +885,7 @@ export default function PayoutPage() {
                     <button
                       type="button"
                       onClick={() => setAccountForm({ ...accountForm, account_holder: userNickname })}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                      className="text-xs text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1"
                     >
                       <Check className="w-3 h-3" />
                       내 닉네임으로 입력

@@ -58,11 +58,11 @@ const TIME_SLOTS = Array.from({ length: 19 }, (_, i) => i + 6); // 6시 ~ 24시
 
 const ROUTINE_COLORS = [
   'bg-rose-500',
-  'bg-blue-500',
+  'bg-orange-500',
   'bg-purple-500',
   'bg-green-500',
   'bg-yellow-500',
-  'bg-orange-500',
+  'bg-amber-500',
   'bg-cyan-500',
   'bg-pink-500',
 ];

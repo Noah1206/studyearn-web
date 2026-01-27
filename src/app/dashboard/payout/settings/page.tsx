@@ -285,12 +285,12 @@ export default function PayoutSettingsPage() {
         )}
 
         {/* Info Card */}
-        <Card variant="outlined" className="mb-6 border-blue-200 bg-blue-50/50">
+        <Card variant="outlined" className="mb-6 border-orange-200 bg-orange-50/50">
           <CardContent className="p-4 flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-700">
+            <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-orange-700">
               <p className="font-medium mb-1">정산 안내</p>
-              <ul className="text-xs space-y-1 text-blue-600">
+              <ul className="text-xs space-y-1 text-orange-600">
                 <li>- 매월 1일 전월 수익이 정산됩니다.</li>
                 <li>- 최소 정산 금액은 10,000원입니다.</li>
                 <li>- 본인 명의 계좌만 등록 가능합니다.</li>

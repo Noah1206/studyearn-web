@@ -180,7 +180,7 @@ export default function AdminPurchasesPage() {
             <div className="flex items-center gap-2">
               <Link
                 href="/admin/payouts"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg transition-colors text-sm font-medium"
               >
                 <Banknote className="w-4 h-4" />
                 정산 관리
@@ -295,7 +295,7 @@ export default function AdminPurchasesPage() {
                         {purchase.content.title}
                       </h3>
                       {purchase.order_number && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono font-medium rounded">
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-mono font-medium rounded">
                           {purchase.order_number}
                         </span>
                       )}

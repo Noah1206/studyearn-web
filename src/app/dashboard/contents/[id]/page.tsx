@@ -63,7 +63,7 @@ const contentTypeLabels: Record<string, string> = {
 // 접근 레벨 설정
 const accessLevelConfig: Record<string, { label: string; color: string }> = {
   public: { label: '공개', color: 'bg-green-100 text-green-700' },
-  subscribers: { label: '구독자 전용', color: 'bg-blue-100 text-blue-700' },
+  subscribers: { label: '구독자 전용', color: 'bg-orange-100 text-orange-700' },
   tier: { label: '티어 전용', color: 'bg-purple-100 text-purple-700' },
   paid: { label: '유료', color: 'bg-orange-100 text-orange-700' },
 };

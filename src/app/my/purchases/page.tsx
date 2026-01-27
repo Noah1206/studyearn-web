@@ -58,7 +58,7 @@ function getStatusBadge(status: Purchase['status']) {
     case 'pending_confirm':
       return <Badge className="flex-shrink-0 bg-amber-100 text-amber-700 border-0">확인 대기</Badge>;
     case 'pending_payment':
-      return <Badge className="flex-shrink-0 bg-blue-100 text-blue-700 border-0">결제 대기</Badge>;
+      return <Badge className="flex-shrink-0 bg-orange-100 text-orange-700 border-0">결제 대기</Badge>;
     case 'rejected':
       return <Badge className="flex-shrink-0 bg-red-100 text-red-700 border-0">거절됨</Badge>;
     default:

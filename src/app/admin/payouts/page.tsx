@@ -210,7 +210,7 @@ export default function AdminPayoutsPage() {
                 onClick={() => setStatus('processing')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   status === 'processing'
-                    ? 'bg-blue-100 text-blue-800'
+                    ? 'bg-orange-100 text-orange-800'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -276,8 +276,8 @@ export default function AdminPayoutsPage() {
               >
                 <div className="flex items-start gap-4">
                   {/* Creator Icon */}
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-orange-600" />
                   </div>
 
                   {/* Info */}

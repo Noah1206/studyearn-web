@@ -32,7 +32,7 @@ interface VersionEntry {
 
 const changeTypeConfig: Record<ChangeType, { icon: React.ElementType; label: string; color: string; bgColor: string }> = {
   feature: { icon: Sparkles, label: '새 기능', color: 'text-purple-600', bgColor: 'bg-purple-100' },
-  improvement: { icon: Zap, label: '개선', color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  improvement: { icon: Zap, label: '개선', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   bugfix: { icon: Bug, label: '버그 수정', color: 'text-red-600', bgColor: 'bg-red-100' },
   security: { icon: Shield, label: '보안', color: 'text-green-600', bgColor: 'bg-green-100' },
   performance: { icon: Wrench, label: '성능', color: 'text-orange-600', bgColor: 'bg-orange-100' },

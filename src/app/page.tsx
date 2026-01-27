@@ -462,7 +462,7 @@ export default function HomePage() {
         {/* Buyer Problems - Horizontal Carousel (Full Width, opposite direction) */}
         <div className="mb-20">
           <div className="text-center mb-8">
-            <span className="inline-block px-5 py-2.5 bg-blue-100 text-blue-700 rounded-full text-base font-medium">
+            <span className="inline-block px-5 py-2.5 bg-orange-100 text-orange-700 rounded-full text-base font-medium">
               공부하고 싶은 학생
             </span>
           </div>
@@ -1172,8 +1172,8 @@ export default function HomePage() {
                         <div className="text-xs text-gray-500">사진 업로드</div>
                       </div>
                       <div className="bg-white rounded-xl p-4 border border-gray-200">
-                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-2">
-                          <BookOpen className="w-5 h-5 text-blue-500" />
+                        <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center mb-2">
+                          <BookOpen className="w-5 h-5 text-orange-500" />
                         </div>
                         <div className="text-sm font-semibold text-gray-900">공부법</div>
                         <div className="text-xs text-gray-500">글 작성</div>

@@ -113,7 +113,7 @@ export default function SettingsPage() {
     default_content_access: 'public' as 'public' | 'subscribers' | 'tier' | 'paid',
     show_subscriber_count: true,
     allow_comments: true,
-    theme_color: '#3B82F6',
+    theme_color: '#F97316',
   });
 
   const [privacyForm, setPrivacyForm] = useState({
@@ -163,7 +163,7 @@ export default function SettingsPage() {
           default_content_access: settings.default_content_access || 'public',
           show_subscriber_count: true,
           allow_comments: true,
-          theme_color: '#3B82F6',
+          theme_color: '#F97316',
         });
         // Load payment settings
         setPaymentForm({
@@ -693,7 +693,7 @@ export default function SettingsPage() {
 
                   {/* Toss ID Input */}
                   {paymentForm.payment_method === 'toss_id' && (
-                    <div className="p-4 bg-blue-50 rounded-xl mb-6">
+                    <div className="p-4 bg-orange-50 rounded-xl mb-6">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         토스 아이디
                       </label>
@@ -803,8 +803,8 @@ export default function SettingsPage() {
                           {paymentForm.payment_method === 'toss_id' && paymentForm.toss_id && (
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <Smartphone className="w-5 h-5 text-blue-600" />
+                                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                  <Smartphone className="w-5 h-5 text-orange-600" />
                                 </div>
                                 <div>
                                   <p className="font-medium text-gray-900">토스로 송금</p>

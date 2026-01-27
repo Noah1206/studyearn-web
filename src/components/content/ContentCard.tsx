@@ -43,7 +43,7 @@ interface ContentCardProps {
 function getSubjectStyle(subject?: string) {
   const styles: Record<string, { bg: string; text: string }> = {
     '국어': { bg: 'bg-rose-50', text: 'text-rose-600' },
-    '수학': { bg: 'bg-blue-50', text: 'text-blue-600' },
+    '수학': { bg: 'bg-orange-50', text: 'text-orange-600' },
     '영어': { bg: 'bg-purple-50', text: 'text-purple-600' },
     '과학': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
     '물리': { bg: 'bg-emerald-50', text: 'text-emerald-600' },
@@ -105,7 +105,7 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
           {/* 정보 영역 */}
           <div className="pt-3.5 flex flex-col flex-1">
             {/* 제목 - 크몽 스타일로 강조 */}
-            <h3 className="text-[15px] font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2.5 leading-snug flex-grow">
+            <h3 className="text-[15px] font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 mb-2.5 leading-snug flex-grow">
               {product.title}
             </h3>
 
@@ -127,7 +127,7 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
             {/* 가격 (크몽 스타일) */}
             <div className="mb-2.5">
               {product.price === 0 ? (
-                <span className="text-base font-bold text-blue-600">무료</span>
+                <span className="text-base font-bold text-orange-600">무료</span>
               ) : (
                 <span className="text-base font-bold text-gray-900">
                   {formatCurrency(product.price)}~

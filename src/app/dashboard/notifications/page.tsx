@@ -29,7 +29,7 @@ const NOTIFICATION_CATEGORIES = [
     title: '구독 알림',
     description: '새로운 구독자, 구독 취소, 티어 변경 알림',
     icon: Users,
-    color: 'bg-blue-100 text-blue-600',
+    color: 'bg-orange-100 text-orange-600',
     settings: [
       { key: 'new_subscriber', label: '새 구독자', description: '누군가 구독을 시작했을 때' },
       { key: 'subscription_cancelled', label: '구독 취소', description: '구독자가 구독을 취소했을 때' },
@@ -492,13 +492,13 @@ export default function NotificationsPage() {
         </div>
 
         {/* Info Notice */}
-        <Card className="border-0 shadow-sm mt-8 bg-blue-50 border border-blue-100">
+        <Card className="border-0 shadow-sm mt-8 bg-orange-50 border border-orange-100">
           <CardContent className="p-4">
             <div className="flex gap-3">
-              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800">
+              <Info className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-orange-800">
                 <p className="font-medium mb-1">알림 설정 안내</p>
-                <p className="text-blue-700">
+                <p className="text-orange-700">
                   푸시 알림을 받으려면 브라우저 알림 권한을 허용해야 합니다.
                   이메일 알림은 계정에 등록된 이메일 주소로 발송됩니다.
                 </p>

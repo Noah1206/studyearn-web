@@ -25,7 +25,7 @@ interface ContentThumbnailProps {
 // 과목별 그라데이션 배경
 const subjectGradients: Record<string, string> = {
   '국어': 'from-rose-400 to-rose-600',
-  '수학': 'from-blue-400 to-blue-600',
+  '수학': 'from-orange-400 to-orange-600',
   '영어': 'from-purple-400 to-purple-600',
   '과학': 'from-emerald-400 to-emerald-600',
   '물리': 'from-emerald-400 to-emerald-600',

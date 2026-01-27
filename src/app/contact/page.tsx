@@ -150,8 +150,8 @@ export default function ContactPage() {
         {/* 연락처 정보 */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
           <Card variant="outlined" className="text-center p-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Mail className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Mail className="w-5 h-5 text-orange-600" />
             </div>
             <h3 className="font-medium text-gray-900 mb-1">이메일</h3>
             <p className="text-sm text-gray-500">ab40905045@gmail.com</p>
@@ -219,19 +219,19 @@ export default function ContactPage() {
                         className={cn(
                           "flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-left",
                           formData.inquiryType === type.id
-                            ? "border-blue-600 bg-blue-50"
+                            ? "border-orange-600 bg-orange-50"
                             : "border-gray-200 hover:border-gray-300"
                         )}
                       >
                         <Icon size={18} className={cn(
                           formData.inquiryType === type.id
-                            ? "text-blue-600"
+                            ? "text-orange-600"
                             : "text-gray-400"
                         )} />
                         <span className={cn(
                           "text-sm font-medium",
                           formData.inquiryType === type.id
-                            ? "text-blue-700"
+                            ? "text-orange-700"
                             : "text-gray-700"
                         )}>
                           {type.label}
@@ -289,7 +289,7 @@ export default function ContactPage() {
                   placeholder="문의하실 내용을 상세히 입력해주세요"
                   rows={6}
                   className={cn(
-                    "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none",
+                    "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none",
                     errors.message ? 'border-red-500' : 'border-gray-200'
                   )}
                 />
