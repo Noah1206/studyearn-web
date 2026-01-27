@@ -476,7 +476,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               )}
             </div>
             {/* 상품 정보 */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex-1 min-w-0 pt-0.5">
               <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug">
                 {product.title}
               </p>
@@ -510,7 +510,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               value={buyerNote}
               onChange={(e) => setBuyerNote(e.target.value)}
               placeholder="송금 시 입력한 이름"
-              className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <button
               onClick={handleOpenToss}
@@ -543,7 +543,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           {/* 총 결제 금액 */}
           <div className="flex justify-between items-center">
             <span className="text-base font-bold text-gray-900">총 결제 금액</span>
-            <span className="text-2xl font-bold text-blue-600">{formatCurrency(product.price)}</span>
+            <span className="text-2xl font-bold text-orange-500">{formatCurrency(product.price)}</span>
           </div>
         </section>
 
@@ -556,7 +556,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             <div className="flex items-center gap-3">
               <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
                 agreedToPrivacy
-                  ? 'bg-blue-500 border-blue-500'
+                  ? 'bg-orange-500 border-orange-500'
                   : 'border-gray-300'
               }`}>
                 {agreedToPrivacy && (
@@ -579,7 +579,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
             <div className="flex items-center gap-3">
               <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
                 agreedToRefund
-                  ? 'bg-blue-500 border-blue-500'
+                  ? 'bg-orange-500 border-orange-500'
                   : 'border-gray-300'
               }`}>
                 {agreedToRefund && (
@@ -632,7 +632,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
               disabled={!allAgreed || isProcessing || (paymentMethod === 'transfer' && !buyerNote.trim())}
               className={`flex-1 py-4 rounded-xl font-bold text-base transition-all ${
                 allAgreed && !isProcessing && (paymentMethod !== 'transfer' || buyerNote.trim())
-                  ? 'bg-blue-500 text-white active:bg-blue-600'
+                  ? 'bg-gray-900 text-white active:bg-gray-800'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
@@ -685,15 +685,15 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     }}
                     className={`w-full py-4 px-4 rounded-xl mb-2 flex items-center justify-between transition-all ${
                       paymentMethod === 'card'
-                        ? 'bg-blue-50 border-2 border-blue-500'
+                        ? 'bg-orange-50 border-2 border-orange-500'
                         : 'bg-gray-50 border-2 border-transparent'
                     }`}
                   >
-                    <span className={`font-medium ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-700'}`}>
+                    <span className={`font-medium ${paymentMethod === 'card' ? 'text-orange-600' : 'text-gray-700'}`}>
                       신용/체크카드
                     </span>
                     {paymentMethod === 'card' && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
                     )}
@@ -703,6 +703,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     onClick={() => {
                       setPaymentMethod('kakaopay');
                       setShowPaymentMethodSheet(false);
+                      setShowKakaoPayModal(true);
                     }}
                     className={`w-full py-4 px-4 rounded-xl mb-2 flex items-center justify-between transition-all ${
                       paymentMethod === 'kakaopay'
@@ -732,15 +733,15 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     }}
                     className={`w-full py-4 px-4 rounded-xl flex items-center justify-between transition-all ${
                       paymentMethod === 'transfer'
-                        ? 'bg-blue-50 border-2 border-blue-500'
+                        ? 'bg-orange-50 border-2 border-orange-500'
                         : 'bg-gray-50 border-2 border-transparent'
                     }`}
                   >
-                    <span className={`font-medium ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-gray-700'}`}>
+                    <span className={`font-medium ${paymentMethod === 'transfer' ? 'text-orange-600' : 'text-gray-700'}`}>
                       계좌이체 (토스)
                     </span>
                     {paymentMethod === 'transfer' && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
                     )}
