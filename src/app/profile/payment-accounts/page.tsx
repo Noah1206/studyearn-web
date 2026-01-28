@@ -245,11 +245,11 @@ export default function PaymentAccountsPage() {
       <AnimatePresence>
         {showSuccess && (
           <motion.div
-            variants={successVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg"
           >
             <motion.div
               animate={{ rotate: 360 }}
