@@ -37,6 +37,7 @@ import {
   Plus,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Avatar, Spinner, SchoolSearch } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
@@ -2554,12 +2555,25 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                         )}
                       </div>
                       {/* 은행 로고 */}
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm text-white font-bold text-xs flex-shrink-0"
-                        style={{ backgroundColor: BANKS[account.bankCode]?.color || '#6B7280' }}
-                      >
-                        {BANKS[account.bankCode]?.shortName || '은행'}
-                      </div>
+                      {BANKS[account.bankCode]?.iconUrl ? (
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-100 shadow-sm flex-shrink-0">
+                          <Image
+                            src={BANKS[account.bankCode].iconUrl!}
+                            alt={BANKS[account.bankCode]?.name || '은행'}
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm text-white font-bold text-xs flex-shrink-0"
+                          style={{ backgroundColor: BANKS[account.bankCode]?.color || '#6B7280' }}
+                        >
+                          {BANKS[account.bankCode]?.shortName || '은행'}
+                        </div>
+                      )}
                       {/* 계좌 정보 */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900">

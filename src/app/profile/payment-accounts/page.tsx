@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -61,16 +62,40 @@ const successVariants = {
 
 // 은행 로고 컴포넌트
 function BankLogo({ bankCode, size = 'md' }: { bankCode: BankCode; size?: 'sm' | 'md' | 'lg' }) {
+  const [imgError, setImgError] = useState(false);
   const bank = BANKS[bankCode];
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-[10px]',
-    md: 'w-10 h-10 text-xs',
-    lg: 'w-12 h-12 text-sm',
+
+  const sizeConfig = {
+    sm: { className: 'w-8 h-8 text-[10px]', imgSize: 32 },
+    md: { className: 'w-10 h-10 text-xs', imgSize: 40 },
+    lg: { className: 'w-12 h-12 text-sm', imgSize: 48 },
   };
 
+  const config = sizeConfig[size];
+
+  // 이미지 URL이 있고 에러가 없으면 이미지 표시
+  if (bank?.iconUrl && !imgError) {
+    return (
+      <div
+        className={`${config.className} rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-100 shadow-sm`}
+      >
+        <Image
+          src={bank.iconUrl}
+          alt={bank.name}
+          width={config.imgSize - 8}
+          height={config.imgSize - 8}
+          className="object-contain"
+          onError={() => setImgError(true)}
+          unoptimized
+        />
+      </div>
+    );
+  }
+
+  // 폴백: 텍스트 로고
   return (
     <div
-      className={`${sizeClasses[size]} rounded-lg flex items-center justify-center text-white font-bold shadow-sm`}
+      className={`${config.className} rounded-lg flex items-center justify-center text-white font-bold shadow-sm`}
       style={{ backgroundColor: bank?.color || '#6B7280' }}
     >
       {bank?.shortName || '은행'}
@@ -626,19 +651,14 @@ export default function PaymentAccountsPage() {
                     <motion.button
                       key={bank.code}
                       onClick={() => handleBankSelect(bank.code)}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                         newAccount.bankCode === bank.code
                           ? 'border-orange-500 bg-orange-50'
                           : 'border-gray-100 bg-white hover:bg-gray-50'
                       }`}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
-                        style={{ backgroundColor: bank.color || '#6B7280' }}
-                      >
-                        {bank.shortName}
-                      </div>
+                      <BankLogo bankCode={bank.code} size="lg" />
                       <span className="text-[12px] font-medium text-gray-700 text-center leading-tight">
                         {bank.name}
                       </span>

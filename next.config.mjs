@@ -60,6 +60,16 @@ const nextConfig = {
         hostname: 'k.kakaocdn.net',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'commons.wikimedia.org',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
