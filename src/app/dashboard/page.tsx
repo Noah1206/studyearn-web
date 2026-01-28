@@ -290,7 +290,7 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
     <>
       {/* Welcome Banner for New Creators */}
       {isNewCreator && (
-        <div className="mb-8 py-6 border-b border-gray-200">
+        <div className="mb-10">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
             크리에이터로 첫 걸음을 내딛으셨네요
           </h2>
@@ -304,8 +304,8 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
       )}
 
       {/* Summary Stats - Horizontal Row */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      <div className="mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           <StatCard
             label="정산 가능"
             value={formatCurrency(data.availableBalance)}
@@ -331,19 +331,15 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
       </div>
 
       {/* Chart Section */}
-      <div className="bg-white rounded-xl border border-gray-200 mb-6">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">조회수</h3>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{formatNumber(data.totalViews)}</p>
-            </div>
-            <span className="text-xs text-gray-400">최근 28일</span>
+      <div className="mb-10">
+        <div className="flex items-baseline justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">조회수</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{formatNumber(data.totalViews)}</p>
           </div>
+          <span className="text-xs text-gray-400">최근 28일</span>
         </div>
-        <div className="px-6 py-4">
-          <AnalyticsChart data={dailyData} />
-        </div>
+        <AnalyticsChart data={dailyData} />
       </div>
     </>
   );
@@ -389,26 +385,24 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
     .slice(0, 5);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
       {/* 인기 콘텐츠 */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold text-gray-900">인기 콘텐츠</h3>
-            <span className="text-xs text-gray-400">조회수 기준</span>
-          </div>
+      <div>
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="font-semibold text-gray-900">인기 콘텐츠</h3>
+          <span className="text-xs text-gray-400">조회수 기준</span>
         </div>
 
         {popularContents.length > 0 ? (
-          <div className="divide-y divide-gray-50">
+          <div className="space-y-1">
             {popularContents.map((content, index) => (
               <Link
                 key={content.id}
                 href={`/content/${content.id}`}
-                className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 py-3 hover:opacity-70 transition-opacity"
               >
                 <span className="text-sm font-medium text-gray-400 w-5">{index + 1}</span>
-                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-gray-100">
+                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
                   <ContentThumbnail
                     thumbnailUrl={content.thumbnailUrl}
                     subject={content.subject ?? undefined}
@@ -424,20 +418,14 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
             ))}
           </div>
         ) : (
-          <div className="p-6">
-            <p className="text-gray-400 text-sm text-center py-4">아직 발행한 콘텐츠가 없어요</p>
-          </div>
+          <p className="text-gray-400 text-sm py-8">아직 발행한 콘텐츠가 없어요</p>
         )}
       </div>
 
       {/* 최근 판매 */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">최근 판매</h3>
-        </div>
-        <div className="p-6">
-          <RecentActivityChart recentSales={payoutData.recentSales} />
-        </div>
+      <div>
+        <h3 className="font-semibold text-gray-900 mb-4">최근 판매</h3>
+        <RecentActivityChart recentSales={payoutData.recentSales} />
       </div>
     </div>
   );
@@ -474,8 +462,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 섹션 1: Analytics Overview (메트릭 탭 + 차트) */}
         <Suspense fallback={<LoadingSection fullHeight />}>
           <AnalyticsOverview creatorId={user.id} />
