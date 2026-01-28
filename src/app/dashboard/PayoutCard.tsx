@@ -28,7 +28,7 @@ export function PayoutCard({ availableBalance, recentSales, pendingAmount, class
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <Card className={cn("border-gray-100 shadow-none flex flex-col", className)}>
+    <Card className={cn("border-0 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col", className)}>
       {/* Clickable Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -36,9 +36,11 @@ export function PayoutCard({ availableBalance, recentSales, pendingAmount, class
       >
         <CardHeader className="p-6 pb-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-gray-500" />
-              <CardTitle className="text-base font-semibold">정산 가능 금액</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-green-500" />
+              </div>
+              <CardTitle className="text-base font-semibold text-gray-900">정산 가능 금액</CardTitle>
             </div>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -48,8 +50,8 @@ export function PayoutCard({ availableBalance, recentSales, pendingAmount, class
             </motion.div>
           </div>
         </CardHeader>
-        <CardContent className="px-6 pt-0 pb-6">
-          <p className="text-gray-900 text-2xl font-bold">
+        <CardContent className="px-6 pt-4 pb-6">
+          <p className="text-gray-900 text-3xl font-bold">
             {formatCurrency(availableBalance)}
           </p>
           {recentSales.length > 0 && !isExpanded && (
