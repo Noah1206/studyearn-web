@@ -32,13 +32,10 @@ export function AnalyticsChart({ data }: AnalyticsChartProps) {
   const yDomain = [0, Math.ceil(maxViews * 1.2)];
 
   return (
-    <div className="h-[280px] w-full relative">
+    <div className="h-[200px] w-full relative">
       {!hasData && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/90">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">아직 조회 데이터가 없어요</p>
-            <p className="text-gray-400 text-xs mt-1">콘텐츠가 조회되면 그래프가 표시됩니다</p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <p className="text-gray-400 text-sm">아직 조회 데이터가 없어요</p>
         </div>
       )}
       <ResponsiveContainer width="100%" height="100%">

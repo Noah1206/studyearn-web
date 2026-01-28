@@ -1,14 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Eye,
-  DollarSign,
-  Users,
-  Sparkles,
-  Play,
-  FileText,
-} from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import { Button, LoadingSection } from '@/components/ui';
@@ -251,35 +244,27 @@ async function getContentStatsData(creatorId: string) {
   return { contentStats };
 }
 
-// Metric Tab Component (YouTube Studio style)
+// Metric Tab Component (Clean minimal style)
 function MetricTab({
-  icon: Icon,
   label,
   value,
   isActive = false,
-  onClick,
 }: {
-  icon: React.ElementType;
   label: string;
   value: string;
   isActive?: boolean;
-  onClick?: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+    <div
+      className={`px-4 py-3 border-b-2 transition-colors ${
         isActive
-          ? 'bg-blue-50 border-b-2 border-blue-500'
-          : 'hover:bg-gray-50'
+          ? 'border-blue-500'
+          : 'border-transparent hover:border-gray-200'
       }`}
     >
-      <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-      <div className="text-left">
-        <p className={`text-xs ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>{label}</p>
-        <p className={`text-lg font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>{value}</p>
-      </div>
-    </button>
+      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+      <p className={`text-base font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>{value}</p>
+    </div>
   );
 }
 
@@ -315,39 +300,22 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
         </div>
       )}
 
-      {/* Metrics Tab Bar */}
+      {/* Metrics Tab Bar + Chart */}
       <div className="bg-white rounded-lg border border-gray-200 mb-6">
-        <div className="flex items-center gap-2 p-2 border-b border-gray-100 overflow-x-auto">
-          <MetricTab
-            icon={Eye}
-            label="조회수"
-            value={formatNumber(data.totalViews)}
-            isActive={true}
-          />
-          <MetricTab
-            icon={DollarSign}
-            label="수익"
-            value={formatCurrency(data.totalRevenue)}
-          />
-          <MetricTab
-            icon={Users}
-            label="구독자"
-            value="0"
-          />
-          <MetricTab
-            icon={Play}
-            label="콘텐츠"
-            value={formatNumber(data.contentCount)}
-          />
+        {/* Tabs */}
+        <div className="flex items-center border-b border-gray-100 overflow-x-auto">
+          <MetricTab label="조회수" value={formatNumber(data.totalViews)} isActive={true} />
+          <MetricTab label="수익" value={formatCurrency(data.totalRevenue)} />
+          <MetricTab label="콘텐츠" value={formatNumber(data.contentCount)} />
         </div>
 
-        {/* Main Chart Area */}
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">최근 28일</p>
-            <p className="text-sm text-gray-400">
+        {/* Chart Area */}
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-gray-400">최근 28일</span>
+            <span className="text-xs text-gray-400">
               {new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toLocaleDateString('ko-KR')} ~ {new Date().toLocaleDateString('ko-KR')}
-            </p>
+            </span>
           </div>
           <AnalyticsChart data={dailyData} />
         </div>
@@ -443,25 +411,15 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-              <FileText className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="text-gray-500 text-sm">아직 발행한 콘텐츠가 없어요</p>
-            <Link href="/dashboard/upload" className="mt-3">
-              <Button size="sm" variant="outline">콘텐츠 업로드</Button>
-            </Link>
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-400 text-sm">아직 발행한 콘텐츠가 없어요</p>
           </div>
         )}
       </div>
 
-      {/* 최근 활동 */}
+      {/* 최근 판매 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">최근 활동</h3>
-          <span className="text-xs text-gray-500">조회수 · 지난 48시간</span>
-        </div>
-
+        <h3 className="font-semibold text-gray-900 mb-4">최근 판매</h3>
         <RecentActivityChart recentSales={payoutData.recentSales} />
       </div>
     </div>
