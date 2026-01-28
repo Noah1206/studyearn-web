@@ -4,19 +4,15 @@ import Link from 'next/link';
 import {
   TrendingUp,
   TrendingDown,
-  Users,
   FileText,
-  CreditCard,
   Eye,
   Heart,
-  Plus,
   Sparkles,
   BookOpen,
   Video,
   Mic,
   Image as ImageIcon,
   CheckCircle2,
-  BarChart3,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
@@ -277,7 +273,7 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <div className={`bg-white rounded-2xl p-6 border border-gray-100 ${href ? 'hover:border-orange-200 hover:shadow-sm transition-all cursor-pointer' : ''}`}>
+    <div className={`bg-white rounded-2xl p-6 shadow-sm ${href ? 'hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer' : 'transition-shadow duration-200 hover:shadow-md'}`}>
       <p className="text-gray-500 text-sm font-medium">{title}</p>
       <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
       {trend && trendValue && (
@@ -296,40 +292,6 @@ function StatCard({
     return <Link href={href}>{content}</Link>;
   }
   return content;
-}
-
-// Quick Action Button
-function QuickAction({
-  icon: Icon,
-  label,
-  href,
-  disabled,
-}: {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-  disabled?: boolean;
-}) {
-  const content = (
-    <div className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border transition-all ${
-      disabled
-        ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50'
-        : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer'
-    }`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-        disabled ? 'bg-gray-100' : 'bg-gray-100'
-      }`}>
-        <Icon className={`w-6 h-6 ${disabled ? 'text-gray-300' : 'text-gray-600'}`} />
-      </div>
-      <span className={`text-sm font-medium ${disabled ? 'text-gray-400' : 'text-gray-700'}`}>
-        {label}
-      </span>
-    </div>
-  );
-
-  if (disabled) return content;
-
-  return <Link href={href}>{content}</Link>;
 }
 
 // Empty State Component
@@ -392,9 +354,9 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
     <>
       {/* Welcome Banner for New Creators */}
       {isNewCreator && (
-        <div className="mb-6 bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="mb-6 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl shadow-sm p-6 animate-fade-in">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-white/80 rounded-xl flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-5 h-5 text-orange-500" />
             </div>
             <div className="flex-1">
@@ -415,51 +377,33 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-        <StatCard
-          title="총 수익"
-          value={formatCurrency(data.totalRevenue)}
-          subValue="누적 수익"
-        />
-        <StatCard
-          title="이번 달 수익"
-          value={formatCurrency(data.currentMonthRevenue)}
-          trend={isPositiveChange ? 'up' : 'down'}
-          trendValue={`${isPositiveChange ? '+' : ''}${revenueChange}%`}
-        />
-        <StatCard
-          title="발행 콘텐츠"
-          value={formatNumber(data.contentCount)}
-          subValue={`총 ${formatNumber(data.totalViews)} 조회`}
-          href="/dashboard/contents"
-        />
-      </div>
-
-      {/* Quick Actions (정산 신청 버튼 활성화는 별도 섹션에서) */}
-      <div className="mb-8">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">빠른 작업</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <QuickAction icon={Plus} label="콘텐츠 업로드" href="/dashboard/upload" />
-          <QuickAction icon={BarChart3} label="상세 분석" href="/dashboard/analytics" />
-          <Suspense fallback={<QuickAction icon={CreditCard} label="정산 신청" href="/dashboard/payout" disabled />}>
-            <PayoutButtonSection creatorId={creatorId} />
-          </Suspense>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="animate-slide-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+          <StatCard
+            title="총 수익"
+            value={formatCurrency(data.totalRevenue)}
+            subValue="누적 수익"
+          />
+        </div>
+        <div className="animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+          <StatCard
+            title="이번 달 수익"
+            value={formatCurrency(data.currentMonthRevenue)}
+            trend={isPositiveChange ? 'up' : 'down'}
+            trendValue={`${isPositiveChange ? '+' : ''}${revenueChange}%`}
+          />
+        </div>
+        <div className="animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <StatCard
+            title="발행 콘텐츠"
+            value={formatNumber(data.contentCount)}
+            subValue={`총 ${formatNumber(data.totalViews)} 조회`}
+            href="/dashboard/contents"
+          />
         </div>
       </div>
-    </>
-  );
-}
 
-// 정산 버튼 활성화 상태 (별도 스트리밍)
-async function PayoutButtonSection({ creatorId }: { creatorId: string }) {
-  const data = await getPayoutData(creatorId);
-  return (
-    <QuickAction
-      icon={CreditCard}
-      label="정산 신청"
-      href="/dashboard/payout"
-      disabled={data.availableBalance < 10000}
-    />
+    </>
   );
 }
 
@@ -471,11 +415,11 @@ async function RevenuePayoutSection({ creatorId }: { creatorId: string }) {
   ]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-fade-in">
       {/* Revenue Chart - Left */}
-      <Card className="lg:col-span-2 border-gray-100 shadow-none flex flex-col">
+      <Card className="lg:col-span-2 border-0 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">
         <CardHeader className="p-6 pb-4">
-          <CardTitle className="text-base font-semibold">월별 수익 추이</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">월별 수익 추이</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 flex-1">
           <RevenueChart data={statsData.revenueStats} />
@@ -500,10 +444,10 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
   const { contentStats } = await getContentStatsData(creatorId);
 
   return (
-    <div className="grid grid-cols-1 gap-6 mb-6">
-      <Card className="border-gray-100 shadow-none flex flex-col">
+    <div className="grid grid-cols-1 gap-6 mb-6 animate-fade-in">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">
         <CardHeader className="p-6 pb-4">
-          <CardTitle className="text-base font-semibold">콘텐츠 성과</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">콘텐츠 성과</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 flex-1">
           {contentStats.length > 0 ? (
@@ -513,7 +457,7 @@ async function ContentPerformanceSection({ creatorId }: { creatorId: string }) {
                   <Link
                     key={content.id}
                     href={`/content/${content.id}`}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-4 p-4 bg-gray-50/50 rounded-xl hover:bg-gray-100 hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       <ContentThumbnail
@@ -581,15 +525,15 @@ async function RecentPayoutsSection({ creatorId }: { creatorId: string }) {
   if (completedPayouts.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-3 border-gray-100 shadow-none">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+      <Card className="lg:col-span-3 border-0 shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardHeader className="p-6 pb-4">
-          <CardTitle className="text-base font-semibold">최근 정산</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">최근 정산</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {completedPayouts.slice(0, 3).map((payout: PayoutInfo) => (
-              <div key={payout.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+              <div key={payout.id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                     <CheckCircle2 className="w-5 h-5 text-green-500" />

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
@@ -178,7 +178,17 @@ export function Header() {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <div className="relative" ref={profileDropdownRef}>
+              <>
+                {/* Upload Button - Only on Dashboard */}
+                {pathname.startsWith('/dashboard') && isCreatorMode && (
+                  <Link
+                    href="/dashboard/upload"
+                    className="w-9 h-9 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center transition-colors"
+                  >
+                    <Plus className="w-5 h-5 text-white" />
+                  </Link>
+                )}
+                <div className="relative" ref={profileDropdownRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
@@ -264,6 +274,7 @@ export function Header() {
                   </div>
                 )}
               </div>
+              </>
             ) : (
               <>
                 <Link href="/login">
@@ -335,13 +346,25 @@ export function Header() {
                     내 프로필
                   </Link>
                   {isCreatorMode && (
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      크리에이터 대시보드
-                    </Link>
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        크리에이터 대시보드
+                      </Link>
+                      {pathname.startsWith('/dashboard') && (
+                        <Link
+                          href="/dashboard/upload"
+                          className="flex items-center gap-2 px-4 py-3 text-orange-600 hover:bg-orange-50 rounded-lg font-medium"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Plus className="w-4 h-4" />
+                          콘텐츠 업로드
+                        </Link>
+                      )}
+                    </>
                   )}
                   <Link
                     href="/my/purchases"
