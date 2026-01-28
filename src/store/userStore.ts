@@ -174,11 +174,14 @@ export const useUserStore = create<UserState>()(
       /**
        * Sync creator status from database
        * Called on app load to ensure localStorage matches database state
-       * If user has creator settings, also switch userType to 'creator'
+       * Only sets userType to 'creator' if userType is null (first load)
+       * Respects user's explicit mode choice (runner/creator)
        */
       syncCreatorStatus: (hasCreatorSettings, creatorProfile) =>
         set((state) => ({
-          userType: hasCreatorSettings ? 'creator' : state.userType,
+          // userType이 null일 때만 creator로 설정 (첫 로드 시)
+          // 이미 값이 있으면 사용자의 선택을 존중하여 유지
+          userType: state.userType === null && hasCreatorSettings ? 'creator' : state.userType,
           isCreatorOnboarded: hasCreatorSettings,
           hasBeenCreator: hasCreatorSettings,
           creatorProfile: creatorProfile || null,
