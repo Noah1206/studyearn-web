@@ -70,6 +70,11 @@ const nextConfig = {
         hostname: 'upload.wikimedia.org',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.logodad.com',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
