@@ -116,7 +116,6 @@ export default function PaymentAccountsPage() {
   const [newAccount, setNewAccount] = useState({
     bankCode: '' as BankCode | '',
     accountNumber: '',
-    accountHolder: '',
     isPrimary: false,
   });
 
@@ -142,7 +141,7 @@ export default function PaymentAccountsPage() {
   }, []);
 
   const handleAddAccount = async () => {
-    if (!newAccount.bankCode || !newAccount.accountNumber || !newAccount.accountHolder) {
+    if (!newAccount.bankCode || !newAccount.accountNumber) {
       alert('필수 정보를 모두 입력해주세요.');
       return;
     }
@@ -157,7 +156,6 @@ export default function PaymentAccountsPage() {
           bankCode: newAccount.bankCode,
           bankName: bankInfo?.name || newAccount.bankCode,
           accountNumber: newAccount.accountNumber,
-          accountHolder: newAccount.accountHolder,
           isPrimary: newAccount.isPrimary,
         }),
       });
@@ -169,7 +167,6 @@ export default function PaymentAccountsPage() {
         setNewAccount({
           bankCode: '' as BankCode | '',
           accountNumber: '',
-          accountHolder: '',
           isPrimary: false,
         });
         // 성공 애니메이션
@@ -528,24 +525,6 @@ export default function PaymentAccountsPage() {
                   />
                 </motion.div>
 
-                {/* 예금주명 - 인풋 내 라벨 스타일 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35 }}
-                  className="relative rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
-                >
-                  <label className="absolute left-4 top-2 text-[11px] font-medium text-gray-400">
-                    예금주
-                  </label>
-                  <input
-                    type="text"
-                    value={newAccount.accountHolder}
-                    onChange={(e) => setNewAccount(prev => ({ ...prev, accountHolder: e.target.value }))}
-                    placeholder="예금주 이름 입력"
-                    className="w-full px-4 pt-7 pb-3 bg-transparent text-[15px] font-medium placeholder:text-gray-300 focus:outline-none"
-                  />
-                </motion.div>
 
                 {/* 안내 문구 */}
                 <motion.p
@@ -566,11 +545,11 @@ export default function PaymentAccountsPage() {
                 transition={{ delay: 0.5 }}
               >
                 {(() => {
-                  const isActive = !isAddingAccount && newAccount.bankCode && newAccount.accountNumber && newAccount.accountHolder;
+                  const isActive = !isAddingAccount && newAccount.bankCode && newAccount.accountNumber;
                   return (
                     <motion.button
                       onClick={handleAddAccount}
-                      disabled={isAddingAccount || !newAccount.bankCode || !newAccount.accountNumber || !newAccount.accountHolder}
+                      disabled={isAddingAccount || !newAccount.bankCode || !newAccount.accountNumber}
                       className={`w-full py-4 rounded-xl text-[16px] font-bold transition-all relative overflow-hidden ${
                         isActive
                           ? 'bg-orange-500 text-white'
