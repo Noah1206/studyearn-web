@@ -114,6 +114,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // 예금주가 없으면 사용자 프로필에서 이름 가져오기
+    let holderName = accountHolder;
+    if (!holderName) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+      holderName = profile?.display_name || user.email?.split('@')[0] || '사용자';
+    }
+
     // 계좌번호 숫자만 추출
     const cleanAccountNumber = accountNumber.replace(/[^0-9]/g, '');
 
@@ -148,7 +159,7 @@ export async function POST(request: Request) {
         bank_code: bankCode,
         bank_name: bankName,
         account_number: cleanAccountNumber,
-        account_holder: accountHolder || null,
+        account_holder: holderName,
         supports_deeplink: supportsDeeplink,
         is_primary: isPrimary,
         nickname,
