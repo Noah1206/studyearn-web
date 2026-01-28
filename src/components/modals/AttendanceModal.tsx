@@ -299,12 +299,12 @@ export function AttendanceModal({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="space-y-4 text-center"
+                  className="flex items-center justify-center gap-4"
                 >
                   <button
                     onClick={handleStamp}
                     disabled={stage === 'stamping'}
-                    className="text-orange-500 font-semibold hover:text-orange-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                    className="text-orange-500 font-semibold hover:text-orange-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {stage === 'stamping' ? (
                       <>
@@ -319,9 +319,10 @@ export function AttendanceModal({
                       <span>{isLoggedIn ? '오늘 출석하기' : '로그인하고 출석하기'}</span>
                     )}
                   </button>
+                  <span className="text-gray-300">|</span>
                   <button
                     onClick={handleDismissToday}
-                    className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors py-2"
+                    className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     오늘 하루 보지 않기
                   </button>
