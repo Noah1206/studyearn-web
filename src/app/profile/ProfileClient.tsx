@@ -466,9 +466,11 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
         setPurchasedContents(mappedPurchases);
       }
 
-      // Fetch payment accounts
+      // Fetch payment accounts (캐시 방지)
       try {
-        const paymentResponse = await fetch('/api/me/payment-accounts');
+        const paymentResponse = await fetch('/api/me/payment-accounts', {
+          cache: 'no-store',
+        });
         if (paymentResponse.ok) {
           const paymentData = await paymentResponse.json();
           if (paymentData.success && paymentData.accounts) {
@@ -498,6 +500,36 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
     fetchUserAndProfile();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, router, setStoreProfile, setUserType, syncCreatorStatus, userType, prefetchedData]);
+
+  // 페이지로 돌아왔을 때 결제 계좌 다시 불러오기
+  useEffect(() => {
+    const refetchPaymentAccounts = async () => {
+      try {
+        const response = await fetch('/api/me/payment-accounts', {
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.accounts) {
+            setPaymentAccounts(data.accounts);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to refetch payment accounts:', err);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetchPaymentAccounts();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
