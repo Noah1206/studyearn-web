@@ -461,35 +461,37 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 pb-52 space-y-3">
+      <main className="max-w-lg mx-auto px-4 py-4 pb-44 space-y-3">
         {/* 상품 정보 카드 */}
         <section className="bg-white rounded-2xl p-4">
-          <p className="text-sm font-bold text-gray-900 mb-3">주문 상품</p>
           <div className="flex gap-3">
             {/* 썸네일 */}
-            <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+            <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
               {product.thumbnail_url ? (
                 <Image
                   src={product.thumbnail_url}
                   alt={product.title}
-                  width={80}
-                  height={80}
+                  width={64}
+                  height={64}
                   className="w-full h-full object-cover"
                   unoptimized
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-2xl bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="w-full h-full flex items-center justify-center text-xl bg-gradient-to-br from-gray-50 to-gray-100">
                   📄
                 </div>
               )}
             </div>
             {/* 상품 정보 */}
-            <div className="flex-1 min-w-0 pt-0.5">
-              <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <p className="text-sm font-medium text-gray-900 line-clamp-1">
                 {product.title}
               </p>
-              <p className="text-xs text-gray-500 mt-1.5">
-                {product.creator.name} · 디지털 콘텐츠
+              <p className="text-xs text-gray-500 mt-0.5">
+                {product.creator.name}
+              </p>
+              <p className="text-base font-bold text-gray-900 mt-1">
+                {formatCurrency(product.price)}
               </p>
             </div>
           </div>
@@ -547,85 +549,34 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           </section>
         )}
 
-        {/* 최종 결제 금액 카드 */}
-        <section className="bg-white rounded-2xl p-4">
-          <p className="text-base font-bold text-gray-900 mb-4">최종 결제 금액</p>
-
-          {/* 금액 상세 */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">총 상품 가격</span>
-              <span className="text-sm text-gray-700">{formatCurrency(product.price)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">할인</span>
-              <span className="text-sm text-gray-700">0원</span>
-            </div>
-          </div>
-
-          {/* 구분선 */}
-          <div className="border-t border-dashed border-gray-200 my-4" />
-
-          {/* 총 결제 금액 */}
-          <div className="flex justify-between items-center">
-            <span className="text-base font-bold text-gray-900">총 결제 금액</span>
-            <span className="text-2xl font-bold text-orange-500">{formatCurrency(product.price)}</span>
-          </div>
-        </section>
-
         {/* 동의 항목 */}
-        <section className="bg-white rounded-2xl p-4">
-          <p className="text-sm font-bold text-gray-900 mb-3">약관 동의</p>
-
+        <section className="bg-white rounded-2xl p-4 space-y-2">
           {/* 개인정보 동의 */}
-          <label className="flex items-center justify-between py-3 cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
-                agreedToPrivacy
-                  ? 'bg-orange-500 border-orange-500'
-                  : 'border-gray-300'
-              }`}>
-                {agreedToPrivacy && (
-                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                )}
-              </div>
-              <span className="text-sm text-gray-700">개인정보 제3자 제공 동의</span>
+          <label className="flex items-center gap-3 py-2 cursor-pointer">
+            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center flex-shrink-0 ${
+              agreedToPrivacy ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+            }`}>
+              {agreedToPrivacy && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
-            <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>보기</Link>
-            <input
-              type="checkbox"
-              checked={agreedToPrivacy}
-              onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-              className="sr-only"
-            />
+            <span className="flex-1 text-sm text-gray-700">개인정보 제3자 제공 동의</span>
+            <Link href="/privacy" className="text-xs text-gray-400" onClick={(e) => e.stopPropagation()}>보기</Link>
+            <input type="checkbox" checked={agreedToPrivacy} onChange={(e) => setAgreedToPrivacy(e.target.checked)} className="sr-only" />
           </label>
 
           {/* 환불 정책 동의 */}
-          <label className="flex items-center justify-between py-3 cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
-                agreedToRefund
-                  ? 'bg-orange-500 border-orange-500'
-                  : 'border-gray-300'
-              }`}>
-                {agreedToRefund && (
-                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                )}
-              </div>
-              <span className="text-sm text-gray-700">환불 정책 동의</span>
+          <label className="flex items-center gap-3 py-2 cursor-pointer">
+            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center flex-shrink-0 ${
+              agreedToRefund ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+            }`}>
+              {agreedToRefund && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
-            <Link href="/refund" className="text-sm text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>보기</Link>
-            <input
-              type="checkbox"
-              checked={agreedToRefund}
-              onChange={(e) => setAgreedToRefund(e.target.checked)}
-              className="sr-only"
-            />
+            <span className="flex-1 text-sm text-gray-700">환불 정책 동의</span>
+            <Link href="/refund" className="text-xs text-gray-400" onClick={(e) => e.stopPropagation()}>보기</Link>
+            <input type="checkbox" checked={agreedToRefund} onChange={(e) => setAgreedToRefund(e.target.checked)} className="sr-only" />
           </label>
 
-          {/* 안내 문구 */}
-          <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-            디지털 콘텐츠 특성상 다운로드/열람 후에는 청약철회가 제한됩니다.
+          <p className="text-xs text-gray-400 pt-1">
+            디지털 콘텐츠는 열람 후 환불이 제한됩니다.
           </p>
         </section>
 
@@ -646,25 +597,19 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       </main>
 
       {/* 하단 고정 결제 바 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-area-bottom">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <p className="text-xs text-gray-500">총 결제 금액</p>
-              <p className="text-xl font-bold text-gray-900">{formatCurrency(product.price)}</p>
-            </div>
-            <button
-              onClick={handlePayment}
-              disabled={!allAgreed || isProcessing || (paymentMethod === 'transfer' && !buyerNote.trim())}
-              className={`flex-1 py-4 rounded-xl font-bold text-base transition-all ${
-                allAgreed && !isProcessing && (paymentMethod !== 'transfer' || buyerNote.trim())
-                  ? 'bg-gray-900 text-white active:bg-gray-800'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isProcessing ? '처리 중...' : !allAgreed ? '약관에 동의해주세요' : '결제하기'}
-            </button>
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-area-bottom">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <button
+            onClick={handlePayment}
+            disabled={!allAgreed || isProcessing || (paymentMethod === 'transfer' && !buyerNote.trim())}
+            className={`w-full py-4 rounded-xl font-bold text-base transition-all ${
+              allAgreed && !isProcessing && (paymentMethod !== 'transfer' || buyerNote.trim())
+                ? 'bg-gray-900 text-white active:bg-gray-800'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isProcessing ? '처리 중...' : !allAgreed ? '약관에 동의해주세요' : `${formatCurrency(product.price)} 결제하기`}
+          </button>
         </div>
       </div>
 

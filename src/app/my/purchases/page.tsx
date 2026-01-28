@@ -11,10 +11,7 @@ import {
   ShoppingBag,
   FileText,
   Calendar,
-  CreditCard,
   ChevronRight,
-  CheckCircle2,
-  Loader2,
   Info,
   X,
 } from 'lucide-react';
@@ -258,25 +255,16 @@ export default function PurchasesPage() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white border-b border-gray-100 sticky top-0 z-20"
       >
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/profile" className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-5 h-5 text-orange-500" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">구매 내역</h1>
-                <p className="text-sm text-gray-500">{stats.total}개의 구매</p>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center">
+          <Link href="/profile" className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="flex-1 text-center font-bold text-lg text-gray-900">구매 내역</h1>
+          <div className="w-9" />
         </div>
       </motion.header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-4">
         {/* 결제 처리 중 알림 */}
         <AnimatePresence>
           {showPaymentNotice && (
@@ -284,85 +272,36 @@ export default function PurchasesPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4"
+              className="mb-4 bg-orange-50 rounded-xl px-4 py-3 flex items-center gap-3"
             >
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-orange-800">
-                    결제가 완료되었습니다
-                  </p>
-                  <p className="text-sm text-orange-600 mt-1">
-                    결제 확인 처리 중입니다. 잠시 후 구매 내역에 반영됩니다.
-                    반영되지 않을 경우 고객센터로 문의해주세요.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowPaymentNotice(false)}
-                  className="p-1 hover:bg-orange-100 rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4 text-orange-500" />
-                </button>
-              </div>
+              <Info className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <p className="flex-1 text-sm text-orange-700">
+                결제 완료! 확인 처리 중입니다.
+              </p>
+              <button
+                onClick={() => setShowPaymentNotice(false)}
+                className="p-1 hover:bg-orange-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 text-orange-400" />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 gap-4 mb-6"
-        >
-          <Card className="border-gray-100">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">구매 완료</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.total}개</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-gray-100">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">총 구매 금액</p>
-                  <p className="text-xl font-bold text-gray-900">{formatCurrency(stats.totalSpent)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="w-full bg-gray-100 p-1 rounded-xl">
-              <TabsTrigger value="all" className="flex-1 rounded-lg">
-                전체 ({purchases.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="flex-1 rounded-lg">
-                구매완료 ({stats.total})
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="flex-1 rounded-lg">
-                대기중 ({stats.pending})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </motion.div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+          <TabsList className="w-full bg-gray-100 p-1 rounded-xl">
+            <TabsTrigger value="all" className="flex-1 rounded-lg text-sm">
+              전체 {purchases.length > 0 && `(${purchases.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 rounded-lg text-sm">
+              완료 {stats.total > 0 && `(${stats.total})`}
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 rounded-lg text-sm">
+              대기 {stats.pending > 0 && `(${stats.pending})`}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {/* Purchases List */}
         {isLoading ? (
