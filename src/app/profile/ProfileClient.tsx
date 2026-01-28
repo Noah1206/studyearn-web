@@ -468,8 +468,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
 
       // Fetch payment accounts (캐시 방지)
       try {
-        const paymentResponse = await fetch('/api/me/payment-accounts', {
-          cache: 'no-store',
+        const paymentResponse = await fetch(`/api/me/payment-accounts?t=${Date.now()}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
         });
         if (paymentResponse.ok) {
           const paymentData = await paymentResponse.json();
@@ -505,8 +509,12 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   useEffect(() => {
     const refetchPaymentAccounts = async () => {
       try {
-        const response = await fetch('/api/me/payment-accounts', {
-          cache: 'no-store',
+        const response = await fetch(`/api/me/payment-accounts?t=${Date.now()}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
         });
         if (response.ok) {
           const data = await response.json();

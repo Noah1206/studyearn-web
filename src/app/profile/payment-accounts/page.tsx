@@ -340,12 +340,6 @@ export default function PaymentAccountsPage() {
                         </p>
                       </div>
 
-                      {/* 빠른송금 지원 */}
-                      {account.supportsDeeplink && (
-                        <span className="text-[11px] text-gray-400">
-                          빠른송금
-                        </span>
-                      )}
                     </div>
 
                     {/* 액션 버튼들 */}
