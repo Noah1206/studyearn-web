@@ -13,9 +13,6 @@ import {
   Mic,
   Image as ImageIcon,
   CheckCircle2,
-  Wallet,
-  Calendar,
-  FolderOpen,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
@@ -259,7 +256,7 @@ async function getContentStatsData(creatorId: string) {
   return { contentStats };
 }
 
-// Stat Card Component with Icon and Color Accent
+// Stat Card Component with Top Color Bar
 function StatCard({
   title,
   value,
@@ -267,7 +264,6 @@ function StatCard({
   trend,
   trendValue,
   href,
-  icon: Icon,
   accentColor = 'orange',
 }: {
   title: string;
@@ -276,37 +272,30 @@ function StatCard({
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
   href?: string;
-  icon?: React.ElementType;
   accentColor?: 'orange' | 'blue' | 'green' | 'purple';
 }) {
-  const colorStyles = {
-    orange: 'bg-orange-50 text-orange-500',
-    blue: 'bg-blue-50 text-blue-500',
-    green: 'bg-green-50 text-green-500',
-    purple: 'bg-purple-50 text-purple-500',
+  const barColors = {
+    orange: 'bg-orange-400',
+    blue: 'bg-blue-400',
+    green: 'bg-green-400',
+    purple: 'bg-purple-400',
   };
 
   const content = (
-    <div className={`bg-white rounded-2xl p-6 shadow-sm ${href ? 'hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer' : 'transition-shadow duration-200 hover:shadow-md'}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-          {trend && trendValue && (
-            <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${
-              trend === 'up' ? 'text-orange-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400'
-            }`}>
-              {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingDown className="w-4 h-4" /> : null}
-              {trendValue}
-            </div>
-          )}
-          {subValue && <p className="text-gray-400 text-sm mt-2">{subValue}</p>}
-        </div>
-        {Icon && (
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorStyles[accentColor]}`}>
-            <Icon className="w-5 h-5" />
+    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden ${href ? 'hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer' : 'transition-shadow duration-200 hover:shadow-md'}`}>
+      <div className={`h-1 ${barColors[accentColor]}`} />
+      <div className="p-6">
+        <p className="text-gray-500 text-sm font-medium">{title}</p>
+        <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+        {trend && trendValue && (
+          <div className={`flex items-center gap-1 mt-3 text-sm font-medium ${
+            trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400'
+          }`}>
+            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingDown className="w-4 h-4" /> : null}
+            {trendValue}
           </div>
         )}
+        {subValue && <p className="text-gray-400 text-sm mt-3">{subValue}</p>}
       </div>
     </div>
   );
@@ -406,7 +395,6 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
             title="총 수익"
             value={formatCurrency(data.totalRevenue)}
             subValue="누적 수익"
-            icon={Wallet}
             accentColor="orange"
           />
         </div>
@@ -416,7 +404,6 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
             value={formatCurrency(data.currentMonthRevenue)}
             trend={isPositiveChange ? 'up' : 'down'}
             trendValue={`${isPositiveChange ? '+' : ''}${revenueChange}%`}
-            icon={Calendar}
             accentColor="blue"
           />
         </div>
@@ -426,7 +413,6 @@ async function StatsSection({ creatorId }: { creatorId: string }) {
             value={formatNumber(data.contentCount)}
             subValue={`총 ${formatNumber(data.totalViews)} 조회`}
             href="/dashboard/contents"
-            icon={FolderOpen}
             accentColor="purple"
           />
         </div>
