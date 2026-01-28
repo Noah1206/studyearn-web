@@ -271,7 +271,7 @@ export function AttendanceModal({
             </AnimatePresence>
 
             {/* Actions */}
-            <div className="px-6 pb-8">
+            <div className="px-6 pt-8 pb-8">
               {stage === 'success' ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
