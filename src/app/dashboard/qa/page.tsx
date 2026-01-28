@@ -140,9 +140,9 @@ function QuestionCard({ question, showActions }: { question: QuestionWithDetails
       <div className="p-4">
         <div className="flex gap-4">
           {/* User Avatar */}
-          <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl overflow-hidden flex items-center justify-center">
+          <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
             {question.is_anonymous ? (
-              <span className="text-xl">?</span>
+              <span className="text-xl text-gray-400">?</span>
             ) : question.asker?.avatar_url ? (
               <img
                 src={question.asker.avatar_url}
@@ -150,7 +150,7 @@ function QuestionCard({ question, showActions }: { question: QuestionWithDetails
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-6 h-6 text-orange-400" />
+              <User className="w-6 h-6 text-gray-400" />
             )}
           </div>
 

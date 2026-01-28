@@ -393,7 +393,7 @@ export default function ProductDetailPage() {
       variants={pageVariants}
     >
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link
             href="/content"
@@ -446,17 +446,17 @@ export default function ProductDetailPage() {
 
             {/* Creator Info */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {product.creator?.avatar_url ? (
                   <Image
                     src={product.creator.avatar_url}
                     alt={product.creator?.name || ''}
                     width={40}
                     height={40}
-                    className="object-cover"
+                    className="object-cover w-full h-full"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-orange-500" />
+                  <User className="w-5 h-5 text-gray-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -1269,24 +1269,18 @@ export default function ProductDetailPage() {
                   {/* Creator Header */}
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="relative">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 p-0.5">
-                        <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
-                          {product.creator?.avatar_url ? (
-                            <Image
-                              src={product.creator.avatar_url}
-                              alt={product.creator?.name || ''}
-                              width={44}
-                              height={44}
-                              className="object-cover rounded-[10px]"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
-                              <User className="w-5 h-5 text-orange-500" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {product.creator?.avatar_url ? (
+                        <Image
+                          src={product.creator.avatar_url}
+                          alt={product.creator?.name || ''}
+                          width={44}
+                          height={44}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-gray-400" />
+                      )}
                     </div>
 
                     {/* Info */}

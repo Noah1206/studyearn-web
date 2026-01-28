@@ -82,7 +82,7 @@ function QuestionCard({ question }: { question: Question }) {
             <div className="flex items-start justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
                 {/* Creator Avatar */}
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                   {question.creator?.avatar_url ? (
                     <img
                       src={question.creator.avatar_url}
@@ -90,7 +90,7 @@ function QuestionCard({ question }: { question: Question }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="w-5 h-5 text-orange-400" />
+                    <User className="w-5 h-5 text-gray-400" />
                   )}
                 </div>
                 <div>
