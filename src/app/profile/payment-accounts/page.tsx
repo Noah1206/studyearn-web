@@ -462,7 +462,7 @@ export default function PaymentAccountsPage() {
                   <motion.select
                     value={newAccount.bankCode}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, bankCode: e.target.value as BankCode }))}
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium focus:outline-none focus:border-orange-500 transition-all appearance-none cursor-pointer"
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23F97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '20px' }}
                     whileFocus={{ scale: 1.01 }}
                   >
@@ -495,7 +495,7 @@ export default function PaymentAccountsPage() {
                     value={newAccount.accountNumber}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountNumber: e.target.value.replace(/[^0-9]/g, '') }))}
                     placeholder="계좌번호 입력"
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
                     whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
@@ -514,53 +514,11 @@ export default function PaymentAccountsPage() {
                     value={newAccount.accountHolder}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountHolder: e.target.value }))}
                     placeholder="예금주명 입력"
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
                     whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
 
-                {/* 주계좌 설정 토글 */}
-                <motion.div
-                  onClick={() => setNewAccount(prev => ({ ...prev, isPrimary: !prev.isPrimary }))}
-                  className="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-2xl p-4 cursor-pointer active:bg-orange-100 transition-colors"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.45 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="flex items-center gap-3">
-                    <motion.div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors`}
-                      animate={{
-                        backgroundColor: newAccount.isPrimary ? '#F97316' : '#FED7AA',
-                        rotate: newAccount.isPrimary ? 360 : 0,
-                      }}
-                      transition={{ type: 'spring', stiffness: 300 }}
-                    >
-                      <CheckCircle2 className={`w-5 h-5 ${newAccount.isPrimary ? 'text-white' : 'text-orange-500'}`} />
-                    </motion.div>
-                    <div>
-                      <p className="text-[14px] font-semibold text-gray-900">주계좌로 설정</p>
-                      <p className="text-[12px] text-gray-500 mt-0.5">기본으로 사용할 계좌예요</p>
-                    </div>
-                  </div>
-                  <motion.div
-                    className="w-12 h-7 rounded-full relative"
-                    animate={{
-                      backgroundColor: newAccount.isPrimary ? '#F97316' : '#FED7AA',
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <motion.div
-                      className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm"
-                      animate={{
-                        x: newAccount.isPrimary ? 24 : 4,
-                      }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  </motion.div>
-                </motion.div>
               </motion.div>
 
               {/* 등록 버튼 */}
@@ -570,45 +528,39 @@ export default function PaymentAccountsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <motion.button
-                  onClick={handleAddAccount}
-                  disabled={isAddingAccount || !newAccount.bankCode || !newAccount.accountNumber || !newAccount.accountHolder}
-                  className="w-full py-4 bg-orange-500 text-white rounded-2xl text-[16px] font-bold disabled:bg-orange-200 disabled:text-orange-400 transition-colors relative overflow-hidden"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isAddingAccount ? (
-                    <motion.div
-                      className="flex items-center justify-center gap-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                {(() => {
+                  const isActive = !isAddingAccount && newAccount.bankCode && newAccount.accountNumber && newAccount.accountHolder;
+                  return (
+                    <motion.button
+                      onClick={handleAddAccount}
+                      disabled={isAddingAccount || !newAccount.bankCode || !newAccount.accountNumber || !newAccount.accountHolder}
+                      className={`w-full py-4 rounded-xl text-[16px] font-bold transition-all relative overflow-hidden ${
+                        isActive
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-transparent text-gray-900'
+                      }`}
+                      whileHover={isActive ? { scale: 1.02 } : {}}
+                      whileTap={isActive ? { scale: 0.98 } : {}}
                     >
-                      <motion.div
-                        className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      />
-                      <span>등록 중...</span>
-                    </motion.div>
-                  ) : (
-                    '등록하기'
-                  )}
-                  {/* 버튼 쉬머 효과 */}
-                  {!isAddingAccount && newAccount.bankCode && newAccount.accountNumber && newAccount.accountHolder && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      animate={{
-                        x: ['-100%', '100%'],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      style={{ width: '50%' }}
-                    />
-                  )}
-                </motion.button>
+                      {isAddingAccount ? (
+                        <motion.div
+                          className="flex items-center justify-center gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          <motion.div
+                            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          />
+                          <span>등록 중...</span>
+                        </motion.div>
+                      ) : (
+                        '등록하기'
+                      )}
+                    </motion.button>
+                  );
+                })()}
               </motion.div>
             </motion.div>
           </>
