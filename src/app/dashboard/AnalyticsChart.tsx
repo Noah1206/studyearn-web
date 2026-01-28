@@ -45,8 +45,8 @@ export function AnalyticsChart({ data }: AnalyticsChartProps) {
         >
           <defs>
             <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
+              <stop offset="5%" stopColor="#f97316" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
@@ -88,11 +88,11 @@ export function AnalyticsChart({ data }: AnalyticsChartProps) {
           <Area
             type="monotone"
             dataKey="views"
-            stroke="#3b82f6"
+            stroke="#f97316"
             strokeWidth={2}
             fill="url(#viewsGradient)"
             dot={false}
-            activeDot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
           />
         </AreaChart>
       </ResponsiveContainer>

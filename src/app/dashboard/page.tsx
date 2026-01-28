@@ -1,7 +1,7 @@
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, TrendingUp, Wallet, Eye, FileText, ArrowUpRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import { Button, LoadingSection } from '@/components/ui';
@@ -61,7 +61,7 @@ async function getStatsData(creatorId: string) {
   const [balanceResult, contentsCountResult, purchasesResult] = await Promise.all([
     supabase
       .from('creator_balances')
-      .select('total_earned')
+      .select('total_earned, available_balance')
       .eq('creator_id', creatorId)
       .maybeSingle(),
     supabase
@@ -81,6 +81,7 @@ async function getStatsData(creatorId: string) {
   const contents = contentsCountResult.data || [];
   const purchases = purchasesResult.data || [];
   const totalRevenue = balanceResult.data?.total_earned || 0;
+  const availableBalance = balanceResult.data?.available_balance || 0;
   const totalViews = contents.reduce((sum: number, c: { view_count: number }) => sum + c.view_count, 0);
 
   // Group purchases by month for revenue stats
@@ -107,6 +108,7 @@ async function getStatsData(creatorId: string) {
 
   return {
     totalRevenue,
+    availableBalance,
     currentMonthRevenue,
     lastMonthRevenue,
     contentCount: contents.length,
@@ -258,14 +260,52 @@ function MetricTab({
     <div
       className={`px-4 py-3 border-b-2 transition-colors ${
         isActive
-          ? 'border-blue-500'
+          ? 'border-orange-500'
           : 'border-transparent hover:border-gray-200'
       }`}
     >
       <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-      <p className={`text-base font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-base font-semibold ${isActive ? 'text-orange-600' : 'text-gray-900'}`}>{value}</p>
     </div>
   );
+}
+
+// Stat Card Component
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  href,
+  highlight = false,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  subValue?: string;
+  href?: string;
+  highlight?: boolean;
+}) {
+  const content = (
+    <div className={`bg-white rounded-xl border ${highlight ? 'border-orange-200' : 'border-gray-200'} p-5 ${href ? 'hover:border-orange-300 transition-colors' : ''}`}>
+      <div className="flex items-start justify-between">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${highlight ? 'bg-orange-50' : 'bg-gray-50'}`}>
+          <Icon className={`w-5 h-5 ${highlight ? 'text-orange-500' : 'text-gray-500'}`} />
+        </div>
+        {href && <ArrowUpRight className="w-4 h-4 text-gray-400" />}
+      </div>
+      <div className="mt-4">
+        <p className="text-sm text-gray-500 mb-1">{label}</p>
+        <p className={`text-2xl font-bold ${highlight ? 'text-orange-600' : 'text-gray-900'}`}>{value}</p>
+        {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
+      </div>
+    </div>
+  );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+  return content;
 }
 
 // 섹션 1: Analytics Overview (YouTube Studio style)
@@ -276,14 +316,19 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
   // 일별 데이터 생성 (최근 28일)
   const dailyData = generateDailyData(data);
 
+  // 이번 달 성장률 계산
+  const growthRate = data.lastMonthRevenue > 0
+    ? Math.round(((data.currentMonthRevenue - data.lastMonthRevenue) / data.lastMonthRevenue) * 100)
+    : 0;
+
   return (
     <>
       {/* Welcome Banner for New Creators */}
       {isNewCreator && (
-        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6">
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-blue-500" />
+            <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-orange-500" />
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -300,8 +345,37 @@ async function AnalyticsOverview({ creatorId }: { creatorId: string }) {
         </div>
       )}
 
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard
+          icon={Wallet}
+          label="정산 가능"
+          value={formatCurrency(data.availableBalance)}
+          subValue={data.availableBalance >= 10000 ? "정산 신청 가능" : "최소 10,000원"}
+          href="/dashboard/payout"
+          highlight={data.availableBalance >= 10000}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="이번 달 수익"
+          value={formatCurrency(data.currentMonthRevenue)}
+          subValue={growthRate !== 0 ? `지난달 대비 ${growthRate > 0 ? '+' : ''}${growthRate}%` : undefined}
+        />
+        <StatCard
+          icon={Eye}
+          label="총 조회수"
+          value={formatNumber(data.totalViews)}
+        />
+        <StatCard
+          icon={FileText}
+          label="발행 콘텐츠"
+          value={`${data.contentCount}개`}
+          href="/dashboard/contents"
+        />
+      </div>
+
       {/* Metrics Tab Bar + Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 mb-6">
+      <div className="bg-white rounded-xl border border-gray-200 mb-6">
         {/* Tabs */}
         <div className="flex items-center border-b border-gray-100 overflow-x-auto">
           <MetricTab label="조회수" value={formatNumber(data.totalViews)} isActive={true} />
@@ -371,7 +445,7 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 인기 콘텐츠 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900">인기 콘텐츠</h3>
           <span className="text-xs text-gray-500">조회수 · 지난 28일</span>
@@ -394,12 +468,12 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                  <p className="text-sm text-gray-900 truncate group-hover:text-orange-600 transition-colors">
                     {content.title}
                   </p>
                   <div className="mt-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500 rounded-full"
+                      className="h-full bg-orange-500 rounded-full"
                       style={{ width: `${(content.viewCount / maxViews) * 100}%` }}
                     />
                   </div>
@@ -418,7 +492,7 @@ async function BottomCardsSection({ creatorId }: { creatorId: string }) {
       </div>
 
       {/* 최근 판매 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4">최근 판매</h3>
         <RecentActivityChart recentSales={payoutData.recentSales} />
       </div>
