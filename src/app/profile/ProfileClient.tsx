@@ -2472,6 +2472,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
 
             {/* 크리에이터 섹션 */}
             {isCreatorMode ? (
+              // 크리에이터 모드: 크리에이터 메뉴 + 러너 모드로 전환
               <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">크리에이터</p>
                 <div className="space-y-1">
@@ -2494,7 +2495,22 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                   </button>
                 </div>
               </motion.div>
+            ) : hasBeenCreator && isCreatorOnboarded ? (
+              // 러너 모드 (이전 크리에이터): 크리에이터 모드로 전환 버튼
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">크리에이터</p>
+                <div className="space-y-1">
+                  <button
+                    onClick={handleSwitchToCreator}
+                    className="flex items-center justify-between py-3 w-full text-left text-gray-700 hover:text-orange-500 transition-colors group"
+                  >
+                    <span className="group-hover:text-orange-500">크리에이터 모드로 전환</span>
+                    <ArrowRightLeft className="w-4 h-4 text-gray-300 group-hover:text-orange-500" />
+                  </button>
+                </div>
+              </motion.div>
             ) : (
+              // 순수 러너: 크리에이터 되기 버튼
               <motion.div variants={itemVariants}>
                 <button
                   onClick={handleSwitchToCreator}
