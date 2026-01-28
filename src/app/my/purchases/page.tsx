@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/components/ui/motion/variants';
 import {
   ArrowLeft,
@@ -14,6 +15,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Loader2,
+  Info,
+  X,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Button, Card, CardContent, Badge, Tabs, TabsList, TabsTrigger, Spinner } from '@/components/ui';
@@ -194,9 +197,18 @@ function EmptyState() {
 }
 
 export default function PurchasesPage() {
+  const searchParams = useSearchParams();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  const [showPaymentNotice, setShowPaymentNotice] = useState(false);
+
+  useEffect(() => {
+    // 결제 처리 중 알림 표시
+    if (searchParams.get('payment') === 'processing') {
+      setShowPaymentNotice(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadPurchases();
@@ -265,6 +277,37 @@ export default function PurchasesPage() {
       </motion.header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* 결제 처리 중 알림 */}
+        <AnimatePresence>
+          {showPaymentNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4"
+            >
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-orange-800">
+                    결제가 완료되었습니다
+                  </p>
+                  <p className="text-sm text-orange-600 mt-1">
+                    결제 확인 처리 중입니다. 잠시 후 구매 내역에 반영됩니다.
+                    반영되지 않을 경우 고객센터로 문의해주세요.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowPaymentNotice(false)}
+                  className="p-1 hover:bg-orange-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4 text-orange-500" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

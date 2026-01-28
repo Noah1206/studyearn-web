@@ -196,27 +196,34 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         throw new Error(paymentResult.message || `결제 오류: ${paymentResult.code}`);
       }
 
-      const verifyResponse = await fetch('/api/payments/portone/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId: paymentResult.paymentId,
-          amount,
-        }),
-      });
+      // 결제 성공 - 검증 시도
+      try {
+        const verifyResponse = await fetch('/api/payments/portone/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId: paymentResult.paymentId,
+            amount,
+          }),
+        });
 
-      if (!verifyResponse.ok) {
-        const errorData = await verifyResponse.json();
-        throw new Error(errorData.message || '결제 검증에 실패했습니다.');
+        if (verifyResponse.ok) {
+          const verifyResult = await verifyResponse.json();
+          if (verifyResult.status === 'completed') {
+            router.push(`/content/${productId}?purchased=true`);
+            return;
+          } else if (verifyResult.status === 'awaiting_deposit') {
+            router.push(`/purchase/${productId}/pending`);
+            return;
+          }
+        }
+      } catch (verifyErr) {
+        console.error('Verification error (payment succeeded):', verifyErr);
       }
 
-      const verifyResult = await verifyResponse.json();
-
-      if (verifyResult.status === 'completed') {
-        router.push(`/content/${productId}?purchased=true`);
-      } else if (verifyResult.status === 'awaiting_deposit') {
-        router.push(`/purchase/${productId}/pending`);
-      }
+      // 검증 실패해도 결제는 성공했으므로 구매 내역으로 이동
+      console.log('Payment succeeded but verification failed, redirecting to purchases');
+      router.push('/my/purchases?payment=processing');
     } catch (err) {
       console.error('Card payment error:', err);
       setError(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.');
@@ -263,27 +270,34 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         throw new Error(paymentResult.message || `결제 오류: ${paymentResult.code}`);
       }
 
-      const verifyResponse = await fetch('/api/payments/portone/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId: paymentResult.paymentId,
-          amount,
-        }),
-      });
+      // 결제 성공 - 검증 시도
+      try {
+        const verifyResponse = await fetch('/api/payments/portone/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId: paymentResult.paymentId,
+            amount,
+          }),
+        });
 
-      if (!verifyResponse.ok) {
-        const errorData = await verifyResponse.json();
-        throw new Error(errorData.message || '결제 검증에 실패했습니다.');
+        if (verifyResponse.ok) {
+          const verifyResult = await verifyResponse.json();
+          if (verifyResult.status === 'completed') {
+            router.push(`/content/${productId}?purchased=true`);
+            return;
+          } else if (verifyResult.status === 'awaiting_deposit') {
+            router.push(`/purchase/${productId}/pending`);
+            return;
+          }
+        }
+      } catch (verifyErr) {
+        console.error('Verification error (payment succeeded):', verifyErr);
       }
 
-      const verifyResult = await verifyResponse.json();
-
-      if (verifyResult.status === 'completed') {
-        router.push(`/content/${productId}?purchased=true`);
-      } else if (verifyResult.status === 'awaiting_deposit') {
-        router.push(`/purchase/${productId}/pending`);
-      }
+      // 검증 실패해도 결제는 성공했으므로 구매 내역으로 이동
+      console.log('KakaoPay succeeded but verification failed, redirecting to purchases');
+      router.push('/my/purchases?payment=processing');
     } catch (err) {
       console.error('KakaoPay payment error:', err);
       setError(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.');
