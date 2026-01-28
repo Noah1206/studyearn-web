@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Wallet,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui';
 import {
@@ -17,7 +18,6 @@ import {
   type BankCode,
   BANKS,
   getAllBanks,
-  getDeeplinkSupportedBanks,
   maskAccountNumber,
 } from '@/lib/deeplink';
 
@@ -59,12 +59,32 @@ const successVariants = {
   },
 };
 
+// 은행 로고 컴포넌트
+function BankLogo({ bankCode, size = 'md' }: { bankCode: BankCode; size?: 'sm' | 'md' | 'lg' }) {
+  const bank = BANKS[bankCode];
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-[10px]',
+    md: 'w-10 h-10 text-xs',
+    lg: 'w-12 h-12 text-sm',
+  };
+
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-lg flex items-center justify-center text-white font-bold shadow-sm`}
+      style={{ backgroundColor: bank?.color || '#6B7280' }}
+    >
+      {bank?.shortName || '은행'}
+    </div>
+  );
+}
+
 export default function PaymentAccountsPage() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [showBankSelectModal, setShowBankSelectModal] = useState(false);
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -184,8 +204,13 @@ export default function PaymentAccountsPage() {
     }
   };
 
-  const deeplinkBanks = getDeeplinkSupportedBanks();
+  const handleBankSelect = (bankCode: BankCode) => {
+    setNewAccount(prev => ({ ...prev, bankCode }));
+    setShowBankSelectModal(false);
+  };
+
   const allBanks = getAllBanks();
+  const selectedBank = newAccount.bankCode ? BANKS[newAccount.bankCode as BankCode] : null;
 
   return (
     <motion.div
@@ -322,41 +347,40 @@ export default function PaymentAccountsPage() {
                     key={account.id}
                     className={`px-5 py-6 ${index !== paymentAccounts.length - 1 ? 'border-b border-gray-50' : ''}`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {/* 라디오 버튼 */}
+                      <button
+                        onClick={() => handleSetPrimary(account.id)}
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          account.isPrimary
+                            ? 'border-orange-500 bg-orange-500'
+                            : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        {account.isPrimary && (
+                          <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                        )}
+                      </button>
+
+                      {/* 은행 로고 */}
+                      <BankLogo bankCode={account.bankCode} size="md" />
+
                       {/* 계좌 정보 */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-semibold text-gray-900">
-                            {account.bankName}
-                          </p>
-                          {account.isPrimary && (
-                            <span className="px-2 py-0.5 bg-gray-900 text-white rounded text-[10px] font-medium">
-                              주계좌
-                            </span>
-                          )}
-                        </div>
+                        <p className="text-[15px] font-semibold text-gray-900">
+                          {account.bankName}
+                        </p>
                         <p className="text-[14px] text-gray-500 mt-0.5 font-medium tracking-wide">
                           {maskAccountNumber(account.accountNumber)}
                         </p>
                       </div>
 
-                    </div>
-
-                    {/* 액션 버튼들 */}
-                    <div className="flex items-center gap-2 mt-4">
-                      {!account.isPrimary && (
-                        <button
-                          onClick={() => handleSetPrimary(account.id)}
-                          className="flex-1 py-2.5 text-[13px] font-semibold text-gray-700 bg-gray-100 rounded-xl active:bg-gray-200 transition-colors"
-                        >
-                          주계좌로 설정
-                        </button>
-                      )}
+                      {/* 삭제 버튼 */}
                       <button
                         onClick={() => handleDeleteAccount(account.id)}
-                        className={`${account.isPrimary ? 'flex-1' : ''} py-2.5 px-4 text-[13px] font-semibold text-gray-500 bg-gray-100 rounded-xl active:bg-gray-200 transition-colors`}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        삭제
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -397,8 +421,7 @@ export default function PaymentAccountsPage() {
                 transition={{ delay: 0.2 }}
               >
                 <motion.div
-                  className="w-10 h-1 bg-orange-200 rounded-full"
-                  whileHover={{ scaleX: 1.2, backgroundColor: '#FDBA74' }}
+                  className="w-10 h-1 bg-gray-200 rounded-full"
                 />
               </motion.div>
 
@@ -418,28 +441,20 @@ export default function PaymentAccountsPage() {
                   >
                     계좌 등록
                   </motion.h3>
-                  <motion.p
-                    className="text-[14px] text-gray-500 mt-1"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    정산받을 계좌를 등록해주세요
-                  </motion.p>
                 </div>
                 <motion.button
                   onClick={() => setShowAddAccountModal(false)}
-                  className="w-10 h-10 flex items-center justify-center hover:bg-orange-50 rounded-full transition-colors"
-                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                  whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <X className="w-6 h-6 text-gray-900" />
+                  <X className="w-6 h-6 text-gray-500" />
                 </motion.button>
               </motion.div>
 
               {/* 폼 */}
               <motion.div
-                className="px-6 pb-6 space-y-5 max-h-[60vh] overflow-y-auto"
+                className="px-6 pb-6 space-y-4 max-h-[60vh] overflow-y-auto"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -450,36 +465,32 @@ export default function PaymentAccountsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
                 >
-                  <label className="block text-[14px] font-semibold text-gray-900 mb-2">
-                    은행
-                  </label>
-                  <select
-                    value={newAccount.bankCode}
-                    onChange={(e) => setNewAccount(prev => ({ ...prev, bankCode: e.target.value as BankCode }))}
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium focus:outline-none focus:border-orange-500 transition-all appearance-none cursor-pointer"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23F97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '20px' }}
+                  <button
+                    onClick={() => setShowBankSelectModal(true)}
+                    className="w-full bg-gray-50 rounded-xl p-4 flex items-center justify-between border border-gray-200 transition-colors hover:bg-gray-100"
                   >
-                    <option value="">은행을 선택해주세요</option>
-                    <optgroup label="빠른송금 지원">
-                      {deeplinkBanks.map(bank => (
-                        <option key={bank.code} value={bank.code}>{bank.name}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="일반 은행">
-                      {allBanks.filter(b => !b.supportsDeeplink).map(bank => (
-                        <option key={bank.code} value={bank.code}>{bank.name}</option>
-                      ))}
-                    </optgroup>
-                  </select>
+                    {selectedBank ? (
+                      <div className="flex items-center gap-3">
+                        <BankLogo bankCode={newAccount.bankCode as BankCode} size="sm" />
+                        <span className="text-[15px] font-medium text-gray-900">
+                          {selectedBank.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[15px] text-gray-400">은행 선택</span>
+                    )}
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  </button>
                 </motion.div>
 
-                {/* 계좌번호 */}
+                {/* 계좌번호 - 인풋 내 라벨 스타일 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
+                  className="relative bg-gray-50 rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
                 >
-                  <label className="block text-[14px] font-semibold text-gray-900 mb-2">
+                  <label className="absolute left-4 top-2 text-[11px] font-medium text-gray-400">
                     계좌번호
                   </label>
                   <input
@@ -487,29 +498,39 @@ export default function PaymentAccountsPage() {
                     inputMode="numeric"
                     value={newAccount.accountNumber}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountNumber: e.target.value.replace(/[^0-9]/g, '') }))}
-                    placeholder="계좌번호 입력"
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
+                    placeholder="'-' 없이 숫자만 입력"
+                    className="w-full px-4 pt-7 pb-3 bg-transparent text-[15px] font-medium placeholder:text-gray-300 focus:outline-none"
                   />
                 </motion.div>
 
-                {/* 예금주명 */}
+                {/* 예금주명 - 인풋 내 라벨 스타일 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35 }}
+                  className="relative bg-gray-50 rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
                 >
-                  <label className="block text-[14px] font-semibold text-gray-900 mb-2">
+                  <label className="absolute left-4 top-2 text-[11px] font-medium text-gray-400">
                     예금주
                   </label>
                   <input
                     type="text"
                     value={newAccount.accountHolder}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountHolder: e.target.value }))}
-                    placeholder="예금주명 입력"
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
+                    placeholder="예금주 이름 입력"
+                    className="w-full px-4 pt-7 pb-3 bg-transparent text-[15px] font-medium placeholder:text-gray-300 focus:outline-none"
                   />
                 </motion.div>
 
+                {/* 안내 문구 */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-[12px] text-gray-400 px-1"
+                >
+                  가상계좌 및 적금 펀드 계좌는 등록 불가
+                </motion.p>
               </motion.div>
 
               {/* 등록 버튼 */}
@@ -528,7 +549,7 @@ export default function PaymentAccountsPage() {
                       className={`w-full py-4 rounded-xl text-[16px] font-bold transition-all relative overflow-hidden ${
                         isActive
                           ? 'bg-orange-500 text-white'
-                          : 'bg-transparent text-gray-900'
+                          : 'bg-gray-100 text-gray-400'
                       }`}
                       whileHover={isActive ? { scale: 1.02 } : {}}
                       whileTap={isActive ? { scale: 0.98 } : {}}
@@ -547,12 +568,93 @@ export default function PaymentAccountsPage() {
                           <span>등록 중...</span>
                         </motion.div>
                       ) : (
-                        '등록하기'
+                        '확인'
                       )}
                     </motion.button>
                   );
                 })()}
               </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 은행 선택 모달 */}
+      <AnimatePresence>
+        {showBankSelectModal && (
+          <>
+            {/* 배경 오버레이 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+              onClick={() => setShowBankSelectModal(false)}
+            />
+
+            {/* 은행 선택 바텀시트 */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-[28px] max-h-[80vh] overflow-hidden"
+            >
+              {/* 핸들 바 */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              </div>
+
+              {/* 헤더 */}
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <h3 className="text-[18px] font-bold text-gray-900">
+                  은행 선택
+                </h3>
+                <button
+                  onClick={() => setShowBankSelectModal(false)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+
+              {/* 은행 그리드 */}
+              <div className="px-6 pb-8 overflow-y-auto max-h-[60vh]">
+                <div className="grid grid-cols-3 gap-3">
+                  {allBanks.map((bank) => (
+                    <motion.button
+                      key={bank.code}
+                      onClick={() => handleBankSelect(bank.code)}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        newAccount.bankCode === bank.code
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-100 bg-white hover:bg-gray-50'
+                      }`}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
+                        style={{ backgroundColor: bank.color || '#6B7280' }}
+                      >
+                        {bank.shortName}
+                      </div>
+                      <span className="text-[12px] font-medium text-gray-700 text-center leading-tight">
+                        {bank.name}
+                      </span>
+                      {newAccount.bankCode === bank.code && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-2 right-2"
+                        >
+                          <Check className="w-4 h-4 text-orange-500" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </>
         )}

@@ -34,6 +34,7 @@ import {
   Globe,
   Lock,
   CreditCard,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -2524,48 +2525,65 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">결제 계좌</p>
-                <Link
-                  href="/profile/payment-accounts"
-                  className="text-xs text-orange-500 hover:text-orange-600"
-                >
-                  {paymentAccounts.length > 0 ? '관리하기' : '등록하기'}
-                </Link>
+                {paymentAccounts.length > 0 && (
+                  <Link
+                    href="/profile/payment-accounts"
+                    className="text-xs text-orange-500 hover:text-orange-600"
+                  >
+                    관리하기
+                  </Link>
+                )}
               </div>
               {paymentAccounts.length > 0 ? (
                 <div className="space-y-3">
                   {paymentAccounts.slice(0, 2).map((account) => (
                     <div
                       key={account.id}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                      className="flex items-center gap-3"
                     >
+                      {/* 라디오 버튼 스타일 표시 */}
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm text-white font-bold text-xs"
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                          account.isPrimary
+                            ? 'border-orange-500 bg-orange-500'
+                            : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        {account.isPrimary && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
+                      </div>
+                      {/* 은행 로고 */}
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm text-white font-bold text-xs flex-shrink-0"
                         style={{ backgroundColor: BANKS[account.bankCode]?.color || '#6B7280' }}
                       >
                         {BANKS[account.bankCode]?.shortName || '은행'}
                       </div>
+                      {/* 계좌 정보 */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {account.bankName}
-                          </p>
-                          {account.isPrimary && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded-full font-medium">
-                              기본
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {account.bankName}
+                        </p>
+                        <p className="text-xs text-gray-500 font-medium">
                           {maskAccountNumber(account.accountNumber)}
                         </p>
                       </div>
                     </div>
                   ))}
                   {paymentAccounts.length > 2 && (
-                    <p className="text-xs text-gray-400 text-center">
+                    <p className="text-xs text-gray-400 text-center pt-1">
                       외 {paymentAccounts.length - 2}개의 계좌
                     </p>
                   )}
+                  {/* 계좌 추가 링크 */}
+                  <Link
+                    href="/profile/payment-accounts"
+                    className="flex items-center gap-2 pt-2 text-sm text-orange-500 hover:text-orange-600 font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    계좌 추가
+                  </Link>
                 </div>
               ) : (
                 <Link
