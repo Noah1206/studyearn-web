@@ -46,6 +46,22 @@ export function AttendanceModal({
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setError('');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=/`,
+      },
+    });
+
+    if (error) {
+      console.error('Google login error:', error);
+      setError('구글 로그인에 실패했습니다.');
+    }
+  };
+
   const handleEmailLogin = () => {
     onClose();
     router.push('/login');
@@ -117,6 +133,20 @@ export function AttendanceModal({
                   />
                 </svg>
                 카카오로 시작하기
+              </button>
+
+              {/* Google Button */}
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold rounded-xl transition-all"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M19.6 10.23c0-.68-.06-1.34-.17-1.97H10v3.73h5.38a4.6 4.6 0 01-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.28z" fill="#4285F4"/>
+                  <path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.24-2.5c-.9.6-2.04.95-3.38.95-2.6 0-4.8-1.76-5.58-4.12H1.07v2.58A9.99 9.99 0 0010 20z" fill="#34A853"/>
+                  <path d="M4.42 11.91A6.02 6.02 0 014.1 10c0-.66.11-1.31.32-1.91V5.51H1.07A9.99 9.99 0 000 10c0 1.61.39 3.14 1.07 4.49l3.35-2.58z" fill="#FBBC05"/>
+                  <path d="M10 3.96c1.47 0 2.78.5 3.82 1.5l2.86-2.86A9.97 9.97 0 0010 0 9.99 9.99 0 001.07 5.51l3.35 2.58C5.2 5.72 7.4 3.96 10 3.96z" fill="#EA4335"/>
+                </svg>
+                구글로 시작하기
               </button>
 
               {/* Email Button */}
