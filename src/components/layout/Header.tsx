@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
@@ -12,6 +12,7 @@ import { useSession } from '@/components/providers';
 
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   // 서버에서 전달받은 세션 사용
   const { user, isLoading: isSessionLoading } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -127,12 +128,18 @@ export function Header() {
   const handleSwitchMode = () => {
     if (isCreatorMode) {
       revertToRunner();
-      router.push('/profile');
+      // 이미 프로필 페이지면 refresh, 아니면 push
+      if (pathname === '/profile' || pathname.startsWith('/profile/')) {
+        router.refresh();
+      } else {
+        router.push('/profile');
+      }
     } else if (canSwitchMode) {
       switchToCreator();
       router.push('/dashboard');
     }
     setIsProfileOpen(false);
+    setIsMenuOpen(false);
   };
 
   return (
