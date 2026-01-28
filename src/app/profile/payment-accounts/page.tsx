@@ -492,7 +492,7 @@ export default function PaymentAccountsPage() {
                 >
                   <button
                     onClick={() => setShowBankSelectModal(true)}
-                    className="w-full bg-gray-50 rounded-xl p-4 flex items-center justify-between border border-gray-200 transition-colors hover:bg-gray-100"
+                    className="w-full rounded-xl p-4 flex items-center justify-between transition-colors hover:bg-gray-50"
                   >
                     {selectedBank ? (
                       <div className="flex items-center gap-3">
@@ -513,7 +513,7 @@ export default function PaymentAccountsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="relative bg-gray-50 rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
+                  className="relative rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
                 >
                   <label className="absolute left-4 top-2 text-[11px] font-medium text-gray-400">
                     계좌번호
@@ -533,7 +533,7 @@ export default function PaymentAccountsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35 }}
-                  className="relative bg-gray-50 rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
+                  className="relative rounded-xl border border-gray-200 focus-within:border-orange-500 transition-colors"
                 >
                   <label className="absolute left-4 top-2 text-[11px] font-medium text-gray-400">
                     예금주
