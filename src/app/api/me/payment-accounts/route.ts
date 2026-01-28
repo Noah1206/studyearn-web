@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     } = body;
 
     // 유효성 검사
-    if (!bankCode || !bankName || !accountNumber || !accountHolder) {
+    if (!bankCode || !bankName || !accountNumber) {
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다.' },
         { status: 400 }
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
         bank_code: bankCode,
         bank_name: bankName,
         account_number: cleanAccountNumber,
-        account_holder: accountHolder,
+        account_holder: accountHolder || null,
         supports_deeplink: supportsDeeplink,
         is_primary: isPrimary,
         nickname,
