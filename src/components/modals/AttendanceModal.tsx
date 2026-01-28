@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Mail } from 'lucide-react';
 import { dismissForToday } from '@/lib/attendance';
+import { createClient } from '@/lib/supabase/client';
 
 interface AttendanceModalProps {
   isOpen: boolean;
@@ -20,20 +22,33 @@ export function AttendanceModal({
   isLoggedIn = false,
 }: AttendanceModalProps) {
   const router = useRouter();
+  const [error, setError] = useState('');
+  const supabase = useMemo(() => createClient(), []);
 
   // 로그인 상태면 팝업 표시 안 함
   if (isLoggedIn) {
     return null;
   }
 
-  const handleLogin = () => {
-    onClose();
-    router.push('/login?redirectTo=/');
+  const handleKakaoLogin = async () => {
+    setError('');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=/`,
+      },
+    });
+
+    if (error) {
+      console.error('Kakao login error:', error);
+      setError('카카오 로그인에 실패했습니다.');
+    }
   };
 
-  const handleSignup = () => {
+  const handleEmailLogin = () => {
     onClose();
-    router.push('/signup');
+    router.push('/login');
   };
 
   const handleDismissToday = () => {
@@ -79,20 +94,40 @@ export function AttendanceModal({
               </div>
             </div>
 
+            {/* Error */}
+            {error && (
+              <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 text-center">
+                {error}
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="px-6 pt-4 pb-8 space-y-3">
+            <div className="px-6 pt-2 pb-8 space-y-3">
+              {/* Kakao Button */}
               <button
-                onClick={handleLogin}
-                className="w-full py-3.5 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors"
+                onClick={handleKakaoLogin}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-semibold rounded-xl transition-all"
               >
-                로그인
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M10 2C5.02944 2 1 5.36419 1 9.5C1 12.0645 2.61438 14.3016 5.07563 15.5983L4.15625 18.8494C4.07773 19.1179 4.38266 19.3349 4.61797 19.1779L8.48438 16.6028C8.98125 16.6676 9.48656 16.7 10 16.7C14.9706 16.7 19 13.3358 19 9.2C19 5.06419 14.9706 2 10 2Z"
+                    fill="#191919"
+                  />
+                </svg>
+                카카오로 시작하기
               </button>
+
+              {/* Email Button */}
               <button
-                onClick={handleSignup}
-                className="w-full py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                onClick={handleEmailLogin}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold rounded-xl transition-all"
               >
-                회원가입
+                <Mail className="w-5 h-5" />
+                이메일로 시작하기
               </button>
+
               <button
                 onClick={handleDismissToday}
                 className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors pt-2"
