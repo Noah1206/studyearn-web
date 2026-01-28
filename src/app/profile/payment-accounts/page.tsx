@@ -459,12 +459,11 @@ export default function PaymentAccountsPage() {
                   <label className="block text-[14px] font-semibold text-gray-900 mb-2">
                     은행
                   </label>
-                  <motion.select
+                  <select
                     value={newAccount.bankCode}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, bankCode: e.target.value as BankCode }))}
                     className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium focus:outline-none focus:border-orange-500 transition-all appearance-none cursor-pointer"
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23F97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '20px' }}
-                    whileFocus={{ scale: 1.01 }}
                   >
                     <option value="">은행을 선택해주세요</option>
                     <optgroup label="빠른송금 지원">
@@ -477,7 +476,7 @@ export default function PaymentAccountsPage() {
                         <option key={bank.code} value={bank.code}>{bank.name}</option>
                       ))}
                     </optgroup>
-                  </motion.select>
+                  </select>
                 </motion.div>
 
                 {/* 계좌번호 */}
@@ -489,14 +488,13 @@ export default function PaymentAccountsPage() {
                   <label className="block text-[14px] font-semibold text-gray-900 mb-2">
                     계좌번호
                   </label>
-                  <motion.input
+                  <input
                     type="text"
                     inputMode="numeric"
                     value={newAccount.accountNumber}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountNumber: e.target.value.replace(/[^0-9]/g, '') }))}
                     placeholder="계좌번호 입력"
                     className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
-                    whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
 
@@ -509,13 +507,12 @@ export default function PaymentAccountsPage() {
                   <label className="block text-[14px] font-semibold text-gray-900 mb-2">
                     예금주
                   </label>
-                  <motion.input
+                  <input
                     type="text"
                     value={newAccount.accountHolder}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountHolder: e.target.value }))}
                     placeholder="예금주명 입력"
                     className="w-full px-4 py-4 bg-white border border-gray-200 rounded-lg text-[15px] font-medium placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all"
-                    whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
 
