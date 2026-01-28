@@ -320,7 +320,7 @@ export default function PaymentAccountsPage() {
                 {paymentAccounts.map((account, index) => (
                   <div
                     key={account.id}
-                    className={`px-5 py-4 ${index !== paymentAccounts.length - 1 ? 'border-b border-gray-50' : ''}`}
+                    className={`px-5 py-6 ${index !== paymentAccounts.length - 1 ? 'border-b border-gray-50' : ''}`}
                   >
                     <div className="flex items-center justify-between">
                       {/* 계좌 정보 */}
