@@ -180,7 +180,7 @@ export function AttendanceModal({
                       {isLoggedIn ? `${userName || '회원'}님` : '출석 체크'}
                     </h2>
                     <p className="text-gray-500 text-sm">
-                      {isLoggedIn ? '오늘의 출석 스탬프를 찍어주세요!' : '로그인하고 출석해주세요!'}
+                      {isLoggedIn ? '오늘의 출석 스탬프를 찍어주세요!' : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
                     </p>
                   </>
                 )}
@@ -256,15 +256,6 @@ export function AttendanceModal({
               </div>
             </div>
 
-            {/* Motivation Message */}
-            <div className="px-6 py-6 text-center">
-              <p className="text-orange-500 text-sm font-medium">
-                {stage === 'success'
-                  ? '꾸준한 출석이 실력을 만들어요 💪'
-                  : '스터플과 함께 꾸준한 공부를 시작해보세요!'}
-              </p>
-            </div>
-
             {/* Error */}
             <AnimatePresence>
               {error && (
@@ -319,7 +310,6 @@ export function AttendanceModal({
                       <span>{isLoggedIn ? '오늘 출석하기' : '로그인하고 출석하기'}</span>
                     )}
                   </button>
-                  <span className="text-gray-300">|</span>
                   <button
                     onClick={handleDismissToday}
                     className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
