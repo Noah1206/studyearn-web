@@ -208,7 +208,7 @@ export default function PaymentAccountsPage() {
               animate={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
             >
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
+              <CheckCircle2 className="w-5 h-5 text-orange-400" />
             </motion.div>
             <span className="font-medium">계좌가 등록되었어요!</span>
           </motion.div>
@@ -403,8 +403,8 @@ export default function PaymentAccountsPage() {
                 transition={{ delay: 0.2 }}
               >
                 <motion.div
-                  className="w-10 h-1 bg-gray-300 rounded-full"
-                  whileHover={{ scaleX: 1.2, backgroundColor: '#9CA3AF' }}
+                  className="w-10 h-1 bg-orange-200 rounded-full"
+                  whileHover={{ scaleX: 1.2, backgroundColor: '#FDBA74' }}
                 />
               </motion.div>
 
@@ -435,11 +435,11 @@ export default function PaymentAccountsPage() {
                 </div>
                 <motion.button
                   onClick={() => setShowAddAccountModal(false)}
-                  className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                  className="w-10 h-10 flex items-center justify-center hover:bg-orange-50 rounded-full transition-colors"
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <X className="w-6 h-6 text-gray-400" />
+                  <X className="w-6 h-6 text-gray-900" />
                 </motion.button>
               </motion.div>
 
@@ -462,8 +462,8 @@ export default function PaymentAccountsPage() {
                   <motion.select
                     value={newAccount.bankCode}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, bankCode: e.target.value as BankCode }))}
-                    className="w-full px-4 py-4 bg-gray-100 border-0 rounded-2xl text-[15px] font-medium focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all appearance-none cursor-pointer"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '20px' }}
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23F97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '20px' }}
                     whileFocus={{ scale: 1.01 }}
                   >
                     <option value="">은행을 선택해주세요</option>
@@ -495,7 +495,7 @@ export default function PaymentAccountsPage() {
                     value={newAccount.accountNumber}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountNumber: e.target.value.replace(/[^0-9]/g, '') }))}
                     placeholder="계좌번호 입력"
-                    className="w-full px-4 py-4 bg-gray-100 border-0 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                     whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
@@ -514,7 +514,7 @@ export default function PaymentAccountsPage() {
                     value={newAccount.accountHolder}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, accountHolder: e.target.value }))}
                     placeholder="예금주명 입력"
-                    className="w-full px-4 py-4 bg-gray-100 border-0 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl text-[15px] font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                     whileFocus={{ scale: 1.01 }}
                   />
                 </motion.div>
@@ -522,7 +522,7 @@ export default function PaymentAccountsPage() {
                 {/* 주계좌 설정 토글 */}
                 <motion.div
                   onClick={() => setNewAccount(prev => ({ ...prev, isPrimary: !prev.isPrimary }))}
-                  className="flex items-center justify-between bg-gray-50 rounded-2xl p-4 cursor-pointer active:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-2xl p-4 cursor-pointer active:bg-orange-100 transition-colors"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45 }}
@@ -533,12 +533,12 @@ export default function PaymentAccountsPage() {
                     <motion.div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors`}
                       animate={{
-                        backgroundColor: newAccount.isPrimary ? '#F97316' : '#E5E7EB',
+                        backgroundColor: newAccount.isPrimary ? '#F97316' : '#FED7AA',
                         rotate: newAccount.isPrimary ? 360 : 0,
                       }}
                       transition={{ type: 'spring', stiffness: 300 }}
                     >
-                      <CheckCircle2 className={`w-5 h-5 ${newAccount.isPrimary ? 'text-white' : 'text-gray-400'}`} />
+                      <CheckCircle2 className={`w-5 h-5 ${newAccount.isPrimary ? 'text-white' : 'text-orange-500'}`} />
                     </motion.div>
                     <div>
                       <p className="text-[14px] font-semibold text-gray-900">주계좌로 설정</p>
@@ -548,7 +548,7 @@ export default function PaymentAccountsPage() {
                   <motion.div
                     className="w-12 h-7 rounded-full relative"
                     animate={{
-                      backgroundColor: newAccount.isPrimary ? '#F97316' : '#E5E7EB',
+                      backgroundColor: newAccount.isPrimary ? '#F97316' : '#FED7AA',
                     }}
                     transition={{ duration: 0.2 }}
                   >
@@ -573,7 +573,7 @@ export default function PaymentAccountsPage() {
                 <motion.button
                   onClick={handleAddAccount}
                   disabled={isAddingAccount || !newAccount.bankCode || !newAccount.accountNumber || !newAccount.accountHolder}
-                  className="w-full py-4 bg-orange-500 text-white rounded-2xl text-[16px] font-bold disabled:bg-gray-200 disabled:text-gray-400 transition-colors relative overflow-hidden"
+                  className="w-full py-4 bg-orange-500 text-white rounded-2xl text-[16px] font-bold disabled:bg-orange-200 disabled:text-orange-400 transition-colors relative overflow-hidden"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
