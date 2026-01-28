@@ -535,9 +535,28 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
       }
     };
 
+    const handleFocus = () => {
+      refetchPaymentAccounts();
+    };
+
+    // 브라우저 뒤로가기 시 (bfcache에서 복원 시)
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        refetchPaymentAccounts();
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handlePageShow);
+
+    // 초기 마운트 시에도 한번 fetch
+    refetchPaymentAccounts();
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handlePageShow);
     };
   }, []);
 
@@ -727,7 +746,8 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
   // Handle mode switching
   const handleSwitchToRunner = () => {
     revertToRunner();
-    router.push('/profile');
+    // 같은 URL이므로 router.refresh()로 상태 갱신
+    router.refresh();
   };
 
   const handleSwitchToCreator = async () => {

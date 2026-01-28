@@ -127,7 +127,7 @@ export function Header() {
   const handleSwitchMode = () => {
     if (isCreatorMode) {
       revertToRunner();
-      router.push('/');
+      router.push('/profile');
     } else if (canSwitchMode) {
       switchToCreator();
       router.push('/dashboard');
