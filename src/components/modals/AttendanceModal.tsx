@@ -299,19 +299,19 @@ export function AttendanceModal({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="space-y-3"
+                  className="space-y-4 text-center"
                 >
                   <button
                     onClick={handleStamp}
                     disabled={stage === 'stamping'}
-                    className="w-full py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="text-orange-500 font-semibold hover:text-orange-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
                   >
                     {stage === 'stamping' ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                          className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full"
                         />
                         <span>출석 중...</span>
                       </>
