@@ -20,6 +20,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
+    // Debug: check all purchases first
+    const { data: allPurchases, error: debugError } = await supabase
+      .from('content_purchases')
+      .select('id, status, created_at')
+      .limit(10);
+    console.log('[Admin Purchases] All purchases in DB:', JSON.stringify(allPurchases), 'Error:', debugError);
+    console.log('[Admin Purchases] Filtering by status:', status);
+
     // Get purchases with content and buyer info
     const { data: purchases, error, count } = await supabase
       .from('content_purchases')
