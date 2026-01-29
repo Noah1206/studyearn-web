@@ -195,14 +195,14 @@ export function AttendanceModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="이메일"
-                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-300 focus:outline-none transition-all placeholder:text-gray-400"
+                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0 focus:outline-none transition-all placeholder:text-gray-400"
                 />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="비밀번호"
-                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-300 focus:outline-none transition-all placeholder:text-gray-400"
+                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0 focus:outline-none transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="submit"
