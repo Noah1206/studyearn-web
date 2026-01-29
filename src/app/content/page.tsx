@@ -569,7 +569,7 @@ export default function ProductsPage() {
     >
       {/* 상단 헤더 */}
       <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="px-8 sm:px-14 lg:px-24">
           {/* 브레드크럼 */}
           <nav className="flex items-center gap-2 py-4 text-sm">
             <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
