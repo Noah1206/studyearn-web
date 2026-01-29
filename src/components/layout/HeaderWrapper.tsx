@@ -10,7 +10,8 @@ export function HeaderWrapper() {
   // 스터디룸 페이지에서는 헤더를 숨김 (전체 화면 모드)
   if (
     pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/study-room')
+    pathname.startsWith('/study-room') ||
+    pathname.startsWith('/admin')
   ) {
     return null;
   }
