@@ -11,8 +11,6 @@ import {
   FileText,
   Star,
   Heart,
-  ChevronRight,
-  Home,
   X,
   Clock,
 } from 'lucide-react';
@@ -567,30 +565,6 @@ export default function ProductsPage() {
       exit="exit"
       variants={pageVariants}
     >
-      {/* 상단 헤더 */}
-      <div className="bg-white">
-        <div className="px-6 sm:px-10 lg:px-16">
-          {/* 브레드크럼 */}
-          <nav className="flex items-center gap-2 py-4 text-sm">
-            <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
-              <Home className="w-4 h-4" />
-            </Link>
-            <ChevronRight className="w-4 h-4 text-gray-300" />
-            <Link href="/content" className="text-gray-400 hover:text-gray-600 transition-colors">
-              콘텐츠
-            </Link>
-            {filters.category !== 'all' && (
-              <>
-                <ChevronRight className="w-4 h-4 text-gray-300" />
-                <span className="text-gray-900 font-medium">{currentCategoryLabel}</span>
-              </>
-            )}
-          </nav>
-
-          {/* 검색바는 헤더로 포털 렌더링 */}
-        </div>
-      </div>
-
       {/* 메인 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6 lg:gap-8">
