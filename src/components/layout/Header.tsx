@@ -146,7 +146,7 @@ export function Header() {
     <header
       className="bg-white"
     >
-      <div className="relative flex items-center justify-between h-[60px] px-8 sm:px-14 lg:px-24 gap-6">
+      <div className="relative flex items-center justify-between h-[60px] px-6 sm:px-10 lg:px-16 gap-6">
         {/* Left: Logo + Search */}
         <div className="flex items-center gap-4 flex-shrink-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
