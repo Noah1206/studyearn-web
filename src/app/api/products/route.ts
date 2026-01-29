@@ -98,9 +98,11 @@ export async function GET() {
       try {
         const supabaseAdmin = createAdminClient();
         const namePromises = (creatorIds as string[]).map(async (id: string) => {
-          const { data } = await supabaseAdmin.auth.admin.getUserById(id);
+          const { data, error: authErr } = await supabaseAdmin.auth.admin.getUserById(id);
+          console.log('[Products API] Auth user lookup:', { id, found: !!data?.user, error: authErr?.message });
           if (data?.user) {
             const meta = data.user.user_metadata || {};
+            console.log('[Products API] User metadata:', { id, meta });
             const name = meta.user_name || meta.name || meta.full_name || meta.preferred_username;
             if (name) authNamesMap[id] = name;
           }
@@ -109,6 +111,10 @@ export async function GET() {
       } catch (err) {
         console.warn('Failed to fetch auth user names:', err);
       }
+
+      console.log('[Products API] creatorsMap:', JSON.stringify(creatorsMap));
+      console.log('[Products API] profilesMap:', JSON.stringify(profilesMap));
+      console.log('[Products API] authNamesMap:', JSON.stringify(authNamesMap));
     }
 
     // Transform to include creator as a flat object
