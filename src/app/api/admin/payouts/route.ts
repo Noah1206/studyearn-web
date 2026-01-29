@@ -1,37 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/auth';
 
 /**
  * GET /api/admin/payouts
  * Get list of payout requests for admin
  */
 export async function GET(request: NextRequest) {
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
     const supabase = await createClient();
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'pending';

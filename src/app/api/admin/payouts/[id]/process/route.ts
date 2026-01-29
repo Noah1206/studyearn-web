@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendPayoutCompleteEmail } from '@/lib/email';
+import { requireAdmin } from '@/lib/auth';
 
 /**
  * POST /api/admin/payouts/[id]/process
@@ -10,33 +11,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
     const { id } = await params;
     const supabase = await createClient();
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
 
     // Get the payout request with creator info for email
     const { data: payout, error: payoutError } = await supabase
@@ -68,7 +48,7 @@ export async function POST(
       .update({
         status: 'completed',
         processed_at: new Date().toISOString(),
-        processed_by: user.id,
+        processed_by: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
@@ -140,36 +120,15 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminError2 = await requireAdmin();
+  if (adminError2) return adminError2;
+
   try {
     const { id } = await params;
     const supabase = await createClient();
 
     const body = await request.json().catch(() => ({}));
     const { reason } = body;
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
 
     // Get the payout request
     const { data: payout, error: payoutError } = await supabase
@@ -199,7 +158,7 @@ export async function DELETE(
         status: 'rejected',
         admin_note: reason || null,
         processed_at: new Date().toISOString(),
-        processed_by: user.id,
+        processed_by: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);

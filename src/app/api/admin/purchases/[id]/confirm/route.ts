@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendPurchaseConfirmEmail } from '@/lib/email';
-import { requireAdmin, checkIsAdmin } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 
 /**
  * POST /api/admin/purchases/[id]/confirm
@@ -19,9 +19,6 @@ export async function POST(
   try {
     const { id } = await params;
     const supabase = await createClient();
-
-    // Get admin user ID for tracking
-    const { user } = await checkIsAdmin();
 
     // Get the purchase with buyer and content info for email
     const { data: purchase, error: purchaseError } = await supabase
@@ -54,7 +51,7 @@ export async function POST(
       .update({
         status: 'completed',
         platform_confirmed_at: new Date().toISOString(),
-        platform_confirmed_by: user?.id || null,
+        platform_confirmed_by: null,
       })
       .eq('id', id);
 
@@ -154,9 +151,6 @@ export async function DELETE(
     const { id } = await params;
     const supabase = await createClient();
 
-    // Get admin user ID for tracking
-    const { user } = await checkIsAdmin();
-
     // Get the purchase
     const { data: purchase, error: purchaseError } = await supabase
       .from('content_purchases')
@@ -184,7 +178,7 @@ export async function DELETE(
       .update({
         status: 'rejected',
         platform_confirmed_at: new Date().toISOString(),
-        platform_confirmed_by: user?.id || null,
+        platform_confirmed_by: null,
       })
       .eq('id', id);
 

@@ -24,6 +24,18 @@ export async function updateSession(request: NextRequest) {
   );
   const isAuthPath = authPaths.includes(request.nextUrl.pathname);
 
+  // Admin route protection (cookie-based, separate from Supabase auth)
+  const isAdminPath = request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login');
+  if (isAdminPath) {
+    const adminSession = request.cookies.get('admin_session');
+    if (adminSession?.value !== 'studyearn-admin-session-2025') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
   // 보호된 경로나 인증 페이지가 아니면 빠르게 통과
   if (!isProtectedPath && !isAuthPath) {
     return supabaseResponse;
