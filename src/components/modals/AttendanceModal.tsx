@@ -226,14 +226,6 @@ export function AttendanceModal({
                   회원가입
                 </button>
               </p>
-
-              {/* Dismiss */}
-              <button
-                onClick={handleDismissToday}
-                className="w-full text-center text-xs text-gray-300 hover:text-gray-400 transition-colors mt-4"
-              >
-                오늘 하루 보지 않기
-              </button>
             </div>
           </motion.div>
         </motion.div>
