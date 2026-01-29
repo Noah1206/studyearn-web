@@ -166,7 +166,7 @@ export function AttendanceModal({
                 </button>
                 <button
                   onClick={handleGoogleLogin}
-                  className="w-full flex items-center justify-center gap-2.5 py-3 bg-gray-50 font-semibold text-sm text-gray-700 rounded-xl transition-all duration-200 hover:bg-gray-100 active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2.5 py-3 bg-white border border-gray-200 font-semibold text-sm text-gray-700 rounded-xl transition-all duration-200 hover:border-gray-300 active:scale-[0.98]"
                 >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                     <path d="M19.6 10.23c0-.68-.06-1.34-.17-1.97H10v3.73h5.38a4.6 4.6 0 01-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.28z" fill="#4285F4"/>
@@ -184,7 +184,7 @@ export function AttendanceModal({
                   <div className="w-full border-t border-gray-100" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="px-3 bg-white text-xs text-gray-400">또는 이메일로</span>
+                  <span className="px-3 bg-white text-xs text-gray-400">또는</span>
                 </div>
               </div>
 
@@ -195,19 +195,19 @@ export function AttendanceModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="이메일"
-                  className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-gray-200 focus:outline-none transition-all placeholder:text-gray-400"
+                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-300 focus:outline-none transition-all placeholder:text-gray-400"
                 />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="비밀번호"
-                  className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-gray-200 focus:outline-none transition-all placeholder:text-gray-400"
+                  className="w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-300 focus:outline-none transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !email || !password}
-                  className="w-full py-3 bg-transparent text-gray-700 hover:bg-gray-900 hover:text-white active:bg-gray-800 active:text-white disabled:bg-gray-200 disabled:text-gray-400 text-sm font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] border border-gray-200 hover:border-transparent"
+                  className="w-full py-3 bg-transparent text-gray-700 hover:bg-gray-900 hover:text-white active:bg-gray-800 active:text-white disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] border border-gray-200 hover:border-transparent"
                 >
                   {isLoading ? '로그인 중...' : '로그인'}
                 </button>
