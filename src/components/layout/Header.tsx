@@ -146,39 +146,38 @@ export function Header() {
     <header
       className="bg-white"
     >
-      <div className="relative flex items-center justify-between h-16 px-8 sm:px-14 lg:px-24 gap-4">
+      <div className="relative flex items-center justify-between h-[60px] px-8 sm:px-14 lg:px-24 gap-6">
         {/* Left: Logo + Search */}
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-5 flex-1 min-w-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <Image
               src="/logo.svg"
               alt="StuPle"
-              width={32}
-              height={32}
-              className="w-8 h-8"
+              width={28}
+              height={28}
+              className="w-7 h-7"
             />
-            <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
+            <span className="text-lg font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
           </Link>
 
           {/* Content Search Slot - rendered via portal from content page */}
-          <div id="header-search-slot" className="hidden md:flex items-center flex-1 max-w-lg" />
+          <div id="header-search-slot" className="hidden md:flex items-center flex-1 max-w-xl" />
         </div>
 
         {/* Right: Nav Links + Auth Buttons */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             <Link
               href="/content"
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
+              className="px-3 py-1.5 text-gray-700 hover:text-gray-900 transition-colors text-[15px] font-medium"
             >
               콘텐츠
             </Link>
             <Link
               href="/studyan"
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
+              className="px-3 py-1.5 text-gray-700 hover:text-gray-900 transition-colors text-[15px] font-medium"
             >
               스터디언
             </Link>
-            <div className="w-px h-5 bg-gray-200 mx-1" />
             {user ? (
               <>
                 {/* Upload Button - Only on Dashboard */}
@@ -282,13 +281,13 @@ export function Header() {
                 <Link href="/login">
                   <Button
                     variant="ghost"
-                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-sm font-medium"
+                    className="text-gray-700 hover:text-gray-900 text-[15px] font-medium"
                   >
                     로그인
                   </Button>
                 </Link>
                 <Link href="/onboarding">
-                  <Button className="bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg">
+                  <Button className="bg-gray-900 hover:bg-gray-800 text-white text-[15px] font-medium px-4 py-2 rounded-lg">
                     회원가입
                   </Button>
                 </Link>

@@ -678,7 +678,6 @@ export default function ProductsPage() {
       {/* 헤더 검색바 포털 */}
       {headerSearchSlot && createPortal(
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
           <input
             type="text"
             placeholder="필요한 학습 자료를 검색해보세요"
@@ -691,8 +690,14 @@ export default function ProductsPage() {
                 handleSearch(searchQuery);
               }
             }}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 focus:bg-white transition-all text-sm"
+            className="w-full pl-4 pr-12 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-all text-[15px]"
           />
+          <button
+            onClick={() => { if (searchQuery.trim()) handleSearch(searchQuery); }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Search className="w-5 h-5" />
+          </button>
 
           {/* 최근 검색어 드롭다운 */}
           {isSearchFocused && (
