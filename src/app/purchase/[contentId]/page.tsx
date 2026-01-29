@@ -5,18 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, AlertCircle, Check } from 'lucide-react';
+import { ArrowLeft, ChevronRight, AlertCircle, Check, Copy } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
-import { generateTossDeeplink } from '@/lib/deeplink';
 import { LoadingPage } from '@/components/ui/Spinner';
-import type { BankCode } from '@/lib/deeplink';
 import { requestCardPayment, requestKakaoPayPayment } from '@/lib/portone/client';
 
 type PaymentMethod = 'card' | 'kakaopay' | 'transfer';
 
-const PLATFORM_BANK_CODE = (process.env.NEXT_PUBLIC_PLATFORM_BANK_CODE || 'busan') as BankCode;
+const PLATFORM_BANK_NAME = process.env.NEXT_PUBLIC_PLATFORM_BANK_NAME || '카카오뱅크';
 const PLATFORM_ACCOUNT_NUMBER = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER || '';
+const PLATFORM_ACCOUNT_HOLDER = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_HOLDER || '';
 
 interface Product {
   id: string;
@@ -112,20 +111,9 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     fetchData();
   }, [productId, router, user, isSessionLoading]);
 
-  const handleOpenToss = () => {
-    if (!product || !PLATFORM_ACCOUNT_NUMBER) {
-      alert('플랫폼 계좌 정보가 설정되지 않았습니다.');
-      return;
-    }
-
-    const url = generateTossDeeplink(
-      PLATFORM_BANK_CODE,
-      PLATFORM_ACCOUNT_NUMBER,
-      product.price
-    );
-
-    console.log('[TossDeeplink]', { url, bank: PLATFORM_BANK_CODE, account: PLATFORM_ACCOUNT_NUMBER });
-    window.location.href = url;
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText(PLATFORM_ACCOUNT_NUMBER);
+    alert('계좌번호가 복사되었습니다.');
   };
 
   const handlePaymentComplete = async () => {
@@ -510,8 +498,8 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                   <span className="text-[#191919] font-bold text-xs">pay</span>
                 </div>
               ) : paymentMethod === 'transfer' ? (
-                <div className="w-10 h-10 bg-[#0064FF] rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">토스</span>
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <span className="text-amber-700 font-bold text-xs">계좌</span>
                 </div>
               ) : (
                 <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
@@ -531,21 +519,50 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
         {/* 계좌이체 추가 입력 */}
         {paymentMethod === 'transfer' && (
-          <section className="bg-white rounded-2xl p-4">
-            <p className="text-sm font-bold text-gray-900 mb-3">입금자명</p>
-            <input
-              type="text"
-              value={buyerNote}
-              onChange={(e) => setBuyerNote(e.target.value)}
-              placeholder="송금 시 입력한 이름"
-              className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <button
-              onClick={handleOpenToss}
-              className="w-full mt-3 py-3 rounded-xl font-medium text-white bg-[#0064FF] hover:bg-[#0050CC] transition-colors"
-            >
-              토스로 송금하기
-            </button>
+          <section className="bg-white rounded-2xl p-4 space-y-4">
+            {/* 입금 계좌 정보 */}
+            <div>
+              <p className="text-sm font-bold text-gray-900 mb-3">입금 계좌</p>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-500">은행</span>
+                  <span className="text-sm font-medium text-gray-900">{PLATFORM_BANK_NAME}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-500">계좌번호</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">{PLATFORM_ACCOUNT_NUMBER}</span>
+                    <button onClick={handleCopyAccount} className="text-orange-500 hover:text-orange-600">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-500">예금주</span>
+                  <span className="text-sm font-medium text-gray-900">{PLATFORM_ACCOUNT_HOLDER}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">입금액</span>
+                  <span className="text-sm font-bold text-orange-600">{formatCurrency(product.price)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 입금자명 입력 */}
+            <div>
+              <p className="text-sm font-bold text-gray-900 mb-3">입금자명</p>
+              <input
+                type="text"
+                value={buyerNote}
+                onChange={(e) => setBuyerNote(e.target.value)}
+                placeholder="송금 시 입력한 이름"
+                className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            <p className="text-xs text-gray-400">
+              위 계좌로 송금 후 아래 결제하기 버튼을 눌러주세요. 입금 확인 후 콘텐츠가 제공됩니다.
+            </p>
           </section>
         )}
 
@@ -709,7 +726,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     }`}
                   >
                     <span className={`font-medium ${paymentMethod === 'transfer' ? 'text-orange-600' : 'text-gray-700'}`}>
-                      계좌이체 (토스)
+                      계좌이체
                     </span>
                     {paymentMethod === 'transfer' && (
                       <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
