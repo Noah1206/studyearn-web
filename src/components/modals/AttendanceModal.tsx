@@ -214,8 +214,8 @@ export function AttendanceModal({
               </form>
 
               {/* Signup Link */}
-              <p className="text-center text-xs text-gray-400 mt-4">
-                아직 회원이 아니신가요?{' '}
+              <p className="text-center text-xs text-gray-400 mt-6 mb-2">
+                계정이 없으신가요?{' '}
                 <button
                   onClick={() => {
                     onClose();
@@ -223,7 +223,7 @@ export function AttendanceModal({
                   }}
                   className="text-gray-700 font-semibold hover:underline"
                 >
-                  회원가입
+                  시작하기
                 </button>
               </p>
             </div>
