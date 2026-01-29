@@ -148,7 +148,7 @@ export function Header() {
     >
       <div className="relative flex items-center justify-between h-[60px] px-8 sm:px-14 lg:px-24 gap-6">
         {/* Left: Logo + Search */}
-        <div className="flex items-center gap-5 flex-1 min-w-0">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <Image
               src="/logo.svg"
@@ -161,7 +161,7 @@ export function Header() {
           </Link>
 
           {/* Content Search Slot - rendered via portal from content page */}
-          <div id="header-search-slot" className="hidden md:flex items-center flex-1 max-w-xl" />
+          <div id="header-search-slot" className="hidden md:flex items-center w-[400px] lg:w-[480px]" />
         </div>
 
         {/* Right: Nav Links + Auth Buttons */}
