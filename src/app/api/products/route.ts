@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/products
@@ -70,6 +70,7 @@ export async function GET() {
     }
     let creatorsMap: Record<string, CreatorInfo> = {};
     let profilesMap: Record<string, ProfileInfo> = {};
+    let authNamesMap: Record<string, string> = {};
     if (creatorIds.length > 0) {
       const [{ data: creators }, { data: profiles }] = await Promise.all([
         supabase
@@ -92,6 +93,22 @@ export async function GET() {
           profilesMap[p.id] = p;
         });
       }
+
+      // Fetch auth user metadata for display name fallback (카카오/구글 이름)
+      try {
+        const supabaseAdmin = createAdminClient();
+        const namePromises = creatorIds.map(async (id) => {
+          const { data } = await supabaseAdmin.auth.admin.getUserById(id);
+          if (data?.user) {
+            const meta = data.user.user_metadata || {};
+            const name = meta.user_name || meta.name || meta.full_name || meta.preferred_username;
+            if (name) authNamesMap[id] = name;
+          }
+        });
+        await Promise.all(namePromises);
+      } catch (err) {
+        console.warn('Failed to fetch auth user names:', err);
+      }
     }
 
     // Transform to include creator as a flat object
@@ -110,7 +127,7 @@ export async function GET() {
         // Map content_type to display-friendly subject if it's a routine
         ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
         creator: {
-          name: creatorSettings?.display_name || profile?.nickname || profile?.username || '익명',
+          name: creatorSettings?.display_name || profile?.nickname || profile?.username || (content.creator_id ? authNamesMap[content.creator_id] : null) || '익명',
           avatar_url: creatorSettings?.profile_image_url || profile?.avatar_url,
         },
       };
