@@ -1259,47 +1259,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h4 className="text-gray-900 font-bold mb-4">StuPle</h4>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                학생 크리에이터 마켓플레이스
-                <br />
-                공부 잘하는 학생이 돈 버는 방법
-              </p>
-            </div>
-            <div>
-              <h4 className="text-gray-900 font-bold mb-4">서비스</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/content" className="text-gray-500 hover:text-gray-900 transition-colors">노트 마켓</Link></li>
-                <li><Link href="/explore" className="text-gray-500 hover:text-gray-900 transition-colors">탐색</Link></li>
-                <li><Link href="/become-creator" className="text-gray-500 hover:text-gray-900 transition-colors">크리에이터 신청</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-gray-900 font-bold mb-4">고객지원</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="text-gray-500 hover:text-gray-900 transition-colors">자주 묻는 질문</Link></li>
-                <li><Link href="/contact" className="text-gray-500 hover:text-gray-900 transition-colors">1:1 문의</Link></li>
-                <li><Link href="/help" className="text-gray-500 hover:text-gray-900 transition-colors">이용가이드</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-gray-900 font-bold mb-4">법적 고지</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/terms" className="text-gray-500 hover:text-gray-900 transition-colors">이용약관</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 StuPle. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer is rendered by FooterWrapper in layout */}
       {/* Attendance Modal */}
       <AttendanceProvider />
     </motion.div>
