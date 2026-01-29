@@ -18,6 +18,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState('');
   // Supabase client를 useMemo로 캐싱하여 매 렌더마다 새 인스턴스 생성 방지
   const supabase = useMemo(() => createClient(), []);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -161,15 +162,28 @@ export function Header() {
           </Link>
 
           {/* Search Input */}
-          <div className="hidden md:flex items-center flex-1 max-w-md">
-            <div
-              className="flex items-center gap-2 w-full px-4 py-2 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => router.push('/content')}
-            >
-              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <span className="text-sm text-gray-400 truncate">필요한 학습 자료를 검색해보세요</span>
+          <form
+            className="hidden md:flex items-center flex-1 max-w-lg"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (headerSearch.trim()) {
+                router.push(`/content?q=${encodeURIComponent(headerSearch.trim())}`);
+              } else {
+                router.push('/content');
+              }
+            }}
+          >
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="필요한 학습 자료를 검색해보세요"
+                value={headerSearch}
+                onChange={(e) => setHeaderSearch(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition-all"
+              />
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Right: Nav Links + Auth Buttons */}
