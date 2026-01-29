@@ -86,7 +86,7 @@ function Dropdown({
         ref={buttonRef}
         onClick={handleToggle}
         className={cn(
-          'flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-[15px] font-medium transition-colors',
+          'flex items-center gap-1.5 px-5 py-2.5 rounded-sm text-[15px] font-medium transition-colors',
           'border border-gray-200 hover:border-gray-300 bg-white',
           value !== 'all' && 'border-gray-900 bg-gray-900 text-white hover:bg-gray-800'
         )}
@@ -170,7 +170,7 @@ export function FilterTagBar({
         {onMobileFilterClick && (
           <button
             onClick={onMobileFilterClick}
-            className="lg:hidden flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-[15px] font-medium text-gray-700 transition-colors flex-shrink-0"
+            className="lg:hidden flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-sm text-[15px] font-medium text-gray-700 transition-colors flex-shrink-0"
           >
             <SlidersHorizontal className="w-4 h-4" />
             필터
@@ -223,7 +223,7 @@ export function FilterTagBar({
             }
           }}
           className={cn(
-            'px-5 py-2.5 rounded-lg text-[15px] font-medium transition-colors flex-shrink-0',
+            'px-5 py-2.5 rounded-sm text-[15px] font-medium transition-colors flex-shrink-0',
             isFreeOnly
               ? 'bg-orange-500 text-white'
               : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
@@ -235,7 +235,7 @@ export function FilterTagBar({
         <button
           onClick={() => onSortChange('popular')}
           className={cn(
-            'px-5 py-2.5 rounded-lg text-[15px] font-medium transition-colors flex-shrink-0',
+            'px-5 py-2.5 rounded-sm text-[15px] font-medium transition-colors flex-shrink-0',
             sortBy === 'popular'
               ? 'bg-orange-500 text-white'
               : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
@@ -247,7 +247,7 @@ export function FilterTagBar({
         <button
           onClick={() => onSortChange('newest')}
           className={cn(
-            'px-5 py-2.5 rounded-lg text-[15px] font-medium transition-colors flex-shrink-0',
+            'px-5 py-2.5 rounded-sm text-[15px] font-medium transition-colors flex-shrink-0',
             sortBy === 'newest'
               ? 'bg-orange-500 text-white'
               : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
@@ -259,7 +259,7 @@ export function FilterTagBar({
         <button
           onClick={() => onSortChange('rating')}
           className={cn(
-            'px-5 py-2.5 rounded-lg text-[15px] font-medium transition-colors flex-shrink-0',
+            'px-5 py-2.5 rounded-sm text-[15px] font-medium transition-colors flex-shrink-0',
             sortBy === 'rating'
               ? 'bg-orange-500 text-white'
               : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'

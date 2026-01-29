@@ -127,7 +127,7 @@ export async function GET() {
         // Map content_type to display-friendly subject if it's a routine
         ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
         creator: {
-          name: creatorSettings?.display_name || profile?.nickname || profile?.username || (content.creator_id ? authNamesMap[content.creator_id] : null) || '익명',
+          name: creatorSettings?.display_name || profile?.nickname || (content.creator_id ? authNamesMap[content.creator_id] : null) || '익명',
           avatar_url: creatorSettings?.profile_image_url || profile?.avatar_url,
         },
       };
