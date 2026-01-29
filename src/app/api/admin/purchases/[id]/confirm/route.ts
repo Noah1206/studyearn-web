@@ -38,7 +38,7 @@ export async function POST(
       );
     }
 
-    if (purchase.status !== 'pending_confirm') {
+    if (purchase.status !== 'pending_confirm' && purchase.status !== 'pending_payment') {
       return NextResponse.json(
         { message: '이미 처리된 구매입니다.' },
         { status: 400 }
@@ -165,7 +165,7 @@ export async function DELETE(
       );
     }
 
-    if (purchase.status !== 'pending_confirm') {
+    if (purchase.status !== 'pending_confirm' && purchase.status !== 'pending_payment') {
       return NextResponse.json(
         { message: '이미 처리된 구매입니다.' },
         { status: 400 }
