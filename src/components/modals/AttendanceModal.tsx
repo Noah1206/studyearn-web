@@ -124,10 +124,10 @@ export function AttendanceModal({
             <div className="relative px-6 pt-6 pb-2">
               <button
                 onClick={handleDismissToday}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
                 aria-label="닫기"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-4 h-4 text-gray-400" />
               </button>
 
               <div className="text-center pt-6 pb-4">
