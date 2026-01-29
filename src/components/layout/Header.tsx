@@ -153,11 +153,11 @@ export function Header() {
             <Image
               src="/logo.svg"
               alt="StuPle"
-              width={28}
-              height={28}
-              className="w-7 h-7"
+              width={36}
+              height={36}
+              className="w-9 h-9"
             />
-            <span className="text-lg font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
           </Link>
 
           {/* Content Search Slot - rendered via portal from content page */}
