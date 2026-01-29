@@ -73,7 +73,7 @@ export function CategorySidebar({
   return (
     <aside className={cn('w-52 flex-shrink-0', className)}>
       {/* 메인 배너 - StudyEarn 스타일 */}
-      <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 mb-6 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 mb-6 overflow-hidden">
         {/* 배경 장식 */}
         <div className="absolute top-3 right-3">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
@@ -96,7 +96,7 @@ export function CategorySidebar({
         {/* 콘텐츠 */}
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="font-bold text-gray-900 text-lg leading-tight">
+            <h2 className="font-bold text-gray-900 text-base leading-tight">
               인기 학습자료<br />모아보기
             </h2>
             <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
