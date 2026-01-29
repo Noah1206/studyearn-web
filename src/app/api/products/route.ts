@@ -97,7 +97,7 @@ export async function GET() {
       // Fetch auth user metadata for display name fallback (카카오/구글 이름)
       try {
         const supabaseAdmin = createAdminClient();
-        const namePromises = creatorIds.map(async (id) => {
+        const namePromises = (creatorIds as string[]).map(async (id: string) => {
           const { data } = await supabaseAdmin.auth.admin.getUserById(id);
           if (data?.user) {
             const meta = data.user.user_metadata || {};
