@@ -118,7 +118,7 @@ export function AttendanceModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl"
           >
             {/* Header */}
             <div className="relative px-6 pt-6 pb-2">
