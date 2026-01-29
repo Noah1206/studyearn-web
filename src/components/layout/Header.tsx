@@ -148,7 +148,7 @@ export function Header() {
     >
       <div className="relative flex items-center justify-between h-16 px-4 sm:px-6">
         {/* Logo - 왼쪽 끝에 고정 */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0 ml-2 sm:ml-4">
           <Image
             src="/logo.svg"
             alt="StuPle"
