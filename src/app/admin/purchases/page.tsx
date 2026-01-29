@@ -63,7 +63,7 @@ export default function AdminPurchasesPage() {
     total: 0,
     totalPages: 0,
   });
-  const [status, setStatus] = useState<'pending_confirm' | 'completed' | 'rejected'>('pending_confirm');
+  const [status, setStatus] = useState<'pending_payment' | 'pending_confirm' | 'completed' | 'rejected'>('pending_payment');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -203,6 +203,17 @@ export default function AdminPurchasesPage() {
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <button
+                onClick={() => setStatus('pending_payment')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  status === 'pending_payment'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Clock className="w-4 h-4 inline-block mr-1" />
+                입금 전 ({status === 'pending_payment' ? pagination.total : '-'})
+              </button>
+              <button
                 onClick={() => setStatus('pending_confirm')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   status === 'pending_confirm'
@@ -211,7 +222,7 @@ export default function AdminPurchasesPage() {
                 }`}
               >
                 <Clock className="w-4 h-4 inline-block mr-1" />
-                대기 중 ({status === 'pending_confirm' ? pagination.total : '-'})
+                확인 대기 ({status === 'pending_confirm' ? pagination.total : '-'})
               </button>
               <button
                 onClick={() => setStatus('completed')}
@@ -340,7 +351,7 @@ export default function AdminPurchasesPage() {
                   </div>
 
                   {/* Actions */}
-                  {status === 'pending_confirm' && (
+                  {(status === 'pending_confirm' || status === 'pending_payment') && (
                     <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleConfirm(purchase.id)}
