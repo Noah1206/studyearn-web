@@ -20,14 +20,10 @@ export async function POST(
     const { id } = await params;
     const supabase = createAdminClient();
 
-    // Get the purchase with buyer and content info for email
+    // Get the purchase
     const { data: purchase, error: purchaseError } = await supabase
       .from('content_purchases')
-      .select(`
-        *,
-        buyer:profiles!content_purchases_buyer_id_fkey(email, nickname),
-        content:contents!content_purchases_content_id_fkey(title)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -37,6 +33,12 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    // Get buyer and content info separately for email
+    const [{ data: buyer }, { data: content }] = await Promise.all([
+      supabase.from('profiles').select('email, nickname').eq('id', purchase.buyer_id).single(),
+      supabase.from('contents').select('title').eq('id', purchase.content_id).single(),
+    ]);
 
     if (purchase.status !== 'pending_confirm' && purchase.status !== 'pending_payment') {
       return NextResponse.json(
@@ -107,11 +109,11 @@ export async function POST(
     }
 
     // Send purchase confirmation email to buyer
-    if (purchase.buyer?.email && purchase.content?.title) {
+    if (buyer?.email && content?.title) {
       try {
         await sendPurchaseConfirmEmail(
-          purchase.buyer.email,
-          purchase.content.title,
+          buyer.email,
+          content.title,
           purchase.content_id
         );
       } catch (emailError) {
