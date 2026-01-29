@@ -565,8 +565,24 @@ export default function ProductsPage() {
       exit="exit"
       variants={pageVariants}
     >
+      {/* 필터 태그바 */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <FilterTagBar
+              activeFilters={activeFilters}
+              onRemoveFilter={handleRemoveFilter}
+              onAddFilter={handleAddFilter}
+              onClearAll={handleClearAllFilters}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              totalCount={sortedProducts.length}
+              onMobileFilterClick={() => setIsMobileFilterOpen(true)}
+            />
+      </div>
+
       {/* 메인 컨텐츠 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
         <div className="flex gap-6 lg:gap-8">
           {/* 사이드바 - 데스크탑 */}
           <div className="hidden lg:block sticky top-24 h-fit">
@@ -580,20 +596,6 @@ export default function ProductsPage() {
 
           {/* 메인 콘텐츠 영역 */}
           <div className="flex-1 min-w-0">
-            {/* 필터 태그바 */}
-            <FilterTagBar
-              activeFilters={activeFilters}
-              onRemoveFilter={handleRemoveFilter}
-              onAddFilter={handleAddFilter}
-              onClearAll={handleClearAllFilters}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              totalCount={sortedProducts.length}
-              onMobileFilterClick={() => setIsMobileFilterOpen(true)}
-            />
-
             {/* 콘텐츠 목록 */}
             {isLoading ? (
               <LoadingSection message="콘텐츠를 불러오는 중..." />

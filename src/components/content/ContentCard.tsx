@@ -93,7 +93,7 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
       <Link href={`/content/${product.id}`} className="block">
         <div className="flex flex-col h-full">
           {/* 썸네일 영역 */}
-          <div className="relative rounded-lg overflow-hidden shadow-toss-2 group-hover:shadow-toss-4 transition-shadow duration-300">
+          <div className="relative rounded-sm overflow-hidden shadow-toss-2 group-hover:shadow-toss-4 transition-shadow duration-300">
             <ContentThumbnail
               thumbnailUrl={product.thumbnail_url}
               subject={product.subject}
