@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft, Plus } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, ArrowRightLeft, Plus, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Avatar, Badge } from '@/components/ui';
 import { useUserStore } from '@/store/userStore';
@@ -146,21 +146,34 @@ export function Header() {
     <header
       className="bg-white border-b border-gray-100"
     >
-      <div className="relative flex items-center justify-between h-16 px-6 sm:px-10 lg:px-16">
-        {/* Logo - 왼쪽 끝에 고정 */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <Image
-            src="/logo.svg"
-            alt="StuPle"
-            width={32}
-            height={32}
-            className="w-8 h-8"
-          />
-          <span className="text-xl font-bold text-gray-900 tracking-tight">StuPle</span>
-        </Link>
+      <div className="relative flex items-center justify-between h-16 px-8 sm:px-14 lg:px-24 gap-4">
+        {/* Left: Logo + Search */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <Image
+              src="/logo.svg"
+              alt="StuPle"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
+            <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
+          </Link>
 
-        {/* Desktop Navigation - 중앙 */}
-        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {/* Search Input */}
+          <div className="hidden md:flex items-center flex-1 max-w-md">
+            <div
+              className="flex items-center gap-2 w-full px-4 py-2 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => router.push('/content')}
+            >
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <span className="text-sm text-gray-400 truncate">필요한 학습 자료를 검색해보세요</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Nav Links + Auth Buttons */}
+          <div className="hidden md:flex items-center gap-1">
             <Link
               href="/content"
               className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all text-sm font-medium"
@@ -173,10 +186,7 @@ export function Header() {
             >
               스터디언
             </Link>
-          </nav>
-
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+            <div className="w-px h-5 bg-gray-200 mx-1" />
             {user ? (
               <>
                 {/* Upload Button - Only on Dashboard */}
