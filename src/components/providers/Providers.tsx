@@ -53,7 +53,7 @@ export function Providers({ children, initialSession }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider initialSession={initialSession}>
-        <ToastProvider position="top-center">
+        <ToastProvider position="bottom-center">
           <Suspense fallback={null}>
             <PageLoader />
           </Suspense>

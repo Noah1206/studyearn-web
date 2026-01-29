@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { dismissForToday } from '@/lib/attendance';
 import { createClient } from '@/lib/supabase/client';
+import { useToastActions } from '@/components/ui/Toast';
 
 interface AttendanceModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export function AttendanceModal({
   isLoggedIn = false,
 }: AttendanceModalProps) {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const toast = useToastActions();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +35,6 @@ export function AttendanceModal({
   }
 
   const handleKakaoLogin = async () => {
-    setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
@@ -43,12 +43,11 @@ export function AttendanceModal({
     });
     if (error) {
       console.error('Kakao login error:', error);
-      setError('카카오 로그인에 실패했습니다.');
+      toast.error('카카오 로그인에 실패했습니다.');
     }
   };
 
   const handleGoogleLogin = async () => {
-    setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -57,16 +56,15 @@ export function AttendanceModal({
     });
     if (error) {
       console.error('Google login error:', error);
-      setError('구글 로그인에 실패했습니다.');
+      toast.error('구글 로그인에 실패했습니다.');
     }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('이메일과 비밀번호를 입력해주세요.');
+      toast.error('이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
@@ -79,9 +77,9 @@ export function AttendanceModal({
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+          toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
         } else {
-          setError(error.message);
+          toast.error(error.message);
         }
         return;
       }
@@ -91,7 +89,7 @@ export function AttendanceModal({
         window.location.href = '/';
       }
     } catch {
-      setError('로그인에 실패했습니다.');
+      toast.error('로그인에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -139,13 +137,6 @@ export function AttendanceModal({
                 </p>
               </div>
             </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mx-6 mb-3 p-2.5 bg-red-50 rounded-xl text-sm text-red-600 text-center">
-                {error}
-              </div>
-            )}
 
             <div className="px-6 pb-6">
               {/* Social Login */}
