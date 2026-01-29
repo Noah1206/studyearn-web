@@ -62,16 +62,34 @@ export async function GET() {
       subject?: string;
       user_id: string;
     }
+    interface ProfileInfo {
+      id: string;
+      nickname?: string;
+      username?: string;
+      avatar_url?: string;
+    }
     let creatorsMap: Record<string, CreatorInfo> = {};
+    let profilesMap: Record<string, ProfileInfo> = {};
     if (creatorIds.length > 0) {
-      const { data: creators } = await supabase
-        .from('creator_settings')
-        .select('user_id, display_name, profile_image_url, subject')
-        .in('user_id', creatorIds);
+      const [{ data: creators }, { data: profiles }] = await Promise.all([
+        supabase
+          .from('creator_settings')
+          .select('user_id, display_name, profile_image_url, subject')
+          .in('user_id', creatorIds),
+        supabase
+          .from('profiles')
+          .select('id, nickname, username, avatar_url')
+          .in('id', creatorIds),
+      ]);
 
       if (creators) {
         creators.forEach((c: CreatorInfo) => {
           creatorsMap[c.user_id] = c;
+        });
+      }
+      if (profiles) {
+        profiles.forEach((p: ProfileInfo) => {
+          profilesMap[p.id] = p;
         });
       }
     }
@@ -84,16 +102,17 @@ export async function GET() {
       [key: string]: unknown;
     }) => {
       const creatorSettings = content.creator_id ? creatorsMap[content.creator_id] : null;
+      const profile = content.creator_id ? profilesMap[content.creator_id] : null;
       return {
         ...content,
         // Use content's subject, fallback to creator's subject
         subject: content.subject || creatorSettings?.subject || null,
         // Map content_type to display-friendly subject if it's a routine
         ...(content.content_type === 'routine' && !content.subject ? { subject: '루틴' } : {}),
-        creator: creatorSettings ? {
-          name: creatorSettings.display_name || '익명',
-          avatar_url: creatorSettings.profile_image_url,
-        } : { name: '익명' },
+        creator: {
+          name: creatorSettings?.display_name || profile?.nickname || profile?.username || '익명',
+          avatar_url: creatorSettings?.profile_image_url || profile?.avatar_url,
+        },
       };
     });
 
