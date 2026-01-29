@@ -104,10 +104,15 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
 
           {/* 정보 영역 */}
           <div className="pt-3.5 flex flex-col flex-1">
-            {/* 제목 - 크몽 스타일로 강조 */}
-            <h3 className="text-[15px] font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 mb-2.5 leading-snug flex-grow">
-              {product.title}
-            </h3>
+            {/* 제목 + 크리에이터 */}
+            <div className="flex items-start justify-between gap-2 mb-2.5 flex-grow">
+              <h3 className="text-[15px] font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+                {product.title}
+              </h3>
+              <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                {product.creator?.name || '익명'}
+              </span>
+            </div>
 
             {/* 별점 + 리뷰 수 (크몽 스타일) */}
             <div className="flex items-center gap-1.5 mb-2">
@@ -124,8 +129,8 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
               )}
             </div>
 
-            {/* 가격 + 크리에이터 */}
-            <div className="flex items-center gap-2">
+            {/* 가격 */}
+            <div>
               {product.price === 0 ? (
                 <span className="text-base font-bold text-orange-600">무료</span>
               ) : (
@@ -133,9 +138,6 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
                   {formatCurrency(product.price)}
                 </span>
               )}
-              <span className="text-xs text-gray-400 truncate">
-                {product.creator?.name || '익명'}
-              </span>
             </div>
           </div>
         </div>
