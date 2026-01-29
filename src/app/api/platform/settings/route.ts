@@ -1,36 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/auth';
 
 /**
  * PUT /api/platform/settings
  * Update platform settings (admin only)
  */
 export async function PUT(request: NextRequest) {
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
-    const supabase = await createClient();
-
-    // Check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { message: '관리자 권한이 필요합니다.' },
-        { status: 403 }
-      );
-    }
+    const supabase = createAdminClient();
 
     const body = await request.json();
     const { key, value } = body;
@@ -72,30 +53,12 @@ export async function PUT(request: NextRequest) {
  * GET /api/platform/settings
  * Get platform settings (payment account, payout settings)
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
+  const adminError = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
-    const supabase = await createClient();
-
-    const { searchParams } = new URL(request.url);
-    const key = searchParams.get('key');
-
-    if (key) {
-      // Get specific setting
-      const { data, error } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .eq('key', key)
-        .single();
-
-      if (error || !data) {
-        return NextResponse.json(
-          { message: '설정을 찾을 수 없습니다.' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(data);
-    }
+    const supabase = createAdminClient();
 
     // Get all settings
     const { data, error } = await supabase
