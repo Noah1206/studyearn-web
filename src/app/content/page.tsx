@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -248,6 +249,14 @@ export default function ProductsPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [headerSearchSlot, setHeaderSearchSlot] = useState<HTMLElement | null>(null);
+
+  // Header search slot 찾기
+  useEffect(() => {
+    const slot = document.getElementById('header-search-slot');
+    setHeaderSearchSlot(slot);
+    return () => setHeaderSearchSlot(null);
+  }, []);
 
   // 최근 검색어 불러오기
   useEffect(() => {
@@ -578,75 +587,7 @@ export default function ProductsPage() {
             )}
           </nav>
 
-          {/* 검색바 */}
-          <div className="pb-6">
-            <div className="relative max-w-2xl">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-              <input
-                type="text"
-                placeholder="필요한 학습 자료를 검색해보세요"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    handleSearch(searchQuery);
-                  }
-                }}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition-all text-base"
-              />
-
-              {/* 최근 검색어 드롭다운 */}
-              {isSearchFocused && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-gray-900">최근 검색어</span>
-                      {recentSearches.length > 0 && (
-                        <button
-                          onClick={clearAllSearches}
-                          className="text-xs text-gray-400 hover:text-gray-600"
-                        >
-                          전체 삭제
-                        </button>
-                      )}
-                    </div>
-
-                    {recentSearches.length > 0 ? (
-                      <div className="space-y-1">
-                        {recentSearches.map((search, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between group px-2 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                            onClick={() => handleSearch(search)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Clock className="w-4 h-4 text-gray-300" />
-                              <span className="text-sm text-gray-700">{search}</span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeSearch(search);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
-                            >
-                              <X className="w-3.5 h-3.5 text-gray-400" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400 text-center py-6">
-                        최근 검색어 내역이 없습니다
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* 검색바는 헤더로 포털 렌더링 */}
         </div>
       </div>
 
@@ -733,6 +674,77 @@ export default function ProductsPage() {
         filters={filters}
         onFilterChange={setFilters}
       />
+
+      {/* 헤더 검색바 포털 */}
+      {headerSearchSlot && createPortal(
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+          <input
+            type="text"
+            placeholder="필요한 학습 자료를 검색해보세요"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                handleSearch(searchQuery);
+              }
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 focus:bg-white transition-all text-sm"
+          />
+
+          {/* 최근 검색어 드롭다운 */}
+          {isSearchFocused && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-gray-900">최근 검색어</span>
+                  {recentSearches.length > 0 && (
+                    <button
+                      onClick={clearAllSearches}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      전체 삭제
+                    </button>
+                  )}
+                </div>
+
+                {recentSearches.length > 0 ? (
+                  <div className="space-y-1">
+                    {recentSearches.map((search, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between group px-2 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                        onClick={() => handleSearch(search)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-4 h-4 text-gray-300" />
+                          <span className="text-sm text-gray-700">{search}</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSearch(search);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                        >
+                          <X className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    최근 검색어 내역이 없습니다
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>,
+        headerSearchSlot
+      )}
     </motion.div>
   );
 }

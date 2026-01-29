@@ -18,7 +18,6 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [headerSearch, setHeaderSearch] = useState('');
   // Supabase client를 useMemo로 캐싱하여 매 렌더마다 새 인스턴스 생성 방지
   const supabase = useMemo(() => createClient(), []);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -161,29 +160,8 @@ export function Header() {
             <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
           </Link>
 
-          {/* Search Input */}
-          <form
-            className="hidden md:flex items-center flex-1 max-w-lg"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (headerSearch.trim()) {
-                router.push(`/content?q=${encodeURIComponent(headerSearch.trim())}`);
-              } else {
-                router.push('/content');
-              }
-            }}
-          >
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="필요한 학습 자료를 검색해보세요"
-                value={headerSearch}
-                onChange={(e) => setHeaderSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition-all"
-              />
-            </div>
-          </form>
+          {/* Content Search Slot - rendered via portal from content page */}
+          <div id="header-search-slot" className="hidden md:flex items-center flex-1 max-w-lg" />
         </div>
 
         {/* Right: Nav Links + Auth Buttons */}
