@@ -144,7 +144,7 @@ export function Header() {
 
   return (
     <header
-      className="bg-white border-b border-gray-100"
+      className="bg-white"
     >
       <div className="relative flex items-center justify-between h-16 px-8 sm:px-14 lg:px-24 gap-4">
         {/* Left: Logo + Search */}
