@@ -130,12 +130,12 @@ export function AttendanceModal({
                 <X className="w-5 h-5 text-gray-400" />
               </button>
 
-              <div className="text-center pt-4 pb-2">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">
-                  로그인
+              <div className="text-center pt-6 pb-4">
+                <h2 className="text-2xl font-bold text-orange-500 mb-2">
+                  스터플에 오신 것을 환영합니다
                 </h2>
-                <p className="text-gray-400 text-sm">
-                  로그인하고 다양한 학습 콘텐츠를 만나보세요
+                <p className="text-gray-500 text-sm">
+                  로그인하고 다양한 학습 콘텐츠를 만나보세요!
                 </p>
               </div>
             </div>
@@ -149,10 +149,10 @@ export function AttendanceModal({
 
             <div className="px-6 pb-6">
               {/* Social Login */}
-              <div className="flex gap-2.5 mb-5">
+              <div className="space-y-2.5 mb-5">
                 <button
                   onClick={handleKakaoLogin}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#FEE500] font-medium text-sm text-[#191919] rounded-xl transition-all duration-200 hover:brightness-95 active:scale-[0.97]"
+                  className="w-full flex items-center justify-center gap-2.5 py-3 bg-[#FEE500] font-semibold text-sm text-[#191919] rounded-xl transition-all duration-200 hover:brightness-95 active:scale-[0.98]"
                 >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                     <path
@@ -162,11 +162,11 @@ export function AttendanceModal({
                       fill="#191919"
                     />
                   </svg>
-                  카카오
+                  카카오로 시작하기
                 </button>
                 <button
                   onClick={handleGoogleLogin}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-50 font-medium text-sm text-gray-700 rounded-xl transition-all duration-200 hover:bg-gray-100 active:scale-[0.97]"
+                  className="w-full flex items-center justify-center gap-2.5 py-3 bg-gray-50 font-semibold text-sm text-gray-700 rounded-xl transition-all duration-200 hover:bg-gray-100 active:scale-[0.98]"
                 >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                     <path d="M19.6 10.23c0-.68-.06-1.34-.17-1.97H10v3.73h5.38a4.6 4.6 0 01-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.28z" fill="#4285F4"/>
@@ -174,7 +174,7 @@ export function AttendanceModal({
                     <path d="M4.42 11.91A6.02 6.02 0 014.1 10c0-.66.11-1.31.32-1.91V5.51H1.07A9.99 9.99 0 000 10c0 1.61.39 3.14 1.07 4.49l3.35-2.58z" fill="#FBBC05"/>
                     <path d="M10 3.96c1.47 0 2.78.5 3.82 1.5l2.86-2.86A9.97 9.97 0 0010 0 9.99 9.99 0 001.07 5.51l3.35 2.58C5.2 5.72 7.4 3.96 10 3.96z" fill="#EA4335"/>
                   </svg>
-                  구글
+                  구글로 시작하기
                 </button>
               </div>
 
@@ -207,7 +207,7 @@ export function AttendanceModal({
                 <button
                   type="submit"
                   disabled={isLoading || !email || !password}
-                  className="w-full py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-all duration-200 active:scale-[0.98]"
+                  className="w-full py-3 bg-transparent text-gray-700 hover:bg-gray-900 hover:text-white active:bg-gray-800 active:text-white disabled:bg-gray-200 disabled:text-gray-400 text-sm font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] border border-gray-200 hover:border-transparent"
                 >
                   {isLoading ? '로그인 중...' : '로그인'}
                 </button>
