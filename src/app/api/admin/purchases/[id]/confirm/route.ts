@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { sendPurchaseConfirmEmail } from '@/lib/email';
 import { requireAdmin } from '@/lib/auth';
 
@@ -18,7 +18,7 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Get the purchase with buyer and content info for email
     const { data: purchase, error: purchaseError } = await supabase
@@ -149,7 +149,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Get the purchase
     const { data: purchase, error: purchaseError } = await supabase
