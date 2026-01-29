@@ -124,19 +124,15 @@ export function ContentCard({ product, index = 0, likedIds, onToggleLike }: Cont
               )}
             </div>
 
-            {/* 가격 (크몽 스타일) */}
-            <div className="mb-2.5">
+            {/* 가격 + 크리에이터 */}
+            <div className="flex items-center gap-2">
               {product.price === 0 ? (
                 <span className="text-base font-bold text-orange-600">무료</span>
               ) : (
                 <span className="text-base font-bold text-gray-900">
-                  {formatCurrency(product.price)}~
+                  {formatCurrency(product.price)}
                 </span>
               )}
-            </div>
-
-            {/* 크리에이터 */}
-            <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-400 truncate">
                 {product.creator?.name || '익명'}
               </span>
