@@ -118,13 +118,13 @@ export function AttendanceModal({
             )}
 
             {/* Actions */}
-            <div className="px-6 pt-2 pb-8 space-y-3">
+            <div className="px-6 pt-2 pb-8 space-y-2.5">
               {/* Kakao Button */}
               <button
                 onClick={handleKakaoLogin}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-semibold rounded-xl transition-all"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[#FEE500] text-[#191919] font-semibold rounded-2xl transition-all duration-200 hover:brightness-95 active:scale-[0.98]"
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -138,9 +138,9 @@ export function AttendanceModal({
               {/* Google Button */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold rounded-xl transition-all"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gray-50 text-gray-800 font-semibold rounded-2xl transition-all duration-200 hover:bg-gray-100 active:scale-[0.98]"
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                   <path d="M19.6 10.23c0-.68-.06-1.34-.17-1.97H10v3.73h5.38a4.6 4.6 0 01-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.28z" fill="#4285F4"/>
                   <path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.24-2.5c-.9.6-2.04.95-3.38.95-2.6 0-4.8-1.76-5.58-4.12H1.07v2.58A9.99 9.99 0 0010 20z" fill="#34A853"/>
                   <path d="M4.42 11.91A6.02 6.02 0 014.1 10c0-.66.11-1.31.32-1.91V5.51H1.07A9.99 9.99 0 000 10c0 1.61.39 3.14 1.07 4.49l3.35-2.58z" fill="#FBBC05"/>
@@ -152,15 +152,15 @@ export function AttendanceModal({
               {/* Email Button */}
               <button
                 onClick={handleEmailLogin}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold rounded-xl transition-all"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gray-50 text-gray-800 font-semibold rounded-2xl transition-all duration-200 hover:bg-gray-100 active:scale-[0.98]"
               >
-                <Mail className="w-5 h-5" />
+                <Mail className="w-[18px] h-[18px]" />
                 이메일로 시작하기
               </button>
 
               <button
                 onClick={handleDismissToday}
-                className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors pt-2"
+                className="w-full text-center text-sm text-gray-400 hover:text-gray-500 transition-colors pt-3"
               >
                 오늘 하루 보지 않기
               </button>
