@@ -73,7 +73,7 @@ export function CategorySidebar({
   return (
     <aside className={cn('w-52 flex-shrink-0', className)}>
       {/* 메인 배너 - StudyEarn 스타일 */}
-      <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 mb-6 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-5 mb-6 overflow-hidden">
         {/* 배경 장식 */}
         <div className="absolute top-3 right-3">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-yellow-400">
