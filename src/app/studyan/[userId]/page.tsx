@@ -309,7 +309,7 @@ export default function StudyanUserPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-white"
       initial="initial"
       animate="enter"
       exit="exit"
@@ -329,78 +329,79 @@ export default function StudyanUserPage() {
       </div>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {/* Profile Card - Minimal Style */}
-        <Card className="mb-6 border-0 shadow-sm">
-          <CardContent className="p-6">
-            {/* Profile Header */}
-            <div className="flex items-center gap-4 mb-6">
-              {/* Avatar */}
-              {user.avatar_url ? (
-                <Avatar
+        {/* Profile Section */}
+        <div className="mb-8">
+          {/* Avatar & Name */}
+          <div className="flex flex-col items-center text-center mb-5">
+            {user.avatar_url ? (
+              <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-orange-100 mb-3">
+                <Image
                   src={user.avatar_url}
                   alt={user.nickname || '사용자'}
-                  size="lg"
-                  className="w-16 h-16"
+                  width={80}
+                  height={80}
+                  className="object-cover w-full h-full"
                 />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-400 flex-shrink-0">
-                  {user.nickname?.charAt(0) || '?'}
-                </div>
-              )}
-
-              {/* Name & Bio */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">
-                    {user.nickname || '익명 사용자'}
-                  </h2>
-                  {isOwnProfile && (
-                    <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
-                      나
-                    </Badge>
-                  )}
-                </div>
-                {user.bio && (
-                  <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{user.bio}</p>
-                )}
               </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="flex items-center justify-around py-4">
-              <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{user.routines.length}</p>
-                <p className="text-xs text-gray-500 mt-0.5">루틴</p>
+            ) : (
+              <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-3xl mb-3 ring-2 ring-orange-100`}>
+                {characterAvatar.emoji}
               </div>
-              <div className="w-px h-8 bg-gray-100" />
-              <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{user.follower_count}</p>
-                <p className="text-xs text-gray-500 mt-0.5">팔로워</p>
-              </div>
-            </div>
-
-            {/* Follow Button */}
-            {currentUserId && !isOwnProfile && (
-              <button
-                onClick={handleToggleFollow}
-                disabled={followLoading}
-                className={`w-full mt-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                  isFollowing
-                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
-              >
-                {followLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                ) : isFollowing ? (
-                  '팔로잉 중'
-                ) : (
-                  '팔로우'
-                )}
-              </button>
             )}
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900">
+                {user.nickname || '익명 사용자'}
+              </h2>
+              {isOwnProfile && (
+                <Badge className="bg-orange-50 text-orange-500 border-0 text-xs">
+                  나
+                </Badge>
+              )}
+            </div>
+            {user.bio && (
+              <p className="text-sm text-gray-500 mt-1 max-w-xs">{user.bio}</p>
+            )}
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex items-center justify-center gap-8 mb-5">
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900">{userContents.length}</p>
+              <p className="text-xs text-gray-500">콘텐츠</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900">{user.routines.length}</p>
+              <p className="text-xs text-gray-500">루틴</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900">{user.follower_count}</p>
+              <p className="text-xs text-gray-500">팔로워</p>
+            </div>
+          </div>
+
+          {/* Follow Button */}
+          {currentUserId && !isOwnProfile && (
+            <button
+              onClick={handleToggleFollow}
+              disabled={followLoading}
+              className={`w-full py-2.5 text-sm font-medium rounded transition-all ${
+                isFollowing
+                  ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+              }`}
+            >
+              {followLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+              ) : isFollowing ? (
+                '팔로잉 중'
+              ) : (
+                '팔로우'
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="w-full h-px bg-gray-100 mb-6" />
 
         {/* Contents Section */}
         <div className="mb-6">
