@@ -264,7 +264,7 @@ export default function ProductDetailPage() {
             if (productsRes.ok) {
               const productsData = await productsRes.json();
               const otherContents = (productsData.products || [])
-                .filter((p: any) => p.creator_id === data.product.creator_id && p.id !== id)
+                .filter((p: any) => p.creator_id === data.product.creator_id)
                 .slice(0, 6);
               setCreatorContents(otherContents);
             }
@@ -670,13 +670,13 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Creator's Other Contents */}
-            {creatorContents.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    크리에이터의 다른 콘텐츠 <span className="text-sm font-normal text-gray-500">({creatorContents.length})</span>
-                  </h2>
-                </div>
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">
+                  크리에이터의 다른 콘텐츠 {creatorContents.length > 0 && <span className="text-sm font-normal text-gray-500">({creatorContents.length})</span>}
+                </h2>
+              </div>
+              {creatorContents.length > 0 ? (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {creatorContents.map((item: any) => (
                     <Link key={item.id} href={`/content/${item.id}`} className="group">
@@ -704,8 +704,10 @@ export default function ProductDetailPage() {
                     </Link>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-400">아직 다른 콘텐츠가 없습니다</p>
+              )}
+            </div>
 
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
