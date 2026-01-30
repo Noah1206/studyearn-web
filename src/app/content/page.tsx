@@ -131,9 +131,7 @@ function ProductListCard({ product, index, likedIds, onToggleLike }: { product: 
                       <span className="text-sm text-gray-400">({product.rating_count})</span>
                     )}
                   </>
-                ) : (
-                  <span className="text-sm text-gray-400">리뷰 없음</span>
-                )}
+                ) : null}
               </div>
 
               {/* 가격 */}

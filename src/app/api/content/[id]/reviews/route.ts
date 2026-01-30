@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/content/[id]/reviews
@@ -43,6 +43,28 @@ export async function GET(
       if (profiles) {
         for (const p of profiles) {
           profileMap[p.id] = { nickname: p.nickname || '익명', avatar_url: p.avatar_url };
+        }
+      }
+
+      // profiles에 avatar_url이 없는 유저는 auth 메타데이터에서 보완
+      for (const uid of userIds) {
+        if (!profileMap[uid]?.avatar_url) {
+          const adminClient = createAdminClient();
+          if (!adminClient) continue;
+          const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(uid);
+          const meta = authUser?.user_metadata;
+          if (meta) {
+            const avatarUrl = meta.avatar_url || meta.picture || null;
+            if (avatarUrl) {
+              if (profileMap[uid]) {
+                profileMap[uid].avatar_url = avatarUrl;
+              } else {
+                profileMap[uid] = { nickname: meta.user_name || meta.name || '익명', avatar_url: avatarUrl };
+              }
+              // DB도 업데이트
+              await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', uid).catch(() => {});
+            }
+          }
         }
       }
     }

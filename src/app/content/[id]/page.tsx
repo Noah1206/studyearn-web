@@ -500,6 +500,150 @@ export default function ProductDetailPage() {
         <div className="lg:grid lg:grid-cols-12 lg:gap-8">
           {/* Left: Main Content */}
           <div className="lg:col-span-8 px-4 py-6 lg:py-10 lg:pl-8">
+            {/* Review Section */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  리뷰
+                  {reviews.length > 0 && (
+                    <span className="text-sm font-normal text-gray-500">({reviews.length})</span>
+                  )}
+                </h2>
+                {rating > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{rating}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Review Form - 구매자만 */}
+              {isPurchased && !isOwner && !hasReviewed && (
+                <div className="mb-4">
+                  {/* Star Rating */}
+                  <div className="flex items-center gap-0.5 mb-4">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setReviewRating(s)}
+                        className="p-0"
+                      >
+                        <Star
+                          className={`w-4 h-4 transition-colors ${
+                            s <= reviewRating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-gray-300 hover:text-amber-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    {reviewRating > 0 && (
+                      <span className="text-xs text-gray-400 ml-1">{reviewRating}점</span>
+                    )}
+                  </div>
+
+                  {/* Text Input */}
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="이 자료에 대한 솔직한 리뷰를 작성해주세요"
+                    maxLength={500}
+                    rows={1}
+                    className="w-full border-b border-gray-200 px-0 pb-1.5 pt-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 resize-none bg-transparent"
+                  />
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-xs text-gray-400">{reviewText.length}/500</span>
+                    <button
+                      onClick={handleSubmitReview}
+                      disabled={!reviewRating || !reviewText.trim() || isSubmittingReview}
+                      className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors disabled:text-gray-300 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {isSubmittingReview ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          등록 중
+                        </>
+                      ) : (
+                        '등록'
+                      )}
+                    </button>
+                  </div>
+                  {reviewError && (
+                    <p className="text-xs text-red-500 mt-1">{reviewError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Already reviewed message */}
+              {hasReviewed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className="text-sm text-emerald-700">리뷰를 등록했습니다.</span>
+                </motion.div>
+              )}
+
+              {/* Review List - 가로 스크롤 카드 */}
+              {reviews.length > 0 ? (
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="flex-shrink-0 w-56 rounded-2xl border border-gray-100 bg-white p-4 flex flex-col">
+                      {/* Profile */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {review.avatar_url ? (
+                            <Image
+                              src={review.avatar_url}
+                              alt={review.nickname}
+                              width={28}
+                              height={28}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <User className="w-3.5 h-3.5 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star
+                                key={s}
+                                className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
+                              />
+                            ))}
+                            <span className="text-xs font-semibold text-gray-900 ml-0.5">{review.rating}.0</span>
+                          </div>
+                          <p className="text-xs text-gray-400 truncate">{review.nickname}</p>
+                        </div>
+                      </div>
+                      {/* Body */}
+                      <p className="text-sm text-gray-600 leading-relaxed flex-1">{review.text}</p>
+                      {/* Date */}
+                      <p className="text-xs text-gray-300 mt-3">{formatRelativeTime(review.created_at)}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageSquare className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">아직 리뷰가 없습니다</p>
+                </div>
+              )}
+            </div>
+
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
               {product.subject && (
@@ -1104,146 +1248,6 @@ export default function ProductDetailPage() {
                 <p className="text-gray-400">
                   아직 등록된 설명이 없습니다.
                 </p>
-              )}
-            </div>
-
-            {/* Review Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  리뷰
-                  {reviews.length > 0 && (
-                    <span className="text-sm font-normal text-gray-500">({reviews.length})</span>
-                  )}
-                </h2>
-                {rating > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900">{rating}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Review Form - 구매자만 */}
-              {isPurchased && !isOwner && !hasReviewed && (
-                <div className="bg-gray-50 rounded-2xl p-4 mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-3">리뷰 작성</p>
-
-                  {/* Star Rating */}
-                  <div className="flex items-center gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setReviewRating(s)}
-                        className="p-0.5"
-                      >
-                        <Star
-                          className={`w-6 h-6 transition-colors ${
-                            s <= reviewRating
-                              ? 'text-amber-400 fill-amber-400'
-                              : 'text-gray-300 hover:text-amber-300'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                    {reviewRating > 0 && (
-                      <span className="text-sm text-gray-500 ml-2">{reviewRating}점</span>
-                    )}
-                  </div>
-
-                  {/* Text Input */}
-                  <textarea
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="이 자료에 대한 솔직한 리뷰를 작성해주세요"
-                    maxLength={500}
-                    rows={3}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 resize-none"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-400">{reviewText.length}/500</span>
-                    <button
-                      onClick={handleSubmitReview}
-                      disabled={!reviewRating || !reviewText.trim() || isSubmittingReview}
-                      className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    >
-                      {isSubmittingReview ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          등록 중...
-                        </>
-                      ) : (
-                        '리뷰 등록'
-                      )}
-                    </button>
-                  </div>
-                  {reviewError && (
-                    <p className="text-xs text-red-500 mt-2">{reviewError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Already reviewed message */}
-              {hasReviewed && (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  <span className="text-sm text-emerald-700">리뷰를 등록했습니다.</span>
-                </div>
-              )}
-
-              {/* Review List */}
-              {reviews.length > 0 ? (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="flex gap-3">
-                      {/* Avatar */}
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {review.avatar_url ? (
-                          <Image
-                            src={review.avatar_url}
-                            alt={review.nickname}
-                            width={32}
-                            height={32}
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          <User className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-semibold text-gray-900">{review.nickname}</span>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((s) => (
-                              <Star
-                                key={s}
-                                className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-400">{formatRelativeTime(review.created_at)}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">{review.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <MessageSquare className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">아직 리뷰가 없습니다</p>
-                </div>
               )}
             </div>
 
