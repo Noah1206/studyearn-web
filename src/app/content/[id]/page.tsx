@@ -60,6 +60,7 @@ interface Product {
   like_count: number;
   rating_sum: number;
   rating_count: number;
+  creator_id?: string | null;
   creator?: {
     name: string;
     avatar_url?: string | null;
@@ -1344,7 +1345,7 @@ export default function ProductDetailPage() {
                   </div>
                   <Link
                     href={`/creator/${product.creator_id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                   >
                     <Home className="w-3.5 h-3.5" />
                     크리에이터 홈
@@ -1421,7 +1422,7 @@ export default function ProductDetailPage() {
                       <button
                         onClick={handleCopyRoutine}
                         disabled={isCopying}
-                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded transition-colors disabled:opacity-50"
                       >
                         {isCopying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
                         <span>{isCopying ? '복사 중...' : '내 루틴으로 복사'}</span>
@@ -1430,7 +1431,7 @@ export default function ProductDetailPage() {
                       <button
                         onClick={handleDownload}
                         disabled={isDownloading}
-                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded transition-colors disabled:opacity-50"
                       >
                         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                         <span>{isDownloading ? '다운로드 중...' : '다운로드'}</span>
@@ -1482,7 +1483,7 @@ export default function ProductDetailPage() {
                         <button
                           onClick={handleClaimFree}
                           disabled={isClaiming}
-                          className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {isClaiming ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /><span>처리 중...</span></>
@@ -1491,13 +1492,13 @@ export default function ProductDetailPage() {
                           )}
                         </button>
                       ) : isPending ? (
-                        <button className="w-full h-12 rounded-xl border-2 border-orange-400 bg-orange-50 text-orange-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed" disabled>
+                        <button className="w-full h-12 rounded border-2 border-orange-400 bg-orange-50 text-orange-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed" disabled>
                           <Clock className="w-4 h-4" />
                           <span>구매 대기 중</span>
                         </button>
                       ) : (
                         <Link href={`/purchase/${id}`} className="block">
-                          <button className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center">
+                          <button className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded transition-colors flex items-center justify-center">
                             구매하기
                           </button>
                         </Link>
