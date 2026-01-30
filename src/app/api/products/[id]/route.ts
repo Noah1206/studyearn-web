@@ -110,12 +110,12 @@ export async function GET(
           .select('id, status')
           .eq('content_id', id)
           .eq('buyer_id', user.id)
-          .in('status', ['completed', 'pending'])
+          .in('status', ['completed', 'pending_confirm'])
           .maybeSingle();
 
         if (purchase?.status === 'completed') {
           isPurchased = true;
-        } else if (purchase?.status === 'pending') {
+        } else if (purchase?.status === 'pending_confirm') {
           isPending = true;
         }
       } else {
