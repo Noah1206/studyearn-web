@@ -680,7 +680,7 @@ export default function ProductDetailPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {creatorContents.map((item: any) => (
                     <Link key={item.id} href={`/content/${item.id}`} className="group">
-                      <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                      <div className="aspect-[4/3] rounded-sm overflow-hidden bg-gray-100 mb-2">
                         {item.thumbnail_url ? (
                           <Image
                             src={item.thumbnail_url}
