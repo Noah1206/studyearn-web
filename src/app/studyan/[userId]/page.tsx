@@ -146,7 +146,7 @@ export default function StudyanUserPage() {
       // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, follower_count, following_count, total_study_minutes, streak_days')
+        .select('id, nickname, avatar_url, bio, follower_count, following_count, total_study_minutes, streak_days')
         .eq('id', userId)
         .single();
 
@@ -182,7 +182,8 @@ export default function StudyanUserPage() {
       setUser({
         id: profile.id,
         nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
+        avatar_url: profile.avatar_url || null,
+        bio: profile.bio || null,
         follower_count: profile.follower_count || 0,
         following_count: profile.following_count || 0,
         total_study_minutes: profile.total_study_minutes || 0,
@@ -316,7 +317,7 @@ export default function StudyanUserPage() {
       variants={pageVariants}
     >
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-20">
+      <div className="bg-white sticky top-0 z-20">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => router.back()}
@@ -333,21 +334,14 @@ export default function StudyanUserPage() {
         <div className="mb-8">
           {/* Avatar & Name */}
           <div className="flex flex-col items-center text-center mb-5">
-            {user.avatar_url ? (
-              <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-orange-100 mb-3">
-                <Image
-                  src={user.avatar_url}
-                  alt={user.nickname || '사용자'}
-                  width={80}
-                  height={80}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            ) : (
-              <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${characterAvatar.gradient} flex items-center justify-center text-3xl mb-3 ring-2 ring-orange-100`}>
-                {characterAvatar.emoji}
-              </div>
-            )}
+            <div className="mb-3">
+              <Avatar
+                src={user.avatar_url || undefined}
+                alt={user.nickname || '사용자'}
+                size="lg"
+                className="w-20 h-20 text-2xl"
+              />
+            </div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-gray-900">
                 {user.nickname || '익명 사용자'}
@@ -401,7 +395,7 @@ export default function StudyanUserPage() {
           )}
         </div>
 
-        <div className="w-full h-px bg-gray-100 mb-6" />
+        {/* Divider removed */}
 
         {/* Contents Section */}
         <div className="mb-6">
@@ -411,7 +405,7 @@ export default function StudyanUserPage() {
           </div>
 
           {userContents.length === 0 ? (
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-none bg-gray-50 rounded-xl">
               <CardContent className="py-10 text-center">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FileText className="w-6 h-6 text-gray-400" />
@@ -458,7 +452,7 @@ export default function StudyanUserPage() {
           </div>
 
           {user.routines.length === 0 ? (
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-none bg-gray-50 rounded-xl">
               <CardContent className="py-10 text-center">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Calendar className="w-6 h-6 text-gray-400" />
@@ -469,7 +463,7 @@ export default function StudyanUserPage() {
           ) : (
             <div className="space-y-4">
               {user.routines.map((routine) => (
-                <Card key={routine.id} className="border border-gray-200 shadow-md overflow-hidden">
+                <Card key={routine.id} className="border-0 shadow-none bg-gray-50 overflow-hidden rounded-xl">
                   <CardContent className="p-0">
                     {/* Routine Header */}
                     <button
@@ -530,7 +524,7 @@ export default function StudyanUserPage() {
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="overflow-hidden border-t border-gray-100"
+                          className="overflow-hidden"
                         >
                           <div className="p-4 bg-gray-50">
                             {/* Weekly View */}
