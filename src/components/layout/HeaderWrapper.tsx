@@ -11,8 +11,7 @@ export function HeaderWrapper() {
   if (
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/study-room') ||
-    pathname.startsWith('/admin') ||
-    pathname.match(/^\/content\/[^/]+$/)
+    pathname.startsWith('/admin')
   ) {
     return null;
   }
