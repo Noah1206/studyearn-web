@@ -517,7 +517,7 @@ a {
 }
 
 .animate-progress-bar {
-  animation: progress-bar 1.5s ease-in-out infinite;
+  animation: progress-bar 1.5s ease-in-out forwards;
 }
 
 /* Hover animations */
