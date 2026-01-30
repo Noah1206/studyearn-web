@@ -162,7 +162,7 @@ export default function StudyanUserPage() {
       // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, bio, follower_count, following_count, total_study_minutes, streak_days')
+        .select('id, nickname, username, avatar_url, bio, follower_count, following_count, total_study_minutes, streak_days')
         .eq('id', userId)
         .single();
 
@@ -204,7 +204,7 @@ export default function StudyanUserPage() {
 
       setUser({
         id: profile.id,
-        nickname: creatorSettings?.display_name || profile.nickname,
+        nickname: creatorSettings?.display_name || (profile.nickname?.includes('@') ? (profile.username || profile.nickname.split('@')[0]) : profile.nickname) || profile.username || '익명 사용자',
         avatar_url: creatorSettings?.profile_image_url || profile.avatar_url || (currentUser?.id === userId ? (currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture) : null) || null,
         bio: creatorSettings?.bio || profile.bio || null,
         follower_count: profile.follower_count || 0,
