@@ -257,15 +257,6 @@ function LoginForm() {
                   이메일로 시작하기
                 </button>
 
-                {/* Phone Button */}
-                <button
-                  type="button"
-                  onClick={() => setStep('phone')}
-                  className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold rounded-xl transition-all"
-                >
-                  <Phone className="w-5 h-5" />
-                  전화번호로 시작하기
-                </button>
               </div>
 
               {/* Divider */}

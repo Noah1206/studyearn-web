@@ -92,6 +92,7 @@ export async function GET(
 
     // Check if user is authenticated and has purchased
     let isPurchased = false;
+    let isPending = false;
     let isOwner = false;
     let isLiked = false;
 
@@ -106,13 +107,17 @@ export async function GET(
         // Check purchase status for paid content
         const { data: purchase } = await supabase
           .from('content_purchases')
-          .select('id')
+          .select('id, status')
           .eq('content_id', id)
           .eq('buyer_id', user.id)
-          .eq('status', 'completed')
+          .in('status', ['completed', 'pending'])
           .maybeSingle();
 
-        isPurchased = !!purchase;
+        if (purchase?.status === 'completed') {
+          isPurchased = true;
+        } else if (purchase?.status === 'pending') {
+          isPending = true;
+        }
       } else {
         // Free content is accessible
         isPurchased = true;
@@ -199,6 +204,7 @@ export async function GET(
       product,
       contents,
       isPurchased,
+      isPending,
       isOwner,
       isLiked,
       isPreviewAllowed: content.allow_preview ?? true,

@@ -157,6 +157,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isPreviewAllowed, setIsPreviewAllowed] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -248,6 +249,7 @@ export default function ProductDetailPage() {
         setProduct(data.product);
         setContents(data.contents || []);
         setIsPurchased(data.isPurchased || false);
+        setIsPending(data.isPending || false);
         setIsOwner(data.isOwner || false);
         setIsLiked(data.isLiked || false);
         setIsPreviewAllowed(data.isPreviewAllowed ?? true);
@@ -470,14 +472,20 @@ export default function ProductDetailPage() {
     >
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link
-            href="/content"
-            className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">목록</span>
-          </Link>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <Image src="/logo.svg" alt="StuPle" width={36} height={36} className="w-9 h-9" />
+              <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
+            </Link>
+            <Link
+              href="/content"
+              className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">목록</span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -1429,6 +1437,14 @@ export default function ProductDetailPage() {
                                 <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                               </>
                             )}
+                          </div>
+                        </button>
+                      ) : isPending ? (
+                        <button className="w-full relative overflow-hidden rounded-xl cursor-not-allowed opacity-60" disabled>
+                          <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400" />
+                          <div className="relative flex items-center justify-center gap-2 h-11 text-white font-bold text-sm">
+                            <Clock className="w-4 h-4" />
+                            <span>구매 대기 중</span>
                           </div>
                         </button>
                       ) : (

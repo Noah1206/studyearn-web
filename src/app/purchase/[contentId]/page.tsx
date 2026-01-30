@@ -325,11 +325,13 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-6xl mb-6">🤔</p>
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-orange-500" />
+          </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">상품을 찾을 수 없어요</h2>
-          <p className="text-gray-500 mb-8">삭제되었거나 존재하지 않는 상품이에요</p>
+          <p className="text-gray-400 mb-8">삭제되었거나 존재하지 않는 상품이에요</p>
           <Link href="/content">
-            <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
+            <button className="w-full py-4 bg-orange-500 text-white rounded-2xl font-semibold shadow-lg shadow-orange-500/25 active:bg-orange-600 transition-all">
               상품 둘러보기
             </button>
           </Link>
@@ -347,17 +349,19 @@ export default function PurchasePage({ params }: PurchasePageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-6xl mb-6">✅</p>
+          <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-white" strokeWidth={3} />
+          </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">이미 구매한 콘텐츠예요</h2>
-          <p className="text-gray-500 mb-8">지금 바로 확인해보세요</p>
+          <p className="text-gray-400 mb-8">지금 바로 확인해보세요</p>
           <div className="space-y-3">
             <Link href={`/content/${productId}`}>
-              <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
+              <button className="w-full py-4 bg-orange-500 text-white rounded-2xl font-semibold shadow-lg shadow-orange-500/25 active:bg-orange-600 transition-all">
                 콘텐츠 보기
               </button>
             </Link>
             <Link href="/my/purchases">
-              <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold">
+              <button className="w-full py-4 text-orange-500 font-semibold">
                 구매 내역
               </button>
             </Link>
@@ -389,45 +393,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
     }
   };
 
-  // 대기 중
+  // 대기 중 → 콘텐츠 상세페이지로 리다이렉트
   if (pendingPurchase) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-5">
-        <motion.div
-          className="text-center max-w-sm w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <motion.p
-            className="text-6xl mb-6"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            ⏳
-          </motion.p>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">입금 확인 중</h2>
-          <p className="text-gray-500 mb-8">확인되면 바로 알려드릴게요</p>
-          <div className="space-y-3">
-            <Link href="/my/purchases">
-              <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold">
-                구매 내역 확인
-              </button>
-            </Link>
-            <Link href={`/content/${productId}`}>
-              <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold">
-                상품 페이지로
-              </button>
-            </Link>
-            <button
-              onClick={handleCancelPending}
-              className="w-full py-3 text-gray-400 text-sm"
-            >
-              구매 취소
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
+    router.replace(`/content/${productId}`);
+    return <LoadingPage message="이동 중..." />;
   }
 
   // 전체 동의 여부
@@ -435,164 +404,160 @@ export default function PurchasePage({ params }: PurchasePageProps) {
 
   // 메인 결제 화면
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-orange-100/50">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center">
           <Link href={`/content/${productId}`}>
             <button className="p-2 -ml-2">
               <ArrowLeft className="w-6 h-6 text-gray-900" />
             </button>
           </Link>
-          <h1 className="flex-1 text-center font-bold text-lg text-gray-900">주문 / 결제</h1>
+          <h1 className="flex-1 text-center font-bold text-lg text-gray-900">결제</h1>
           <div className="w-10" />
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 pb-44 space-y-3">
-        {/* 상품 정보 카드 */}
-        <section className="bg-white rounded-2xl p-4">
+      <main className="max-w-lg mx-auto px-4 pb-44">
+        {/* 결제 금액 히어로 */}
+        <div className="pt-8 pb-6 text-center">
+          <p className="text-sm text-gray-500 mb-1">결제 금액</p>
+          <p className="text-[32px] font-extrabold text-gray-900">{formatCurrency(product.price)}</p>
+        </div>
+
+        {/* 상품 정보 */}
+        <section className="border border-orange-100 rounded-2xl p-4 mb-3">
           <div className="flex gap-3">
-            {/* 썸네일 */}
-            <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-orange-100">
               {product.thumbnail_url ? (
                 <Image
                   src={product.thumbnail_url}
                   alt={product.title}
-                  width={64}
-                  height={64}
+                  width={56}
+                  height={56}
                   className="w-full h-full object-cover"
                   unoptimized
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-xl bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="w-full h-full flex items-center justify-center bg-orange-50 text-lg">
                   📄
                 </div>
               )}
             </div>
-            {/* 상품 정보 */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <p className="text-sm font-medium text-gray-900 line-clamp-1">
+              <p className="text-[15px] font-semibold text-gray-900 line-clamp-1">
                 {product.title}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 {product.creator.name}
-              </p>
-              <p className="text-base font-bold text-gray-900 mt-1">
-                {formatCurrency(product.price)}
               </p>
             </div>
           </div>
         </section>
 
-        {/* 결제수단 선택 카드 */}
-        <section className="bg-white rounded-2xl overflow-hidden">
+        {/* 결제수단 선택 */}
+        <section className="border border-orange-100 rounded-2xl overflow-hidden mb-3">
           <button
             onClick={() => setShowPaymentMethodSheet(true)}
-            className="w-full px-4 py-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            className="w-full px-4 py-4 flex items-center justify-between hover:bg-orange-50/50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              {/* 결제수단 아이콘 */}
               {paymentMethod === 'kakaopay' ? (
-                <div className="w-10 h-10 bg-[#FEE500] rounded-xl flex items-center justify-center">
-                  <span className="text-[#191919] font-bold text-xs">pay</span>
+                <div className="w-9 h-9 bg-[#FEE500] rounded-lg flex items-center justify-center">
+                  <span className="text-[#191919] font-bold text-[10px]">pay</span>
                 </div>
               ) : paymentMethod === 'transfer' ? (
-                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <span className="text-amber-700 font-bold text-xs">계좌</span>
+                <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-[10px]">계좌</span>
                 </div>
               ) : (
-                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-4.5 h-4.5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                 </div>
               )}
               <div>
-                <p className="text-sm font-bold text-gray-900 text-left">결제수단</p>
-                <p className="text-sm text-gray-500 mt-0.5 text-left">{getPaymentMethodLabel()}</p>
+                <p className="text-[15px] font-semibold text-gray-900 text-left">결제수단</p>
+                <p className="text-xs text-gray-400 mt-0.5 text-left">{getPaymentMethodLabel()}</p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
+            <ChevronRight className="w-5 h-5 text-orange-300" />
           </button>
         </section>
 
         {/* 계좌이체 추가 입력 */}
         {paymentMethod === 'transfer' && (
-          <section className="bg-white rounded-2xl p-4 space-y-4">
-            {/* 입금 계좌 정보 */}
+          <section className="border border-orange-100 rounded-2xl p-5 mb-3 space-y-5">
             <div>
-              <p className="text-sm font-bold text-gray-900 mb-3">입금 계좌</p>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">은행</span>
+              <p className="text-[15px] font-semibold text-gray-900 mb-3">입금 계좌</p>
+              <div className="bg-orange-50/60 rounded-xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">은행</span>
                   <span className="text-sm font-medium text-gray-900">{PLATFORM_BANK_NAME}</span>
                 </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">계좌번호</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">계좌번호</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-900">{PLATFORM_ACCOUNT_NUMBER}</span>
-                    <button onClick={handleCopyAccount} className="text-orange-500 hover:text-orange-600">
+                    <button onClick={handleCopyAccount} className="text-orange-500 hover:text-orange-600 active:scale-95 transition-transform">
                       <Copy className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">예금주</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">예금주</span>
                   <span className="text-sm font-medium text-gray-900">{PLATFORM_ACCOUNT_HOLDER}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">입금액</span>
-                  <span className="text-sm font-bold text-orange-600">{formatCurrency(product.price)}</span>
+                <div className="border-t border-orange-200/50 pt-2.5 flex items-center justify-between">
+                  <span className="text-sm text-gray-400">입금액</span>
+                  <span className="text-[15px] font-bold text-orange-600">{formatCurrency(product.price)}</span>
                 </div>
               </div>
             </div>
 
-            {/* 입금자명 입력 */}
             <div>
-              <p className="text-sm font-bold text-gray-900 mb-3">입금자명</p>
+              <p className="text-[15px] font-semibold text-gray-900 mb-2">입금자명</p>
               <input
                 type="text"
                 value={buyerNote}
                 onChange={(e) => setBuyerNote(e.target.value)}
                 placeholder="송금 시 입력한 이름"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-orange-50/60 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-300 transition-shadow"
               />
             </div>
 
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 leading-relaxed">
               위 계좌로 송금 후 아래 결제하기 버튼을 눌러주세요. 입금 확인 후 콘텐츠가 제공됩니다.
             </p>
           </section>
         )}
 
         {/* 동의 항목 */}
-        <section className="bg-white rounded-2xl p-4 space-y-2">
-          {/* 개인정보 동의 */}
-          <label className="flex items-center gap-3 py-2 cursor-pointer">
-            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center flex-shrink-0 ${
-              agreedToPrivacy ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+        <section className="px-1 pt-2 space-y-1">
+          <label className="flex items-center gap-3 py-2.5 cursor-pointer">
+            <div className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0 ${
+              agreedToPrivacy ? 'bg-orange-500 border-orange-500' : 'border-gray-200'
             }`}>
               {agreedToPrivacy && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
             <span className="flex-1 text-sm text-gray-700">개인정보 제3자 제공 동의</span>
-            <Link href="/privacy" className="text-xs text-gray-400" onClick={(e) => e.stopPropagation()}>보기</Link>
+            <Link href="/privacy" className="text-xs text-orange-400 hover:text-orange-500" onClick={(e) => e.stopPropagation()}>보기</Link>
             <input type="checkbox" checked={agreedToPrivacy} onChange={(e) => setAgreedToPrivacy(e.target.checked)} className="sr-only" />
           </label>
 
-          {/* 환불 정책 동의 */}
-          <label className="flex items-center gap-3 py-2 cursor-pointer">
-            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center flex-shrink-0 ${
-              agreedToRefund ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+          <label className="flex items-center gap-3 py-2.5 cursor-pointer">
+            <div className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0 ${
+              agreedToRefund ? 'bg-orange-500 border-orange-500' : 'border-gray-200'
             }`}>
               {agreedToRefund && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
             <span className="flex-1 text-sm text-gray-700">환불 정책 동의</span>
-            <Link href="/refund" className="text-xs text-gray-400" onClick={(e) => e.stopPropagation()}>보기</Link>
+            <Link href="/refund" className="text-xs text-orange-400 hover:text-orange-500" onClick={(e) => e.stopPropagation()}>보기</Link>
             <input type="checkbox" checked={agreedToRefund} onChange={(e) => setAgreedToRefund(e.target.checked)} className="sr-only" />
           </label>
 
-          <p className="text-xs text-gray-400 pt-1">
+          <p className="text-xs text-gray-300 pt-1 pl-8">
             디지털 콘텐츠는 열람 후 환불이 제한됩니다.
           </p>
         </section>
@@ -601,10 +566,10 @@ export default function PurchasePage({ params }: PurchasePageProps) {
         <AnimatePresence>
           {error && (
             <motion.div
-              className="mx-4 mt-4 bg-red-50 rounded-lg p-4 flex items-start gap-3"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
             >
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-600">{error}</p>
@@ -614,15 +579,15 @@ export default function PurchasePage({ params }: PurchasePageProps) {
       </main>
 
       {/* 하단 고정 결제 바 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg safe-area-bottom">
         <div className="max-w-lg mx-auto px-4 py-3">
           <button
             onClick={handlePayment}
             disabled={!allAgreed || isProcessing || (paymentMethod === 'transfer' && !buyerNote.trim())}
-            className={`w-full py-4 rounded-xl font-bold text-base transition-all ${
+            className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
               allAgreed && !isProcessing && (paymentMethod !== 'transfer' || buyerNote.trim())
-                ? 'bg-gray-900 text-white active:bg-gray-800'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-orange-500 text-white active:bg-orange-600 shadow-lg shadow-orange-500/25'
+                : 'bg-orange-100 text-orange-300 cursor-not-allowed'
             }`}
           >
             {isProcessing ? '처리 중...' : !allAgreed ? '약관에 동의해주세요' : `${formatCurrency(product.price)} 결제하기`}
@@ -687,6 +652,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     )}
                   </button>
 
+                  {/* 카카오페이 - 임시 숨김
                   <button
                     onClick={() => {
                       setPaymentMethod('kakaopay');
@@ -713,6 +679,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                       </div>
                     )}
                   </button>
+                  */}
 
                   <button
                     onClick={() => {
