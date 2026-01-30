@@ -24,6 +24,8 @@ import {
   Calendar,
   Copy,
   MessageSquare,
+  ChevronDown,
+  Home,
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { Button } from '@/components/ui';
@@ -1317,62 +1319,63 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Creator Info Section */}
-            <h2 className="text-lg font-bold text-gray-900 mb-4">크리에이터 정보</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">크리에이터</h2>
             <div className="rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {product.creator?.avatar_url ? (
-                      <Image
-                        src={product.creator.avatar_url}
-                        alt={product.creator?.name || ''}
-                        width={56}
-                        height={56}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <User className="w-6 h-6 text-white" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-base font-bold text-gray-900 truncate">
-                        {product.creator?.name || '익명'}
-                      </p>
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] font-bold flex-shrink-0">C</span>
+              {/* Header: Avatar + Name + Creator Home */}
+              <div className="px-5 pt-5 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-orange-100">
+                      {product.creator?.avatar_url ? (
+                        <Image
+                          src={product.creator.avatar_url}
+                          alt={product.creator?.name || ''}
+                          width={48}
+                          height={48}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-gray-400" />
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      등록일 : {new Date(product.created_at).toLocaleDateString('ko-KR')}
+                    <p className="text-base font-bold text-gray-900">
+                      {product.creator?.name || '익명'}
                     </p>
                   </div>
-                  <button className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm font-medium text-gray-700 rounded-lg transition-colors flex-shrink-0">
-                    문의하기
-                  </button>
+                  <Link
+                    href={`/creator/${product.creator_id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                    크리에이터 홈
+                  </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-4 border-t border-gray-200">
-                <div className="py-4 text-center border-r border-gray-200 bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-1">총 콘텐츠</p>
-                  <p className="text-sm font-bold text-gray-900">{creatorContents.length}개</p>
-                </div>
-                <div className="py-4 text-center border-r border-gray-200 bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-1">평점</p>
-                  <p className="text-sm font-bold text-gray-900">{rating > 0 ? `${rating.toFixed(1)}점` : '-'}</p>
-                </div>
-                <div className="py-4 text-center border-r border-gray-200 bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-1">좋아요</p>
-                  <p className="text-sm font-bold text-gray-900">{product.like_count || 0}개</p>
-                </div>
-                <div className="py-4 text-center bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-1">조회수</p>
-                  <p className="text-sm font-bold text-gray-900">{product.view_count || 0}회</p>
-                </div>
-              </div>
+
+              {/* Bio / Description */}
               {product.creator?.bio && (
-                <div className="px-5 py-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 leading-relaxed">{product.creator.bio}</p>
+                <div className="px-5 pb-5">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {product.creator.bio}
+                  </p>
                 </div>
               )}
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-3 border-t border-gray-200 bg-gray-50">
+                <div className="py-3.5 text-center border-r border-gray-200">
+                  <p className="text-[11px] text-gray-500 mb-0.5">콘텐츠</p>
+                  <p className="text-sm font-bold text-gray-900">{creatorContents.length}개</p>
+                </div>
+                <div className="py-3.5 text-center border-r border-gray-200">
+                  <p className="text-[11px] text-gray-500 mb-0.5">평점</p>
+                  <p className="text-sm font-bold text-gray-900">{rating > 0 ? rating.toFixed(1) : '-'}</p>
+                </div>
+                <div className="py-3.5 text-center">
+                  <p className="text-[11px] text-gray-500 mb-0.5">좋아요</p>
+                  <p className="text-sm font-bold text-gray-900">{product.like_count || 0}</p>
+                </div>
+              </div>
             </div>
           </div>
 
