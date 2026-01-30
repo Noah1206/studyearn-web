@@ -175,6 +175,9 @@ export default function ProductDetailPage() {
   const [reviewError, setReviewError] = useState('');
   const [hasReviewed, setHasReviewed] = useState(false);
 
+  // Creator contents state
+  const [creatorContents, setCreatorContents] = useState<any[]>([]);
+
   const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch(`/api/content/${id}/reviews`);
@@ -253,6 +256,20 @@ export default function ProductDetailPage() {
         setIsOwner(data.isOwner || false);
         setIsLiked(data.isLiked || false);
         setIsPreviewAllowed(data.isPreviewAllowed ?? true);
+
+        // Fetch creator's other contents
+        if (data.product?.creator_id) {
+          try {
+            const productsRes = await fetch('/api/products');
+            if (productsRes.ok) {
+              const productsData = await productsRes.json();
+              const otherContents = (productsData.products || [])
+                .filter((p: any) => p.creator_id === data.product.creator_id && p.id !== id)
+                .slice(0, 6);
+              setCreatorContents(otherContents);
+            }
+          } catch {}
+        }
       } catch (error) {
         console.error('Failed to fetch product:', error);
       } finally {
@@ -651,6 +668,44 @@ export default function ProductDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* Creator's Other Contents */}
+            {creatorContents.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    크리에이터의 다른 콘텐츠 <span className="text-sm font-normal text-gray-500">({creatorContents.length})</span>
+                  </h2>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  {creatorContents.map((item: any) => (
+                    <Link key={item.id} href={`/content/${item.id}`} className="group">
+                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-2">
+                        {item.thumbnail_url ? (
+                          <Image
+                            src={item.thumbnail_url}
+                            alt={item.title}
+                            width={300}
+                            height={225}
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <FileText className="w-8 h-8" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-1 group-hover:text-orange-500 transition-colors">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.price === 0 ? '무료' : formatCurrency(item.price)}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
