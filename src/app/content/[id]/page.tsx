@@ -709,6 +709,20 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Description Section */}
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">자료 소개</h2>
+              {product.description ? (
+                <div className="text-gray-600 leading-relaxed whitespace-pre-line">
+                  {product.description}
+                </div>
+              ) : (
+                <p className="text-gray-400">
+                  아직 등록된 설명이 없습니다.
+                </p>
+              )}
+            </div>
+
             {/* Category & Type */}
             <div className="flex items-center gap-2 mb-4">
               {product.subject && (
@@ -1302,47 +1316,51 @@ export default function ProductDetailPage() {
               })()}
             </div>
 
-            {/* Description Section */}
-            <div className="mb-8">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">자료 소개</h2>
-              {product.description ? (
-                <div className="text-gray-600 leading-relaxed whitespace-pre-line">
-                  {product.description}
+            {/* Creator Info Section - Class101 Style */}
+            <div className="rounded-2xl bg-gray-50 p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden border border-gray-200 flex-shrink-0">
+                  {product.creator?.avatar_url ? (
+                    <Image
+                      src={product.creator.avatar_url}
+                      alt={product.creator?.name || ''}
+                      width={56}
+                      height={56}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <User className="w-6 h-6 text-gray-400" />
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-400">
-                  아직 등록된 설명이 없습니다.
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs font-medium text-orange-500">크리에이터</span>
+                  </div>
+                  <p className="text-base font-bold text-gray-900 truncate">
+                    {product.creator?.name || '익명'}
+                  </p>
+                </div>
+                <button className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-full transition-colors flex-shrink-0">
+                  팔로우
+                </button>
+              </div>
+              {product.creator?.bio && (
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  {product.creator.bio}
                 </p>
               )}
-            </div>
-
-            {/* Info Section */}
-            <div className="rounded-2xl bg-gray-50 p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">자료 정보</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">{product.content_type === 'routine' ? '유형' : '파일 형식'}</span>
-                  <span className="font-medium text-gray-900">
-                    {product.content_type === 'routine'
-                      ? (routineTypeLabels[product.routine_type || ''] || '루틴')
-                      : (product.type || 'pdf').toUpperCase()
-                    }
-                  </span>
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <FileText className="w-4 h-4" />
+                  <span>콘텐츠 <strong className="text-gray-900">{creatorContents.length}</strong></span>
                 </div>
-                {product.content_type === 'routine' && product.routine_items && product.routine_items.length > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">일정 수</span>
-                    <span className="font-medium text-gray-900">
-                      {product.routine_items.length}개
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">등록일</span>
-                  <span className="font-medium text-gray-900 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    {formatRelativeTime(product.created_at)}
-                  </span>
+                <div className="flex items-center gap-1.5">
+                  <Heart className="w-4 h-4" />
+                  <span>좋아요 <strong className="text-gray-900">{product.like_count || 0}</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-4 h-4" />
+                  <span>평점 <strong className="text-gray-900">{rating > 0 ? rating.toFixed(1) : '-'}</strong></span>
                 </div>
               </div>
             </div>
