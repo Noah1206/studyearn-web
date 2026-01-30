@@ -451,7 +451,13 @@ export default function ProductDetailPage() {
 
   // Loading state
   if (isLoading) {
-    return <LoadingPage message="불러오는 중..." />;
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-gray-100 overflow-hidden">
+          <div className="h-full bg-orange-500 animate-progress-bar rounded-r-full" />
+        </div>
+      </div>
+    );
   }
 
   // Not found state
