@@ -132,6 +132,22 @@ export default function StudyanUserPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+
+        // 카카오 등 OAuth 프로필 사진이 profiles에 없으면 동기화
+        const oauthAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+        if (oauthAvatar) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', user.id)
+            .single();
+          if (profile && !profile.avatar_url) {
+            await supabase
+              .from('profiles')
+              .update({ avatar_url: oauthAvatar })
+              .eq('id', user.id);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load current user:', error);
@@ -182,7 +198,7 @@ export default function StudyanUserPage() {
       setUser({
         id: profile.id,
         nickname: profile.nickname,
-        avatar_url: profile.avatar_url || null,
+        avatar_url: profile.avatar_url || (currentUser?.id === userId ? (currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture) : null) || null,
         bio: profile.bio || null,
         follower_count: profile.follower_count || 0,
         following_count: profile.following_count || 0,
