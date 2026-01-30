@@ -171,6 +171,13 @@ export default function StudyanUserPage() {
         return;
       }
 
+      // Get creator settings (profile_image_url)
+      const { data: creatorSettings } = await supabase
+        .from('creator_settings')
+        .select('profile_image_url, display_name, bio')
+        .eq('user_id', userId)
+        .single();
+
       // Get user's public routines
       const { data: routines, error: routinesError } = await supabase
         .from('routines')
@@ -197,9 +204,9 @@ export default function StudyanUserPage() {
 
       setUser({
         id: profile.id,
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url || (currentUser?.id === userId ? (currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture) : null) || null,
-        bio: profile.bio || null,
+        nickname: creatorSettings?.display_name || profile.nickname,
+        avatar_url: creatorSettings?.profile_image_url || profile.avatar_url || (currentUser?.id === userId ? (currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture) : null) || null,
+        bio: creatorSettings?.bio || profile.bio || null,
         follower_count: profile.follower_count || 0,
         following_count: profile.following_count || 0,
         total_study_minutes: profile.total_study_minutes || 0,
