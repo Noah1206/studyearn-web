@@ -500,10 +500,6 @@ export default function ProductDetailPage() {
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <Image src="/logo.svg" alt="StuPle" width={36} height={36} className="w-9 h-9" />
-              <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">StuPle</span>
-            </Link>
             <Link
               href="/content"
               className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
