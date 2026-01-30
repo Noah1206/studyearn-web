@@ -56,12 +56,18 @@ export async function GET(request: Request) {
             total_study_days: 0,
           }).catch(() => {});
         } else if (avatarUrl) {
-          // 기존 프로필의 avatar_url이 없으면 업데이트
-          await supabase.from('profiles')
-            .update({ avatar_url: avatarUrl })
+          // 기존 프로필의 avatar_url이 비어있으면 OAuth 사진으로 업데이트
+          const { data: profileWithAvatar } = await supabase
+            .from('profiles')
+            .select('avatar_url')
             .eq('id', user.id)
-            .is('avatar_url', null)
-            .catch(() => {});
+            .single();
+          if (profileWithAvatar && !profileWithAvatar.avatar_url) {
+            await supabase.from('profiles')
+              .update({ avatar_url: avatarUrl })
+              .eq('id', user.id)
+              .catch(() => {});
+          }
         }
       } catch (profileError) {
         // 프로필 처리 실패해도 로그인은 진행
