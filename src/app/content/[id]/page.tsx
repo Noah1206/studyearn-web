@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Calendar,
   Copy,
+  MessageSquare,
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import { Button } from '@/components/ui';
@@ -138,6 +139,16 @@ const subjectLabels: Record<string, string> = {
   etc: '기타',
 };
 
+interface Review {
+  id: string;
+  user_id: string;
+  rating: number;
+  text: string;
+  created_at: string;
+  nickname: string;
+  avatar_url: string | null;
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -154,6 +165,70 @@ export default function ProductDetailPage() {
   const [isLiking, setIsLiking] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+
+  // Review state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [hasReviewed, setHasReviewed] = useState(false);
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/content/${id}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data.reviews || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    }
+  }, [id]);
+
+  const handleSubmitReview = async () => {
+    if (!reviewRating || !reviewText.trim() || isSubmittingReview) return;
+    setIsSubmittingReview(true);
+    setReviewError('');
+
+    try {
+      const res = await fetch(`/api/content/${id}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, text: reviewText.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push(`/login?redirectTo=/content/${id}`);
+          return;
+        }
+        setReviewError(data.message || '리뷰 작성에 실패했습니다.');
+        return;
+      }
+
+      // 성공: 폼 초기화 및 목록 갱신
+      setReviewRating(0);
+      setReviewText('');
+      setHasReviewed(true);
+      fetchReviews();
+
+      // 별점 평균 업데이트
+      if (product) {
+        setProduct({
+          ...product,
+          rating_sum: (product.rating_sum || 0) + reviewRating,
+          rating_count: (product.rating_count || 0) + 1,
+        });
+      }
+    } catch (err) {
+      setReviewError('리뷰 작성에 실패했습니다.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -184,7 +259,8 @@ export default function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [id, router]);
+    fetchReviews();
+  }, [id, router, fetchReviews]);
 
   const handleDownload = async () => {
     // 본인 콘텐츠이거나 구매한 경우 다운로드 허용
@@ -1028,6 +1104,146 @@ export default function ProductDetailPage() {
                 <p className="text-gray-400">
                   아직 등록된 설명이 없습니다.
                 </p>
+              )}
+            </div>
+
+            {/* Review Section */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  리뷰
+                  {reviews.length > 0 && (
+                    <span className="text-sm font-normal text-gray-500">({reviews.length})</span>
+                  )}
+                </h2>
+                {rating > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{rating}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Review Form - 구매자만 */}
+              {isPurchased && !isOwner && !hasReviewed && (
+                <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3">리뷰 작성</p>
+
+                  {/* Star Rating */}
+                  <div className="flex items-center gap-1 mb-3">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setReviewRating(s)}
+                        className="p-0.5"
+                      >
+                        <Star
+                          className={`w-6 h-6 transition-colors ${
+                            s <= reviewRating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-gray-300 hover:text-amber-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    {reviewRating > 0 && (
+                      <span className="text-sm text-gray-500 ml-2">{reviewRating}점</span>
+                    )}
+                  </div>
+
+                  {/* Text Input */}
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="이 자료에 대한 솔직한 리뷰를 작성해주세요"
+                    maxLength={500}
+                    rows={3}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 resize-none"
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-gray-400">{reviewText.length}/500</span>
+                    <button
+                      onClick={handleSubmitReview}
+                      disabled={!reviewRating || !reviewText.trim() || isSubmittingReview}
+                      className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      {isSubmittingReview ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          등록 중...
+                        </>
+                      ) : (
+                        '리뷰 등록'
+                      )}
+                    </button>
+                  </div>
+                  {reviewError && (
+                    <p className="text-xs text-red-500 mt-2">{reviewError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Already reviewed message */}
+              {hasReviewed && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className="text-sm text-emerald-700">리뷰를 등록했습니다.</span>
+                </div>
+              )}
+
+              {/* Review List */}
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="flex gap-3">
+                      {/* Avatar */}
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {review.avatar_url ? (
+                          <Image
+                            src={review.avatar_url}
+                            alt={review.nickname}
+                            width={32}
+                            height={32}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <User className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm font-semibold text-gray-900">{review.nickname}</span>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star
+                                key={s}
+                                className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-400">{formatRelativeTime(review.created_at)}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed">{review.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageSquare className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">아직 리뷰가 없습니다</p>
+                </div>
               )}
             </div>
 
