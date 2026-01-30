@@ -1363,16 +1363,20 @@ export default function ProductDetailPage() {
               )}
 
               {/* Stats Row */}
-              <div className="grid grid-cols-3 border-t border-gray-200 bg-gray-50">
-                <div className="py-3.5 text-center border-r border-gray-200">
-                  <p className="text-[11px] text-gray-500 mb-0.5">콘텐츠</p>
-                  <p className="text-sm font-bold text-gray-900">{creatorContents.length}개</p>
+              <div className="grid grid-cols-4 gap-2 px-5 pb-5">
+                <div className="py-3 text-center bg-gray-100 rounded-lg">
+                  <p className="text-[11px] text-gray-500 mb-0.5">팔로워</p>
+                  <p className="text-sm font-bold text-gray-900">0명</p>
                 </div>
-                <div className="py-3.5 text-center border-r border-gray-200">
+                <div className="py-3 text-center bg-gray-100 rounded-lg">
+                  <p className="text-[11px] text-gray-500 mb-0.5">구매자</p>
+                  <p className="text-sm font-bold text-gray-900">{product.download_count || 0}명</p>
+                </div>
+                <div className="py-3 text-center bg-gray-100 rounded-lg">
                   <p className="text-[11px] text-gray-500 mb-0.5">평점</p>
                   <p className="text-sm font-bold text-gray-900">{rating > 0 ? rating.toFixed(1) : '-'}</p>
                 </div>
-                <div className="py-3.5 text-center">
+                <div className="py-3 text-center bg-gray-100 rounded-lg">
                   <p className="text-[11px] text-gray-500 mb-0.5">좋아요</p>
                   <p className="text-sm font-bold text-gray-900">{product.like_count || 0}</p>
                 </div>
