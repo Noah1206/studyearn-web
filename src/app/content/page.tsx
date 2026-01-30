@@ -596,7 +596,11 @@ export default function ProductsPage() {
           <div className="flex-1 min-w-0">
             {/* 콘텐츠 목록 */}
             {isLoading ? (
-              <LoadingSection message="콘텐츠를 불러오는 중..." />
+              <div className="flex items-center justify-center py-32">
+                <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-gray-100 overflow-hidden">
+                  <div className="h-full bg-orange-500 animate-progress-bar rounded-r-full" />
+                </div>
+              </div>
             ) : sortedProducts.length > 0 ? (
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
