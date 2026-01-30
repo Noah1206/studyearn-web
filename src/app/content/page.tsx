@@ -664,11 +664,11 @@ export default function ProductsPage() {
                 handleSearch(searchQuery);
               }
             }}
-            className="w-full pl-4 pr-12 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-all text-[15px]"
+            className="w-full pl-6 pr-14 py-2.5 bg-white border border-gray-300 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-all text-[15px]"
           />
           <button
             onClick={() => { if (searchQuery.trim()) handleSearch(searchQuery); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <Search className="w-5 h-5" />
           </button>
