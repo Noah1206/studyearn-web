@@ -505,9 +505,9 @@ export default function ProductDetailPage() {
       </header>
 
       <main className="max-w-7xl mx-auto">
-        <div>
-          {/* Main Content */}
-          <div className="px-4 py-6 lg:py-10 lg:px-8 max-w-5xl mx-auto pb-32">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+          {/* Left: Main Content */}
+          <div className="lg:col-span-8 px-4 py-6 lg:py-10 lg:pl-8">
             {/* Review Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
@@ -1291,127 +1291,190 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Creator Card - inline below content */}
-          <div className="px-4 pb-6 lg:px-8 max-w-5xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-            >
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {product.creator?.avatar_url ? (
-                      <Image
-                        src={product.creator.avatar_url}
-                        alt={product.creator?.name || ''}
-                        width={44}
-                        height={44}
-                        className="object-cover w-full h-full"
-                      />
+          {/* Right: Sticky Purchase Sidebar */}
+          <div className="lg:col-span-4 px-4 pb-6 lg:py-8 lg:pr-8">
+            <div className="lg:sticky lg:top-20 space-y-4">
+              {/* Purchase Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+              >
+                {(isPurchased || isOwner) ? (
+                  <div className="p-5">
+                    <div className={`flex items-center gap-2.5 p-3 rounded-xl mb-4 border ${
+                      isOwner
+                        ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100'
+                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isOwner
+                          ? 'bg-gradient-to-br from-orange-400 to-amber-500'
+                          : 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                      }`}>
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-bold ${isOwner ? 'text-orange-800' : 'text-emerald-800'}`}>
+                          {isOwner ? '내 콘텐츠' : product.price === 0 ? '무료 자료 획득' : '구매 완료'}
+                        </p>
+                        <p className={`text-xs ${isOwner ? 'text-orange-600' : 'text-emerald-600'}`}>
+                          {isOwner
+                            ? '직접 등록한 콘텐츠입니다'
+                            : product.content_type === 'routine'
+                              ? '루틴을 확인해보세요'
+                              : '언제든 다운로드 가능'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {product.content_type === 'routine' ? (
+                      <button
+                        onClick={handleCopyRoutine}
+                        disabled={isCopying}
+                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        {isCopying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+                        <span>{isCopying ? '복사 중...' : '내 루틴으로 복사'}</span>
+                      </button>
                     ) : (
-                      <User className="w-5 h-5 text-gray-400" />
+                      <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="w-full flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        <span>{isDownloading ? '다운로드 중...' : '다운로드'}</span>
+                      </button>
+                    )}
+
+                    {product.content_type !== 'routine' && product.download_count > 0 && (
+                      <p className="text-center text-xs text-gray-400 mt-2">
+                        {product.download_count.toLocaleString()}회 다운로드
+                      </p>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate text-sm">
-                      {product.creator?.name || '익명'}
-                    </p>
-                    <span className="inline-flex items-center gap-1 text-xs text-orange-600">
-                      <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
-                      크리에이터
-                    </span>
+                ) : (
+                  <div className="p-5">
+                    {/* Price */}
+                    <div className="mb-4">
+                      {product.price === 0 ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-extrabold text-gray-900">무료</span>
+                        </div>
+                      ) : (
+                        <span className="text-2xl font-extrabold text-gray-900">
+                          {formatCurrency(product.price)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Content Info */}
+                    <div className="space-y-2.5 mb-5 text-sm text-gray-600">
+                      <div className="flex items-center justify-between">
+                        <span>평생 소장</span>
+                        <CheckCircle className="w-4 h-4 text-gray-900" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>{product.content_type === 'routine' ? '바로 확인 가능' : '즉시 다운로드'}</span>
+                        <CheckCircle className="w-4 h-4 text-gray-900" />
+                      </div>
+                      {product.price > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span>안전한 결제</span>
+                          <CheckCircle className="w-4 h-4 text-gray-900" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CTA Buttons */}
+                    <div className="space-y-2.5">
+                      {product.price === 0 ? (
+                        <button
+                          onClick={handleClaimFree}
+                          disabled={isClaiming}
+                          className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isClaiming ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /><span>처리 중...</span></>
+                          ) : (
+                            <span>무료로 받기</span>
+                          )}
+                        </button>
+                      ) : isPending ? (
+                        <button className="w-full h-12 rounded-xl border-2 border-orange-400 bg-orange-50 text-orange-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed" disabled>
+                          <Clock className="w-4 h-4" />
+                          <span>구매 대기 중</span>
+                        </button>
+                      ) : (
+                        <Link href={`/purchase/${id}`} className="block">
+                          <button className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center">
+                            구매하기
+                          </button>
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Notice */}
+                    <div className="mt-4 pt-3 border-t border-gray-100 space-y-1">
+                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                        · 디지털 콘텐츠 특성상 다운로드/열람 후 환불이 제한됩니다.
+                      </p>
+                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                        · 구매 즉시 이용 가능 · <Link href="/refund" className="underline hover:text-gray-600">환불정책</Link>
+                      </p>
+                    </div>
                   </div>
-                  <button className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors">
-                    팔로우
-                  </button>
-                </div>
-                {product.creator?.bio && (
-                  <p className="mt-3 text-xs text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-2.5">
-                    {product.creator.bio}
-                  </p>
                 )}
-              </div>
-            </motion.div>
+              </motion.div>
+
+              {/* Creator Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+              >
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {product.creator?.avatar_url ? (
+                        <Image
+                          src={product.creator.avatar_url}
+                          alt={product.creator?.name || ''}
+                          width={44}
+                          height={44}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 truncate text-sm">
+                        {product.creator?.name || '익명'}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-xs text-orange-600">
+                        <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
+                        크리에이터
+                      </span>
+                    </div>
+                    <button className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors">
+                      팔로우
+                    </button>
+                  </div>
+                  {product.creator?.bio && (
+                    <p className="mt-3 text-xs text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-2.5">
+                      {product.creator.bio}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Fixed Bottom Purchase Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8 py-3">
-          {(isPurchased || isOwner) ? (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-bold ${isOwner ? 'text-orange-600' : 'text-emerald-600'}`}>
-                  {isOwner ? '내 콘텐츠' : product.price === 0 ? '무료 자료 획득' : '구매 완료'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {isOwner
-                    ? '직접 등록한 콘텐츠입니다'
-                    : product.content_type === 'routine'
-                      ? '루틴을 확인해보세요'
-                      : '언제든 다운로드 가능'}
-                </p>
-              </div>
-              {product.content_type === 'routine' ? (
-                <button
-                  onClick={handleCopyRoutine}
-                  disabled={isCopying}
-                  className="flex items-center gap-2 px-6 h-11 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {isCopying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
-                  <span>{isCopying ? '복사 중...' : '내 루틴으로 복사'}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  className="flex items-center gap-2 px-6 h-11 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  <span>{isDownloading ? '다운로드 중...' : '다운로드'}</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                {product.price === 0 ? (
-                  <p className="text-lg font-extrabold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">무료</p>
-                ) : (
-                  <p className="text-lg font-extrabold text-gray-900">{formatCurrency(product.price)}</p>
-                )}
-                <p className="text-xs text-gray-500">{product.price === 0 ? (product.content_type === 'routine' ? '무료로 확인' : '무료 다운로드') : '평생 소장'}</p>
-              </div>
-              {product.price === 0 ? (
-                <button
-                  onClick={handleClaimFree}
-                  disabled={isClaiming}
-                  className="flex items-center gap-2 px-6 h-11 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm rounded-xl transition-transform hover:scale-[1.02] disabled:opacity-50"
-                >
-                  {isClaiming ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  <span>{isClaiming ? '처리 중...' : '무료로 받기'}</span>
-                  {!isClaiming && <ChevronRight className="w-4 h-4" />}
-                </button>
-              ) : isPending ? (
-                <button className="flex items-center gap-2 px-6 h-11 rounded-xl border-2 border-orange-400 bg-orange-50 text-orange-500 font-bold text-sm cursor-not-allowed" disabled>
-                  <Clock className="w-4 h-4" />
-                  <span>구매 대기 중</span>
-                </button>
-              ) : (
-                <Link href={`/purchase/${id}`}>
-                  <button className="flex items-center gap-2 px-6 h-11 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl transition-colors">
-                    <span>구매하기</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </motion.div>
   );
 }
