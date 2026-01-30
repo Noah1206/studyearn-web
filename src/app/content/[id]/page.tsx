@@ -1346,7 +1346,7 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                   <Link
-                    href={`/creator/${product.creator_id}`}
+                    href={`/studyan/${product.creator_id}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                   >
                     <Home className="w-3.5 h-3.5" />

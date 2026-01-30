@@ -14,9 +14,12 @@ import {
   Loader2,
   Target,
 } from 'lucide-react';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Badge, Avatar, Card, CardContent, Skeleton } from '@/components/ui';
 import { LoadingPage } from '@/components/ui/Spinner';
+import { FileText } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface RoutineItem {
   id: string;
@@ -115,10 +118,12 @@ export default function StudyanUserPage() {
   const [followLoading, setFollowLoading] = useState(false);
   const [copiedRoutineId, setCopiedRoutineId] = useState<string | null>(null);
   const [expandedRoutineId, setExpandedRoutineId] = useState<string | null>(null);
+  const [userContents, setUserContents] = useState<any[]>([]);
 
   useEffect(() => {
     loadCurrentUser();
     loadUserProfile();
+    loadUserContents();
   }, [userId]);
 
   const loadCurrentUser = async () => {
@@ -198,6 +203,19 @@ export default function StudyanUserPage() {
       router.push('/studyan');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadUserContents = async () => {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        const contents = (data.products || []).filter((p: any) => p.creator_id === userId);
+        setUserContents(contents);
+      }
+    } catch (error) {
+      console.error('Failed to load user contents:', error);
     }
   };
 
@@ -383,6 +401,53 @@ export default function StudyanUserPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Contents Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-500">콘텐츠</h3>
+            <span className="text-sm text-gray-400">{userContents.length}개</span>
+          </div>
+
+          {userContents.length === 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="py-10 text-center">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500">아직 등록된 콘텐츠가 없습니다</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {userContents.map((item: any) => (
+                <Link key={item.id} href={`/content/${item.id}`} className="group">
+                  <div className="aspect-[4/3] rounded-sm overflow-hidden bg-gray-100 mb-2">
+                    {item.thumbnail_url ? (
+                      <Image
+                        src={item.thumbnail_url}
+                        alt={item.title}
+                        width={300}
+                        height={225}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <FileText className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-gray-900 line-clamp-1 group-hover:text-orange-500 transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {item.price === 0 ? '무료' : formatCurrency(item.price)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Routines Section */}
         <div className="mb-6">
