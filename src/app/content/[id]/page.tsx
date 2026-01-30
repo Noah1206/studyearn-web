@@ -505,9 +505,9 @@ export default function ProductDetailPage() {
       </header>
 
       <main className="max-w-7xl mx-auto">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-          {/* Left: Main Content */}
-          <div className="lg:col-span-8 px-4 py-6 lg:py-10 lg:pl-8">
+        <div>
+          {/* Main Content */}
+          <div className="px-4 py-6 lg:py-10 lg:px-8 max-w-4xl mx-auto">
             {/* Review Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
@@ -1291,9 +1291,9 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Right: Sticky Purchase Card */}
-          <div className="lg:col-span-4 px-4 pb-6 lg:py-8 lg:pr-8">
-            <div className="lg:sticky lg:top-20 space-y-3">
+          {/* Purchase Section */}
+          <div className="px-4 pb-6 lg:px-8 max-w-4xl mx-auto">
+            <div className="space-y-3">
               {/* Purchase Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1440,12 +1440,9 @@ export default function ProductDetailPage() {
                           </div>
                         </button>
                       ) : isPending ? (
-                        <button className="w-full relative overflow-hidden rounded-xl cursor-not-allowed opacity-60" disabled>
-                          <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400" />
-                          <div className="relative flex items-center justify-center gap-2 h-11 text-white font-bold text-sm">
-                            <Clock className="w-4 h-4" />
-                            <span>구매 대기 중</span>
-                          </div>
+                        <button className="w-full h-11 rounded-xl border-2 border-orange-400 bg-orange-50 text-orange-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed" disabled>
+                          <Clock className="w-4 h-4" />
+                          <span>구매 대기 중</span>
                         </button>
                       ) : (
                         <Link href={`/purchase/${id}`} className="block">
