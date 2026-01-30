@@ -150,14 +150,24 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
       console.log('📡 [SessionProvider] Profile fetch completed:', { profile });
 
       if (profile) {
+        const resolvedAvatar = profile.avatar_url || oauthAvatarUrl;
         setProfile({
           id: userId,
           email: user.email || '',
           nickname: profile.nickname || profile.username || oauthNickname || '사용자',
           username: profile.username,
-          avatar_url: profile.avatar_url || oauthAvatarUrl,
+          avatar_url: resolvedAvatar,
           bio: profile.bio,
         });
+
+        // OAuth 프로필 사진이 있고 DB와 다르면 동기화 (유저가 직접 업로드한 supabase 이미지는 유지)
+        if (oauthAvatarUrl && profile.avatar_url !== oauthAvatarUrl && !profile.avatar_url?.includes('supabase')) {
+          supabase.from('profiles')
+            .update({ avatar_url: oauthAvatarUrl })
+            .eq('id', userId)
+            .then(() => {})
+            .catch(() => {});
+        }
       }
 
       lastLoadedUserId.current = userId;
