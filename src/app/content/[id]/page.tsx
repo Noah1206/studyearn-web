@@ -28,7 +28,7 @@ import {
   Home,
 } from 'lucide-react';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button, Avatar } from '@/components/ui';
 import { LoadingPage, LoadingInline } from '@/components/ui/Spinner';
 
 interface RoutineItem {
@@ -750,19 +750,11 @@ export default function ProductDetailPage() {
 
             {/* Creator Info */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                {product.creator?.avatar_url ? (
-                  <Image
-                    src={product.creator.avatar_url}
-                    alt={product.creator?.name || ''}
-                    width={40}
-                    height={40}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <User className="w-5 h-5 text-gray-400" />
-                )}
-              </div>
+              <Avatar
+                src={product.creator?.avatar_url || undefined}
+                alt={product.creator?.name || '크리에이터'}
+                size="md"
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">
                   {product.creator?.name || '익명'}
@@ -1328,19 +1320,12 @@ export default function ProductDetailPage() {
               <div className="px-5 pt-5 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-orange-100">
-                      {product.creator?.avatar_url ? (
-                        <Image
-                          src={product.creator.avatar_url}
-                          alt={product.creator?.name || ''}
-                          width={48}
-                          height={48}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <User className="w-5 h-5 text-gray-400" />
-                      )}
-                    </div>
+                    <Avatar
+                      src={product.creator?.avatar_url || undefined}
+                      alt={product.creator?.name || '크리에이터'}
+                      size="lg"
+                      className="ring-2 ring-orange-100"
+                    />
                     <p className="text-base font-bold text-gray-900">
                       {product.creator?.name || '익명'}
                     </p>

@@ -89,22 +89,28 @@ export async function GET(
         .maybeSingle();
       profileInfo = profile;
 
-      // If no good avatar, get from auth.users OAuth metadata
-      if (!creator?.profile_image_url && !profile?.avatar_url?.includes('supabase')) {
-        try {
-          const adminClient = createAdminClient();
+      // Always try to get OAuth avatar from auth.users metadata
+      try {
+        const adminClient = createAdminClient();
+        if (adminClient) {
           const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(content.creator_id);
+          console.log('[Products API] auth.admin user_metadata:', JSON.stringify(authUser?.user_metadata));
           if (authUser) {
             let oauthAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture;
             if (oauthAvatar && oauthAvatar.startsWith('http://')) {
               oauthAvatar = oauthAvatar.replace('http://', 'https://');
             }
             if (oauthAvatar) {
-              if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
-              else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
+              // Always override with OAuth avatar unless creator has custom image
+              if (!creator?.profile_image_url) {
+                if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
+                else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
+              }
             }
           }
-        } catch {}
+        }
+      } catch (e) {
+        console.error('[Products API] Failed to get OAuth avatar:', e);
       }
     }
 
@@ -193,6 +199,7 @@ export async function GET(
           avatarUrl = avatarUrl.replace('http://', 'https://');
         }
 
+        console.log('[Products API] Final creator:', { name, avatar_url: avatarUrl, profileAvatar: profileInfo?.avatar_url, creatorAvatar: creatorInfo?.profile_image_url });
         return { name, avatar_url: avatarUrl, bio: creatorInfo?.bio || profileInfo?.bio || null };
       })(),
       creator_id: content.creator_id,
