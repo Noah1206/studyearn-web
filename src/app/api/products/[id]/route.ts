@@ -88,6 +88,21 @@ export async function GET(
         .eq('id', content.creator_id)
         .maybeSingle();
       profileInfo = profile;
+
+      // If no good avatar, get from auth.users OAuth metadata
+      if (!creator?.profile_image_url && !profile?.avatar_url?.includes('supabase')) {
+        try {
+          const adminClient = createAdminClient();
+          const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(content.creator_id);
+          if (authUser) {
+            const oauthAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture;
+            if (oauthAvatar) {
+              if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
+              else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
+            }
+          }
+        } catch {}
+      }
     }
 
     // Check if user is authenticated and has purchased

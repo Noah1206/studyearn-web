@@ -178,6 +178,16 @@ export default function StudyanUserPage() {
         .eq('user_id', userId)
         .single();
 
+      // Get real avatar from server API (resolves OAuth photos)
+      let resolvedAvatarUrl: string | null = null;
+      try {
+        const avatarRes = await fetch(`/api/users/${userId}/avatar`);
+        if (avatarRes.ok) {
+          const avatarData = await avatarRes.json();
+          resolvedAvatarUrl = avatarData.avatar_url;
+        }
+      } catch {}
+
       // Get user's public routines
       const { data: routines, error: routinesError } = await supabase
         .from('routines')
@@ -205,7 +215,7 @@ export default function StudyanUserPage() {
       setUser({
         id: profile.id,
         nickname: creatorSettings?.display_name || (profile.nickname?.includes('@') ? (profile.username || profile.nickname.split('@')[0]) : profile.nickname) || profile.username || '익명 사용자',
-        avatar_url: creatorSettings?.profile_image_url || profile.avatar_url || (currentUser?.id === userId ? (currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture) : null) || null,
+        avatar_url: resolvedAvatarUrl || creatorSettings?.profile_image_url || profile.avatar_url || null,
         bio: creatorSettings?.bio || profile.bio || null,
         follower_count: profile.follower_count || 0,
         following_count: profile.following_count || 0,
