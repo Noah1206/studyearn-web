@@ -161,18 +161,11 @@ const ToastItem = ({ toast, onDismiss }: ToastItemProps) => {
     info: Info,
   };
 
-  const colors = {
-    success: 'bg-success-light border-success-DEFAULT text-success-dark',
-    error: 'bg-error-light border-error-DEFAULT text-error-dark',
-    warning: 'bg-warning-light border-warning-DEFAULT text-warning-dark',
-    info: 'bg-info-light border-info-DEFAULT text-info-dark',
-  };
-
   const iconColors = {
-    success: 'text-success-DEFAULT',
-    error: 'text-error-DEFAULT',
-    warning: 'text-warning-DEFAULT',
-    info: 'text-info-DEFAULT',
+    success: 'text-green-500',
+    error: 'text-red-500',
+    warning: 'text-amber-500',
+    info: 'text-blue-500',
   };
 
   const Icon = icons[toast.type];
