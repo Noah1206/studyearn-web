@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToastActions } from '@/components/ui/Toast';
 
@@ -8,9 +8,11 @@ export function LoginSuccessToast() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useToastActions();
+  const hasShown = useRef(false);
 
   useEffect(() => {
-    if (searchParams.get('login') === 'success') {
+    if (searchParams.get('login') === 'success' && !hasShown.current) {
+      hasShown.current = true;
       toast.success('로그인 완료', '환영합니다!');
 
       // URL에서 login 파라미터 제거
