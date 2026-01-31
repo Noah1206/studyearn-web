@@ -292,169 +292,47 @@ export default function StudyanPage() {
   const MAX_RETRIES = 2;
 
   useEffect(() => {
-    loadCurrentUser();
+    loadUsers();
   }, []);
 
-  useEffect(() => {
-    if (currentUser) {
-      loadFollowingList();
-    }
-    loadUsersWithRoutines();
-  }, [currentUser]);
-
-  const loadCurrentUser = async () => {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUser({ id: user.id });
-      }
-    } catch (error) {
-      console.error('Failed to load current user:', error);
-    }
-  };
-
-  const loadFollowingList = async () => {
-    if (!currentUser) return;
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('user_follows')
-        .select('following_id')
-        .eq('follower_id', currentUser.id);
-
-      if (!error && data) {
-        setFollowingIds(new Set(data.map((f: { following_id: string }) => f.following_id)));
-      }
-    } catch (error) {
-      console.error('Failed to load following list:', error);
-    }
-  };
-
-  const loadUsersWithRoutines = async (retry = 0) => {
+  const loadUsers = async (retry = 0) => {
     setIsLoading(true);
     setError(null);
 
-    // 타임아웃 설정 (10초)
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('요청 시간이 초과되었습니다')), 10000)
-    );
-
     try {
-      const supabase = createClient();
+      const res = await fetch('/api/studyan/users', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to fetch');
 
-      // Get all profiles first (with follower_count, streak_days, total_study_minutes)
-      const profilesPromise = supabase
-        .from('profiles')
-        .select('id, nickname, avatar_url, bio, follower_count, streak_days, total_study_minutes')
-        .order('created_at', { ascending: false });
+      const data = await res.json();
 
-      // Get creator settings for profile images and creator status
-      const creatorSettingsPromise = supabase
-        .from('creator_settings')
-        .select('user_id, display_name, profile_image_url, bio');
+      if (data.currentUserId) {
+        setCurrentUser({ id: data.currentUserId });
+      }
 
-      // Get all public routines only
-      const routinesPromise = supabase
-        .from('routines')
-        .select(`
-          id,
-          user_id,
-          title,
-          routine_type,
-          routine_days,
-          routine_items,
-          is_public,
-          created_at
-        `)
-        .eq('is_active', true)
-        .eq('is_public', true)
-        .order('created_at', { ascending: false });
+      const usersData: StudyanUser[] = (data.users || []).map((u: any) => ({
+        ...u,
+        avatar_url: u.avatar_url || undefined,
+        bio: u.bio || undefined,
+      }));
 
-      // 병렬 요청 + 타임아웃
-      const [profilesResult, creatorSettingsResult, routinesResult] = await Promise.race([
-        Promise.all([profilesPromise, creatorSettingsPromise, routinesPromise]),
-        timeoutPromise.then(() => { throw new Error('timeout'); })
-      ]) as [Awaited<typeof profilesPromise>, Awaited<typeof creatorSettingsPromise>, Awaited<typeof routinesPromise>];
+      // Build followingIds from server response
+      const fIds = new Set<string>();
+      usersData.forEach(u => { if (u.isFollowing) fIds.add(u.id); });
+      setFollowingIds(fIds);
 
-      const { data: profilesData, error: profilesError } = profilesResult;
-      const { data: creatorSettingsData, error: creatorSettingsError } = creatorSettingsResult;
-      const { data: routinesData, error: routinesError } = routinesResult;
-
-      if (profilesError) throw profilesError;
-      if (routinesError) throw routinesError;
-
-      // Build creator settings map
-      const creatorMap = new Map<string, { display_name: string; profile_image_url: string | null; bio: string | null }>();
-      (creatorSettingsData || []).forEach((cs: any) => {
-        creatorMap.set(cs.user_id, cs);
-      });
-
-      // Build set of user IDs that have public routines
-      const usersWithRoutines = new Set<string>();
-      (routinesData || []).forEach((r: any) => usersWithRoutines.add(r.user_id));
-
-      // Combine data - only show users who are creators OR have public routines
-      const usersMap = new Map<string, StudyanUser>();
-
-      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; bio?: string; follower_count?: number; streak_days?: number; total_study_minutes?: number }) => {
-        const isCreator = creatorMap.has(profile.id);
-        const hasRoutines = usersWithRoutines.has(profile.id);
-
-        // Skip users who are neither creators nor have public routines
-        if (!isCreator && !hasRoutines) return;
-
-        const creatorInfo = creatorMap.get(profile.id);
-        // Use creator_settings profile_image_url as primary, fallback to profiles.avatar_url
-        const avatarUrl = creatorInfo?.profile_image_url || profile.avatar_url || null;
-        const displayName = creatorInfo?.display_name || profile.nickname;
-        const bio = creatorInfo?.bio || profile.bio;
-
-        usersMap.set(profile.id, {
-          id: profile.id,
-          display_name: displayName,
-          avatar_url: avatarUrl || undefined,
-          bio: bio || undefined,
-          routines: [],
-          isFollowing: followingIds.has(profile.id),
-          follower_count: profile.follower_count || 0,
-          streak_days: profile.streak_days || 0,
-          total_study_minutes: profile.total_study_minutes || 0,
-        });
-      });
-
-      // Attach routines to users
-      (routinesData || []).forEach((routine: { id: string; user_id: string; title: string; routine_type: 'day' | 'week' | 'month' | 'custom'; routine_days?: number; routine_items: RoutineItem[]; is_public?: boolean; created_at: string }) => {
-        const user = usersMap.get(routine.user_id);
-        if (user) {
-          user.routines.push({
-            id: routine.id,
-            title: routine.title,
-            routine_type: routine.routine_type,
-            routine_days: routine.routine_days,
-            routine_items: routine.routine_items || [],
-            created_at: routine.created_at,
-          });
-        }
-      });
-
-      // Show all users (including those without routines)
-      setUsers(Array.from(usersMap.values()));
+      setUsers(usersData);
       setError(null);
       setRetryCount(0);
       setIsLoading(false);
     } catch (err) {
-      console.error('Failed to load users with routines:', err);
+      console.error('Failed to load users:', err);
 
-      // 자동 재시도
       if (retry < MAX_RETRIES) {
-        console.log(`Retrying... (${retry + 1}/${MAX_RETRIES})`);
         setRetryCount(retry + 1);
-        setTimeout(() => loadUsersWithRoutines(retry + 1), 1500);
+        setTimeout(() => loadUsers(retry + 1), 1500);
         return;
       }
 
-      // 최대 재시도 후 에러 표시
       setError('데이터를 불러오지 못했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
       setIsLoading(false);
     }
@@ -462,7 +340,7 @@ export default function StudyanPage() {
 
   const handleRetry = () => {
     setRetryCount(0);
-    loadUsersWithRoutines(0);
+    loadUsers(0);
   };
 
   const copyRoutineToMyProfile = async (routine: UserRoutine, userName: string) => {
