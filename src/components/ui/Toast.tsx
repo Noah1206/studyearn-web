@@ -180,13 +180,14 @@ const ToastItem = ({ toast, onDismiss }: ToastItemProps) => {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -20, scale: 0.9 }}
+      initial={{ opacity: 0, y: -40, scale: 0.8 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.9 }}
+      exit={{ opacity: 0, y: -20, scale: 0.8 }}
       transition={{
         type: 'spring',
-        stiffness: 500,
-        damping: 30,
+        stiffness: 300,
+        damping: 20,
+        mass: 0.8,
       }}
       className={cn(
         'relative flex items-center gap-2.5 px-5 py-3 rounded-full',
