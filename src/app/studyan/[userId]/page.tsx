@@ -25,28 +25,31 @@ export default async function StudyanUserPage({ params }: PageProps) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      // Only use display_name if it's not an email
-      if (creator?.display_name && !creator.display_name.includes('@')) {
-        resolvedNickname = creator.display_name;
-      }
       if (creator?.bio) resolvedBio = creator.bio;
       // Only use creator avatar if not default kakao
       if (creator?.profile_image_url && !isDefaultKakao(creator.profile_image_url)) {
         resolvedAvatar = creator.profile_image_url;
       }
 
-      // 2. Check profiles
+      // 2. Check profiles (nickname 최우선)
       const { data: profile } = await admin
         .from('profiles')
         .select('nickname, username, avatar_url, bio')
         .eq('id', userId)
         .maybeSingle();
 
-      if (!resolvedNickname && profile) {
+      if (profile) {
         const nick = profile.nickname;
-        resolvedNickname = nick && !nick.includes('@')
-          ? nick
-          : (profile.username || nick?.split('@')[0] || null);
+        if (nick && !nick.includes('@')) {
+          resolvedNickname = nick;
+        }
+      }
+      // profiles.nickname이 없으면 creator_settings.display_name 사용
+      if (!resolvedNickname && creator?.display_name && !creator.display_name.includes('@')) {
+        resolvedNickname = creator.display_name;
+      }
+      if (!resolvedNickname && profile) {
+        resolvedNickname = profile.username || profile.nickname?.split('@')[0] || null;
       }
       if (!resolvedBio && profile?.bio) resolvedBio = profile.bio;
 

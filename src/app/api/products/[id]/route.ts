@@ -200,11 +200,11 @@ export async function GET(
         const nick = profileInfo?.nickname;
         const resolvedDisplayName = displayName && !displayName.includes('@') ? displayName : null;
         const resolvedNick = nick && !nick.includes('@') ? nick : null;
-        const name = resolvedDisplayName
-          || resolvedNick
+        const name = resolvedNick
+          || resolvedDisplayName
           || profileInfo?.username
-          || (creatorInfo?.display_name?.split('@')[0])
           || (nick?.split('@')[0])
+          || (creatorInfo?.display_name?.split('@')[0])
           || '익명';
 
         // Resolve avatar: prefer OAuth metadata over creator_settings if creator has default kakao image

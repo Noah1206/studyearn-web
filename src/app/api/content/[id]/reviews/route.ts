@@ -51,9 +51,11 @@ export async function GET(
       if (profilesResult.data) {
         for (const p of profilesResult.data) {
           const creator = creatorMap.get(p.id);
-          console.log('[Review Debug]', p.id, 'profile.nickname:', p.nickname, 'creator.display_name:', creator?.display_name);
+          // profiles.nickname 최우선 (사용자가 직접 설정한 닉네임)
+          const nick = p.nickname && !p.nickname.includes('@') ? p.nickname : null;
+          const displayName = creator?.display_name && !creator.display_name.includes('@') ? creator.display_name : null;
           profileMap[p.id] = {
-            nickname: creator?.display_name || p.nickname || '익명',
+            nickname: nick || displayName || p.nickname || '익명',
             avatar_url: creator?.profile_image_url || p.avatar_url,
           };
         }
