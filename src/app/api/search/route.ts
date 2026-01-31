@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        results.contents = (contents || []).map(c => ({
+        results.contents = (contents || []).map((c: any) => ({
           ...c,
           creator: creatorMap[c.creator_id] || null,
           average_rating: c.rating_count > 0 ? Math.round((c.rating_sum / c.rating_count) * 10) / 10 : 0,
