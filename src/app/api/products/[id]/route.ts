@@ -101,10 +101,14 @@ export async function GET(
               oauthAvatar = oauthAvatar.replace('http://', 'https://');
             }
             if (oauthAvatar) {
-              // Always override with OAuth avatar unless creator has custom image
-              if (!creator?.profile_image_url) {
-                if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
-                else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
+              // Always set OAuth avatar on profileInfo
+              if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
+              else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
+
+              // Also get full_name from OAuth metadata for name resolution
+              const oauthName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.user_name;
+              if (oauthName && profileInfo) {
+                profileInfo = { ...profileInfo, nickname: oauthName };
               }
             }
           }
@@ -188,18 +192,41 @@ export async function GET(
       routine_items: content.routine_items,
       allow_preview: content.allow_preview ?? true,
       creator: (() => {
-        // Resolve name: skip email-like nicknames
+        // Resolve name: skip email-like values
+        const displayName = creatorInfo?.display_name;
         const nick = profileInfo?.nickname;
-        const resolvedNick = nick?.includes('@') ? (profileInfo?.username || nick.split('@')[0]) : nick;
-        const name = creatorInfo?.display_name || resolvedNick || profileInfo?.username || '익명';
+        const resolvedDisplayName = displayName && !displayName.includes('@') ? displayName : null;
+        const resolvedNick = nick && !nick.includes('@') ? nick : null;
+        const name = resolvedDisplayName
+          || resolvedNick
+          || profileInfo?.username
+          || (creatorInfo?.display_name?.split('@')[0])
+          || (nick?.split('@')[0])
+          || '익명';
 
-        // Resolve avatar: ensure HTTPS (Kakao uses http://)
-        let avatarUrl = creatorInfo?.profile_image_url || profileInfo?.avatar_url || null;
+        // Resolve avatar: prefer OAuth metadata over creator_settings if creator has default kakao image
+        const isDefaultKakao = (url: string | null | undefined) =>
+          url?.includes('default_profile') || url?.includes('account_images/default');
+
+        let avatarUrl: string | null = null;
+        // 1. creator_settings image (only if not default kakao)
+        if (creatorInfo?.profile_image_url && !isDefaultKakao(creatorInfo.profile_image_url)) {
+          avatarUrl = creatorInfo.profile_image_url;
+        }
+        // 2. OAuth avatar from profileInfo (set by admin getUserById above)
+        if (!avatarUrl && profileInfo?.avatar_url && !isDefaultKakao(profileInfo.avatar_url)) {
+          avatarUrl = profileInfo.avatar_url;
+        }
+        // 3. Any avatar as fallback
+        if (!avatarUrl) {
+          avatarUrl = profileInfo?.avatar_url || creatorInfo?.profile_image_url || null;
+        }
+        // Ensure HTTPS
         if (avatarUrl && avatarUrl.startsWith('http://')) {
           avatarUrl = avatarUrl.replace('http://', 'https://');
         }
 
-        console.log('[Products API] Final creator:', { name, avatar_url: avatarUrl, profileAvatar: profileInfo?.avatar_url, creatorAvatar: creatorInfo?.profile_image_url });
+        console.log('[Products API] Final creator:', { name, avatar_url: avatarUrl });
         return { name, avatar_url: avatarUrl, bio: creatorInfo?.bio || profileInfo?.bio || null };
       })(),
       creator_id: content.creator_id,

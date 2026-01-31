@@ -5,10 +5,12 @@ interface PageProps {
   params: Promise<{ userId: string }>;
 }
 
+const isDefaultKakao = (url: string | null | undefined) =>
+  url?.includes('default_profile') || url?.includes('account_images/default');
+
 export default async function StudyanUserPage({ params }: PageProps) {
   const { userId } = await params;
 
-  // Resolve avatar and nickname server-side using admin client
   let resolvedAvatar: string | null = null;
   let resolvedNickname: string | null = null;
   let resolvedBio: string | null = null;
@@ -23,9 +25,15 @@ export default async function StudyanUserPage({ params }: PageProps) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (creator?.display_name) resolvedNickname = creator.display_name;
+      // Only use display_name if it's not an email
+      if (creator?.display_name && !creator.display_name.includes('@')) {
+        resolvedNickname = creator.display_name;
+      }
       if (creator?.bio) resolvedBio = creator.bio;
-      if (creator?.profile_image_url) resolvedAvatar = creator.profile_image_url;
+      // Only use creator avatar if not default kakao
+      if (creator?.profile_image_url && !isDefaultKakao(creator.profile_image_url)) {
+        resolvedAvatar = creator.profile_image_url;
+      }
 
       // 2. Check profiles
       const { data: profile } = await admin
@@ -36,39 +44,35 @@ export default async function StudyanUserPage({ params }: PageProps) {
 
       if (!resolvedNickname && profile) {
         const nick = profile.nickname;
-        resolvedNickname = nick?.includes('@')
-          ? (profile.username || nick.split('@')[0])
-          : (nick || profile.username || null);
+        resolvedNickname = nick && !nick.includes('@')
+          ? nick
+          : (profile.username || nick?.split('@')[0] || null);
       }
       if (!resolvedBio && profile?.bio) resolvedBio = profile.bio;
 
-      // Only use profile avatar if it's a supabase-uploaded one
-      if (!resolvedAvatar && profile?.avatar_url?.includes('supabase')) {
+      // Only use profile avatar if supabase-uploaded and not default kakao
+      if (!resolvedAvatar && profile?.avatar_url?.includes('supabase') && !isDefaultKakao(profile.avatar_url)) {
         resolvedAvatar = profile.avatar_url;
       }
 
-      // 3. Get real OAuth avatar from auth.users metadata
-      if (!resolvedAvatar) {
-        const { data: { user } } = await admin.auth.admin.getUserById(userId);
-        if (user) {
-          const oauthAvatar = user.user_metadata?.avatar_url ||
-                              user.user_metadata?.picture ||
-                              user.user_metadata?.profile_image;
-          if (oauthAvatar) {
-            resolvedAvatar = oauthAvatar;
-            // Sync to profiles for future use
-            if (profile && profile.avatar_url !== oauthAvatar) {
-              await admin
-                .from('profiles')
-                .update({ avatar_url: oauthAvatar })
-                .eq('id', userId)
-                .catch(() => {});
-            }
-          }
+      // 3. ALWAYS get OAuth avatar from auth.users metadata
+      const { data: { user } } = await admin.auth.admin.getUserById(userId);
+      if (user) {
+        const oauthAvatar = user.user_metadata?.avatar_url ||
+                            user.user_metadata?.picture ||
+                            user.user_metadata?.profile_image;
+        // Use OAuth avatar if we don't have a good one yet, or current one is default kakao
+        if (oauthAvatar && (!resolvedAvatar || isDefaultKakao(resolvedAvatar))) {
+          resolvedAvatar = oauthAvatar;
+        }
+        // Use OAuth name if we don't have a good one yet
+        const oauthName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.user_name;
+        if (oauthName && !resolvedNickname) {
+          resolvedNickname = oauthName;
         }
       }
 
-      // 4. Fallback to whatever profile has
+      // 4. Fallback
       if (!resolvedAvatar && profile?.avatar_url) {
         resolvedAvatar = profile.avatar_url;
       }
@@ -77,7 +81,7 @@ export default async function StudyanUserPage({ params }: PageProps) {
     console.error('Failed to resolve user data server-side:', e);
   }
 
-  // Ensure HTTPS for all avatar URLs (Kakao uses http:// which causes mixed content)
+  // Ensure HTTPS (Kakao uses http://)
   if (resolvedAvatar && resolvedAvatar.startsWith('http://')) {
     resolvedAvatar = resolvedAvatar.replace('http://', 'https://');
   }
