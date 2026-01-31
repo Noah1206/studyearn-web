@@ -162,7 +162,7 @@ const ToastItem = ({ toast, onDismiss }: ToastItemProps) => {
   };
 
   const iconColors = {
-    success: 'text-green-500',
+    success: 'text-orange-500',
     error: 'text-red-500',
     warning: 'text-amber-500',
     info: 'text-blue-500',

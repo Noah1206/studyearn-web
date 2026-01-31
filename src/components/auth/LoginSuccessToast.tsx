@@ -13,7 +13,7 @@ export function LoginSuccessToast() {
   useEffect(() => {
     if (searchParams.get('login') === 'success' && !hasShown.current) {
       hasShown.current = true;
-      toast.success('환영합니다! 로그인되었습니다.');
+      toast.success('스터플에 오신 걸 환영해요!');
 
       // URL에서 login 파라미터 제거
       const params = new URLSearchParams(searchParams.toString());
