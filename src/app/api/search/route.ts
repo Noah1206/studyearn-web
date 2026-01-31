@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         console.error('Content search error:', error);
       } else {
         // Fetch creator info for results
-        const creatorIds = Array.from(new Set((contents || []).map(c => c.creator_id)));
+        const creatorIds = Array.from(new Set((contents || []).map((c: any) => c.creator_id)));
         let creatorMap: Record<string, { display_name: string; profile_image_url: string | null }> = {};
 
         if (creatorIds.length > 0) {
