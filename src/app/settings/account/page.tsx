@@ -172,7 +172,7 @@ export default function AccountSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
@@ -180,7 +180,7 @@ export default function AccountSettingsPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-white"
       initial="initial"
       animate="enter"
       exit="exit"

@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui';
 
 export default function ContentDetailLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-8">

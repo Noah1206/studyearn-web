@@ -92,7 +92,7 @@ export default async function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
       </head>
-      <body className="min-h-screen bg-gray-50 flex flex-col antialiased">
+      <body className="min-h-screen bg-white flex flex-col antialiased">
         <Providers initialSession={session}>
           <HeaderWrapper />
           <Suspense fallback={null}>

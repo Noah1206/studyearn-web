@@ -231,65 +231,7 @@ export default function FollowingPage() {
         .eq('subscriber_id', user.id);
 
       if (followingError) {
-        // Mock data
-        setFollowing([
-          {
-            id: '1',
-            user_id: 'c1',
-            display_name: '수학왕',
-            username: 'mathking',
-            bio: '수능 수학 만점 강사',
-            is_creator: true,
-            subject: '수학',
-            content_count: 45,
-            subscriber_count: 1250,
-            is_notified: true,
-          },
-          {
-            id: '2',
-            user_id: 'c2',
-            display_name: '영어마스터',
-            username: 'englishmaster',
-            bio: '토익 만점, 수능 영어 1등급 달성',
-            is_creator: true,
-            subject: '영어',
-            content_count: 32,
-            subscriber_count: 890,
-            is_notified: false,
-          },
-          {
-            id: '3',
-            user_id: 'c3',
-            display_name: '코딩천재',
-            username: 'codinggenius',
-            bio: '파이썬, 자바스크립트 전문',
-            is_creator: true,
-            subject: '코딩',
-            content_count: 67,
-            subscriber_count: 2340,
-            is_notified: true,
-          },
-        ]);
-
-        setFollowers([
-          {
-            id: 'f1',
-            user_id: 'u1',
-            display_name: '열공학생',
-            username: 'studyhard',
-            bio: '수능 준비 중인 고3입니다',
-            is_creator: false,
-            is_notified: false,
-          },
-          {
-            id: 'f2',
-            user_id: 'u2',
-            display_name: '공부왕',
-            bio: '매일 공부하는 습관!',
-            is_creator: false,
-            is_notified: false,
-          },
-        ]);
+        console.error('Failed to load following:', followingError);
       } else {
         const transformedFollowing = (followingData || []).map((item: any) => ({
           id: item.id,
@@ -384,7 +326,7 @@ export default function FollowingPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-white"
       initial="initial"
       animate="enter"
       exit="exit"

@@ -639,7 +639,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     className={`w-full py-4 px-4 rounded-xl mb-2 flex items-center justify-between transition-all ${
                       paymentMethod === 'card'
                         ? 'bg-orange-50 border-2 border-orange-500'
-                        : 'bg-gray-50 border-2 border-transparent'
+                        : 'bg-white border-2 border-gray-200'
                     }`}
                   >
                     <span className={`font-medium ${paymentMethod === 'card' ? 'text-orange-600' : 'text-gray-700'}`}>
@@ -662,7 +662,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     className={`w-full py-4 px-4 rounded-xl mb-2 flex items-center justify-between transition-all ${
                       paymentMethod === 'kakaopay'
                         ? 'bg-[#FEE500]/20 border-2 border-[#FEE500]'
-                        : 'bg-gray-50 border-2 border-transparent'
+                        : 'bg-white border-2 border-gray-200'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -689,7 +689,7 @@ export default function PurchasePage({ params }: PurchasePageProps) {
                     className={`w-full py-4 px-4 rounded-xl flex items-center justify-between transition-all ${
                       paymentMethod === 'transfer'
                         ? 'bg-orange-50 border-2 border-orange-500'
-                        : 'bg-gray-50 border-2 border-transparent'
+                        : 'bg-white border-2 border-gray-200'
                     }`}
                   >
                     <span className={`font-medium ${paymentMethod === 'transfer' ? 'text-orange-600' : 'text-gray-700'}`}>

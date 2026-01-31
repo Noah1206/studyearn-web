@@ -197,7 +197,7 @@ export default function FAQPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-white"
       initial="initial"
       animate="enter"
       exit="exit"

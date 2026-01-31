@@ -2257,7 +2257,7 @@ export default function StudyRoomPage() {
   if (error || !room) {
     return (
       <motion.div
-        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        className="min-h-screen bg-white flex items-center justify-center"
         initial="initial"
         animate="enter"
         exit="exit"

@@ -185,52 +185,92 @@ export default function CreatorProfilePage() {
         });
       }
 
-      // 크리에이터 통계 가져오기 (임시 Mock 데이터)
+      // 크리에이터 통계 및 콘텐츠를 DB에서 가져오기
+      const [contentsResult, creatorSettingsResult, purchasesResult] = await Promise.all([
+        supabase
+          .from('contents')
+          .select('id, title, thumbnail_url, content_type, is_published, view_count, rating_count, created_at')
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('creator_settings')
+          .select('total_subscribers, pending_revenue, total_revenue')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('content_purchases')
+          .select('amount, creator_revenue, created_at')
+          .eq('seller_id', user.id)
+          .eq('status', 'completed'),
+      ]);
+
+      const contents = contentsResult.data || [];
+      const creatorSettings = creatorSettingsResult.data;
+      const purchases = purchasesResult.data || [];
+
+      // 좋아요 수 가져오기
+      const contentIds = contents.map((c: any) => c.id);
+      let likesMap: Record<string, number> = {};
+      if (contentIds.length > 0) {
+        const { data: likes } = await supabase
+          .from('content_likes')
+          .select('content_id')
+          .in('content_id', contentIds);
+        if (likes) {
+          likes.forEach((l: any) => {
+            likesMap[l.content_id] = (likesMap[l.content_id] || 0) + 1;
+          });
+        }
+      }
+
+      // 수익 per content
+      let earningsMap: Record<string, number> = {};
+      if (contentIds.length > 0) {
+        const { data: contentPurchases } = await supabase
+          .from('content_purchases')
+          .select('content_id, creator_revenue')
+          .in('content_id', contentIds)
+          .eq('status', 'completed');
+        if (contentPurchases) {
+          contentPurchases.forEach((p: any) => {
+            earningsMap[p.content_id] = (earningsMap[p.content_id] || 0) + (p.creator_revenue || 0);
+          });
+        }
+      }
+
+      const totalViews = contents.reduce((sum: number, c: any) => sum + (c.view_count || 0), 0);
+      const totalLikes = Object.values(likesMap).reduce((sum, v) => sum + v, 0);
+      const totalEarnings = creatorSettings?.total_revenue || purchases.reduce((sum: number, p: any) => sum + (p.creator_revenue || 0), 0);
+
+      // 이번 달 수익
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const monthlyEarnings = purchases
+        .filter((p: any) => p.created_at >= monthStart)
+        .reduce((sum: number, p: any) => sum + (p.creator_revenue || 0), 0);
+
       setCreatorStats({
-        totalEarnings: Math.floor(Math.random() * 500000) + 50000,
-        totalViews: Math.floor(Math.random() * 50000) + 1000,
-        totalLikes: Math.floor(Math.random() * 5000) + 100,
-        totalSubscribers: Math.floor(Math.random() * 1000) + 50,
-        monthlyEarnings: Math.floor(Math.random() * 100000) + 10000,
-        totalContents: 3,
+        totalEarnings,
+        totalViews,
+        totalLikes,
+        totalSubscribers: creatorSettings?.total_subscribers || 0,
+        monthlyEarnings,
+        totalContents: contents.length,
       });
 
-      // 업로드한 콘텐츠 가져오기 (임시 Mock 데이터)
-      setUploadedContents([
-        {
-          id: '1',
-          title: '수능 영어 독해 비법 총정리',
-          thumbnail_url: 'https://picsum.photos/seed/upload1/400/300',
-          views: 3240,
-          likes: 456,
-          earnings: 125000,
-          created_at: '2024-12-20',
-          type: 'document',
-          status: 'published',
-        },
-        {
-          id: '2',
-          title: '미적분 개념 완벽 마스터 강의',
-          thumbnail_url: 'https://picsum.photos/seed/upload2/400/300',
-          views: 1850,
-          likes: 234,
-          earnings: 89000,
-          created_at: '2024-12-15',
-          type: 'video',
-          status: 'published',
-        },
-        {
-          id: '3',
-          title: '문법 정리 노트 (작성 중)',
-          thumbnail_url: 'https://picsum.photos/seed/upload3/400/300',
-          views: 0,
-          likes: 0,
-          earnings: 0,
-          created_at: '2024-12-25',
-          type: 'document',
-          status: 'draft',
-        },
-      ]);
+      setUploadedContents(
+        contents.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          thumbnail_url: c.thumbnail_url || undefined,
+          views: c.view_count || 0,
+          likes: likesMap[c.id] || 0,
+          earnings: earningsMap[c.id] || 0,
+          created_at: c.created_at,
+          type: c.content_type === 'video' ? 'video' : c.content_type === 'audio' ? 'audio' : 'document',
+          status: c.is_published ? 'published' : 'draft',
+        }))
+      );
 
       setIsLoading(false);
     };

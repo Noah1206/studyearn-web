@@ -68,8 +68,7 @@ export async function GET(request: Request) {
           if (Object.keys(updateData).length > 0) {
             await supabase.from('profiles')
               .update(updateData)
-              .eq('id', user.id)
-              .catch(() => {});
+              .eq('id', user.id);
           }
         }
       } catch (profileError) {
