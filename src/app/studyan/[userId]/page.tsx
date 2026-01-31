@@ -77,6 +77,11 @@ export default async function StudyanUserPage({ params }: PageProps) {
     console.error('Failed to resolve user data server-side:', e);
   }
 
+  // Ensure HTTPS for all avatar URLs (Kakao uses http:// which causes mixed content)
+  if (resolvedAvatar && resolvedAvatar.startsWith('http://')) {
+    resolvedAvatar = resolvedAvatar.replace('http://', 'https://');
+  }
+
   return (
     <StudyanUserClient
       userId={userId}

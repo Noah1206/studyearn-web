@@ -24,7 +24,11 @@ export async function GET(request: Request) {
         // OAuth 메타데이터에서 사용자 정보 추출
         const metadata = user.user_metadata || {};
         const nickname = metadata.user_name || metadata.name || metadata.full_name || metadata.preferred_username || `user_${user.id.slice(0, 8)}`;
-        const avatarUrl = metadata.avatar_url || metadata.picture || null;
+        let avatarUrl = metadata.avatar_url || metadata.picture || null;
+        // Ensure HTTPS (Kakao uses http://)
+        if (avatarUrl && avatarUrl.startsWith('http://')) {
+          avatarUrl = avatarUrl.replace('http://', 'https://');
+        }
         const email = user.email || metadata.email || null;
 
         if (!existingProfile) {

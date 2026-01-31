@@ -70,9 +70,13 @@ export function SessionProvider({ children, initialSession }: SessionProviderPro
                          user.user_metadata?.user_name ||
                          user.user_metadata?.preferred_username ||
                          user.user_metadata?.nickname;
-    const oauthAvatarUrl = user.user_metadata?.avatar_url ||
+    let oauthAvatarUrl = user.user_metadata?.avatar_url ||
                           user.user_metadata?.picture ||
                           user.user_metadata?.profile_image;
+    // Ensure HTTPS (Kakao uses http://)
+    if (oauthAvatarUrl && oauthAvatarUrl.startsWith('http://')) {
+      oauthAvatarUrl = oauthAvatarUrl.replace('http://', 'https://');
+    }
 
     // 기본 프로필 먼저 설정 (즉시 반영)
     setProfile({
