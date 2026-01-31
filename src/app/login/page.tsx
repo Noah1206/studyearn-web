@@ -232,6 +232,20 @@ function LoginForm() {
                   카카오로 시작하기
                 </button>
 
+                {/* Naver Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = `/api/auth/naver?redirectTo=${redirectTo}`;
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-[#03C75A] hover:bg-[#02b351] text-white font-semibold rounded-xl transition-all"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M16.27 12.85L7.56 0H0v24h7.73V11.15L16.44 24H24V0h-7.73v12.85z" fill="white"/>
+                  </svg>
+                  네이버로 시작하기
+                </button>
+
                 {/* Google Button */}
                 <button
                   type="button"
