@@ -156,6 +156,17 @@ export function AttendanceModal({
                   카카오로 시작하기
                 </button>
                 <button
+                  onClick={() => {
+                    window.location.href = '/api/auth/naver?redirectTo=/';
+                  }}
+                  className="w-full flex items-center justify-center gap-2.5 py-3 bg-[#03C75A] font-semibold text-sm text-white rounded-xl transition-all duration-200 hover:brightness-95 active:scale-[0.98]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M16.27 12.85L7.56 0H0v24h7.73V11.15L16.44 24H24V0h-7.73v12.85z" fill="white"/>
+                  </svg>
+                  네이버로 시작하기
+                </button>
+                <button
                   onClick={handleGoogleLogin}
                   className="w-full flex items-center justify-center gap-2.5 py-3 bg-white border border-gray-200 font-semibold text-sm text-gray-700 rounded-xl transition-all duration-200 hover:border-gray-300 active:scale-[0.98]"
                 >
