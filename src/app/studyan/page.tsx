@@ -413,7 +413,7 @@ export default function StudyanPage() {
         usersMap.set(profile.id, {
           id: profile.id,
           display_name: displayName,
-          avatar_url: avatarUrl,
+          avatar_url: avatarUrl || undefined,
           bio: bio || undefined,
           routines: [],
           isFollowing: followingIds.has(profile.id),
