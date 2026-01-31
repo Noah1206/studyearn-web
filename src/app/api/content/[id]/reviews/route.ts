@@ -51,6 +51,7 @@ export async function GET(
       if (profilesResult.data) {
         for (const p of profilesResult.data) {
           const creator = creatorMap.get(p.id);
+          console.log('[Review Debug]', p.id, 'profile.nickname:', p.nickname, 'creator.display_name:', creator?.display_name);
           profileMap[p.id] = {
             nickname: creator?.display_name || p.nickname || '익명',
             avatar_url: creator?.profile_image_url || p.avatar_url,
@@ -58,24 +59,34 @@ export async function GET(
         }
       }
 
-      // profiles에 avatar_url이 없는 유저는 auth 메타데이터에서 보완
-      for (const uid of userIds) {
-        if (!profileMap[uid]?.avatar_url) {
-          const adminClient = createAdminClient();
-          if (!adminClient) continue;
-          const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(uid);
-          const meta = authUser?.user_metadata;
-          if (meta) {
-            const avatarUrl = meta.avatar_url || meta.picture || null;
-            if (avatarUrl) {
-              if (profileMap[uid]) {
-                profileMap[uid].avatar_url = avatarUrl;
-              } else {
-                profileMap[uid] = { nickname: meta.user_name || meta.name || '익명', avatar_url: avatarUrl };
+      // 닉네임/아바타가 OAuth 실명일 수 있으므로 admin 메타데이터로 보완
+      const adminClient = createAdminClient();
+      if (adminClient) {
+        for (const uid of userIds) {
+          const profile = profileMap[uid];
+          const needsAvatar = !profile?.avatar_url;
+          const needsNickname = !profile || !profile.nickname || profile.nickname === '익명';
+
+          if (needsAvatar || needsNickname) {
+            try {
+              const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(uid);
+              const meta = authUser?.user_metadata;
+              if (meta) {
+                const avatarUrl = meta.avatar_url || meta.picture || null;
+                const metaNickname = meta.preferred_username || meta.user_name || meta.name || meta.full_name || null;
+
+                if (!profileMap[uid]) {
+                  profileMap[uid] = { nickname: metaNickname || '익명', avatar_url: avatarUrl };
+                } else {
+                  if (needsAvatar && avatarUrl) {
+                    profileMap[uid].avatar_url = avatarUrl;
+                  }
+                  if (needsNickname && metaNickname) {
+                    profileMap[uid].nickname = metaNickname;
+                  }
+                }
               }
-              // DB도 업데이트
-              await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', uid).catch(() => {});
-            }
+            } catch {}
           }
         }
       }
