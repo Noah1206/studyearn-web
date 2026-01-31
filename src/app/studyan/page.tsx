@@ -346,8 +346,13 @@ export default function StudyanPage() {
       // Get all profiles first (with follower_count, streak_days, total_study_minutes)
       const profilesPromise = supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, follower_count, streak_days, total_study_minutes')
+        .select('id, nickname, avatar_url, bio, follower_count, streak_days, total_study_minutes')
         .order('created_at', { ascending: false });
+
+      // Get creator settings for profile images and creator status
+      const creatorSettingsPromise = supabase
+        .from('creator_settings')
+        .select('user_id, display_name, profile_image_url, bio');
 
       // Get all public routines only
       const routinesPromise = supabase
@@ -367,26 +372,49 @@ export default function StudyanPage() {
         .order('created_at', { ascending: false });
 
       // 병렬 요청 + 타임아웃
-      const [profilesResult, routinesResult] = await Promise.race([
-        Promise.all([profilesPromise, routinesPromise]),
+      const [profilesResult, creatorSettingsResult, routinesResult] = await Promise.race([
+        Promise.all([profilesPromise, creatorSettingsPromise, routinesPromise]),
         timeoutPromise.then(() => { throw new Error('timeout'); })
-      ]) as [Awaited<typeof profilesPromise>, Awaited<typeof routinesPromise>];
+      ]) as [Awaited<typeof profilesPromise>, Awaited<typeof creatorSettingsPromise>, Awaited<typeof routinesPromise>];
 
       const { data: profilesData, error: profilesError } = profilesResult;
+      const { data: creatorSettingsData, error: creatorSettingsError } = creatorSettingsResult;
       const { data: routinesData, error: routinesError } = routinesResult;
 
       if (profilesError) throw profilesError;
       if (routinesError) throw routinesError;
 
-      // Combine data - all profiles
+      // Build creator settings map
+      const creatorMap = new Map<string, { display_name: string; profile_image_url: string | null; bio: string | null }>();
+      (creatorSettingsData || []).forEach((cs: any) => {
+        creatorMap.set(cs.user_id, cs);
+      });
+
+      // Build set of user IDs that have public routines
+      const usersWithRoutines = new Set<string>();
+      (routinesData || []).forEach((r: any) => usersWithRoutines.add(r.user_id));
+
+      // Combine data - only show users who are creators OR have public routines
       const usersMap = new Map<string, StudyanUser>();
 
-      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; follower_count?: number; streak_days?: number; total_study_minutes?: number }) => {
+      (profilesData || []).forEach((profile: { id: string; nickname?: string; avatar_url?: string; bio?: string; follower_count?: number; streak_days?: number; total_study_minutes?: number }) => {
+        const isCreator = creatorMap.has(profile.id);
+        const hasRoutines = usersWithRoutines.has(profile.id);
+
+        // Skip users who are neither creators nor have public routines
+        if (!isCreator && !hasRoutines) return;
+
+        const creatorInfo = creatorMap.get(profile.id);
+        // Use creator_settings profile_image_url as primary, fallback to profiles.avatar_url
+        const avatarUrl = creatorInfo?.profile_image_url || profile.avatar_url || null;
+        const displayName = creatorInfo?.display_name || profile.nickname;
+        const bio = creatorInfo?.bio || profile.bio;
+
         usersMap.set(profile.id, {
           id: profile.id,
-          display_name: profile.nickname,
-          avatar_url: profile.avatar_url,
-          bio: undefined,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+          bio: bio || undefined,
           routines: [],
           isFollowing: followingIds.has(profile.id),
           follower_count: profile.follower_count || 0,

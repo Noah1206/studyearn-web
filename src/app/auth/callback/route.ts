@@ -59,12 +59,18 @@ export async function GET(request: Request) {
             longest_streak: 0,
             total_study_days: 0,
           }).catch(() => {});
-        } else if (avatarUrl) {
-          // 매 로그인마다 OAuth 프로필 사진을 profiles에 동기화
-          await supabase.from('profiles')
-            .update({ avatar_url: avatarUrl })
-            .eq('id', user.id)
-            .catch(() => {});
+        } else {
+          // 매 로그인마다 OAuth 프로필 사진과 닉네임을 profiles에 동기화
+          const updateData: Record<string, any> = {};
+          if (avatarUrl) updateData.avatar_url = avatarUrl;
+          if (nickname) updateData.nickname = nickname;
+
+          if (Object.keys(updateData).length > 0) {
+            await supabase.from('profiles')
+              .update(updateData)
+              .eq('id', user.id)
+              .catch(() => {});
+          }
         }
       } catch (profileError) {
         // 프로필 처리 실패해도 로그인은 진행
