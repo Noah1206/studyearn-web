@@ -112,7 +112,8 @@ function LoginForm() {
       if (data.session) {
         // 쿠키가 설정될 시간을 주고 전체 페이지 새로고침으로 이동
         await new Promise(resolve => setTimeout(resolve, 100));
-        window.location.href = redirectTo;
+        const separator = redirectTo.includes('?') ? '&' : '?';
+        window.location.href = `${redirectTo}${separator}login=success`;
       } else {
         setError('로그인에 실패했습니다. 다시 시도해주세요.');
       }

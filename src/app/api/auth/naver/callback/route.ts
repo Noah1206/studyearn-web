@@ -173,5 +173,6 @@ export async function GET(request: Request) {
     console.error('Naver profile creation error (non-blocking):', profileError);
   }
 
-  return NextResponse.redirect(`${origin}${redirectTo}`);
+  const separator = redirectTo.includes('?') ? '&' : '?';
+  return NextResponse.redirect(`${origin}${redirectTo}${separator}login=success`);
 }

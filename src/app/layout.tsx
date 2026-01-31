@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { HeaderWrapper, FooterWrapper } from '@/components/layout';
 import { Providers } from '@/components/providers';
 import { createClient } from '@/lib/supabase/server';
+import { LoginSuccessToast } from '@/components/auth/LoginSuccessToast';
 import './globals.css';
 
 // Optimize font loading with next/font
@@ -93,6 +95,9 @@ export default async function RootLayout({
       <body className="min-h-screen bg-gray-50 flex flex-col antialiased">
         <Providers initialSession={session}>
           <HeaderWrapper />
+          <Suspense fallback={null}>
+            <LoginSuccessToast />
+          </Suspense>
           <main className="flex-1">{children}</main>
           <FooterWrapper />
         </Providers>
