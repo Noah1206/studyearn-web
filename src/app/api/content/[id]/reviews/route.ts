@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { notify } from '@/lib/notifications';
 
 /**
  * GET /api/content/[id]/reviews
@@ -195,6 +196,22 @@ export async function POST(
           rating_count: (content.rating_count || 0) + 1,
         })
         .eq('id', id);
+    }
+
+    // Send notification to content creator
+    const { data: contentInfo } = await supabase
+      .from('contents')
+      .select('creator_id, title')
+      .eq('id', id)
+      .single();
+
+    if (contentInfo && contentInfo.creator_id !== user.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', user.id)
+        .single();
+      notify.review(contentInfo.creator_id, profile?.nickname || '누군가', contentInfo.title, rating, id).catch(() => {});
     }
 
     return NextResponse.json({ success: true, reviewId: newComment.id });

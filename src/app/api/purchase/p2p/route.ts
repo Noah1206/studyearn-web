@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateOrderNumber } from '@/lib/utils';
+import { notify } from '@/lib/notifications';
 
 // Platform fee rate (20%)
 const PLATFORM_FEE_RATE = 0.20;
@@ -148,7 +149,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Send notification to creator about new purchase
+    // Send notification to creator about new purchase
+    const { data: buyerProfile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('id', user.id)
+      .single();
+    notify.purchase(content.creator_id, buyerProfile?.nickname || '누군가', content.title, content.price, newPurchase.id).catch(() => {});
 
     return NextResponse.json({
       success: true,

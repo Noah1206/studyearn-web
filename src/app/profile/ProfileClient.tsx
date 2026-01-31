@@ -2645,7 +2645,7 @@ export default function ProfileClient({ prefetchedData }: ProfileClientProps) {
                     계좌를 등록해주세요
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    정산금과 환불금을 안전하게 받을 수 있어요
+                    콘텐츠 구매 시 결제에 사용돼요
                   </p>
                 </Link>
               )}

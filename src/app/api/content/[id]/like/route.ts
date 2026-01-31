@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { notify } from '@/lib/notifications';
 
 export async function POST(
   request: NextRequest,
@@ -56,6 +57,22 @@ export async function POST(
         console.error('Insert error:', insertError);
         return NextResponse.json({ error: '저장 오류' }, { status: 500 });
       }
+      // Send notification to content creator
+      const { data: content } = await admin
+        .from('contents')
+        .select('creator_id, title')
+        .eq('id', contentId)
+        .single();
+
+      if (content && content.creator_id !== user.id) {
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single();
+        notify.like(content.creator_id, profile?.nickname || '누군가', contentId, content.title).catch(() => {});
+      }
+
       return NextResponse.json({ isLiked: true });
     }
   } catch (error) {
