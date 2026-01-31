@@ -60,14 +60,10 @@ export async function GET(request: Request) {
             total_study_days: 0,
           }).catch(() => {});
         } else {
-          // 매 로그인마다 OAuth 프로필 사진과 닉네임을 profiles에 동기화
-          const updateData: Record<string, any> = {};
-          if (avatarUrl) updateData.avatar_url = avatarUrl;
-          if (nickname) updateData.nickname = nickname;
-
-          if (Object.keys(updateData).length > 0) {
+          // 매 로그인마다 OAuth 프로필 사진만 동기화 (닉네임은 유저가 직접 설정한 값 유지)
+          if (avatarUrl) {
             await supabase.from('profiles')
-              .update(updateData)
+              .update({ avatar_url: avatarUrl })
               .eq('id', user.id);
           }
         }
