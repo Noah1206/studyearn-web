@@ -23,7 +23,8 @@ export async function GET(request: Request) {
 
         // OAuth 메타데이터에서 사용자 정보 추출
         const metadata = user.user_metadata || {};
-        const nickname = metadata.user_name || metadata.name || metadata.full_name || metadata.preferred_username || `user_${user.id.slice(0, 8)}`;
+        // 실명 대신 랜덤 닉네임 생성 (유저가 나중에 직접 변경)
+        const nickname = `스터플러_${user.id.slice(0, 6)}`;
         let avatarUrl = metadata.avatar_url || metadata.picture || null;
         // Ensure HTTPS (Kakao uses http://)
         if (avatarUrl && avatarUrl.startsWith('http://')) {
