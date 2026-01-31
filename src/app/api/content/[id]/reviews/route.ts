@@ -36,14 +36,25 @@ export async function GET(
     let profileMap: Record<string, { nickname: string; avatar_url: string | null }> = {};
 
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, nickname, avatar_url')
-        .in('id', userIds);
+      const [profilesResult, creatorResult] = await Promise.all([
+        supabase.from('profiles').select('id, nickname, avatar_url').in('id', userIds),
+        supabase.from('creator_settings').select('user_id, display_name, profile_image_url').in('user_id', userIds),
+      ]);
 
-      if (profiles) {
-        for (const p of profiles) {
-          profileMap[p.id] = { nickname: p.nickname || '익명', avatar_url: p.avatar_url };
+      const creatorMap = new Map<string, { display_name: string; profile_image_url: string | null }>();
+      if (creatorResult.data) {
+        for (const c of creatorResult.data) {
+          creatorMap.set(c.user_id, { display_name: c.display_name, profile_image_url: c.profile_image_url });
+        }
+      }
+
+      if (profilesResult.data) {
+        for (const p of profilesResult.data) {
+          const creator = creatorMap.get(p.id);
+          profileMap[p.id] = {
+            nickname: creator?.display_name || p.nickname || '익명',
+            avatar_url: creator?.profile_image_url || p.avatar_url,
+          };
         }
       }
 
