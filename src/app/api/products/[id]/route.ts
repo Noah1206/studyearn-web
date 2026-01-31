@@ -95,7 +95,10 @@ export async function GET(
           const adminClient = createAdminClient();
           const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(content.creator_id);
           if (authUser) {
-            const oauthAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture;
+            let oauthAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture;
+            if (oauthAvatar && oauthAvatar.startsWith('http://')) {
+              oauthAvatar = oauthAvatar.replace('http://', 'https://');
+            }
             if (oauthAvatar) {
               if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
               else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
@@ -178,11 +181,20 @@ export async function GET(
       routine_days: content.routine_days,
       routine_items: content.routine_items,
       allow_preview: content.allow_preview ?? true,
-      creator: {
-        name: creatorInfo?.display_name || profileInfo?.nickname || profileInfo?.username || '익명',
-        avatar_url: creatorInfo?.profile_image_url || profileInfo?.avatar_url || null,
-        bio: creatorInfo?.bio || profileInfo?.bio || null,
-      },
+      creator: (() => {
+        // Resolve name: skip email-like nicknames
+        const nick = profileInfo?.nickname;
+        const resolvedNick = nick?.includes('@') ? (profileInfo?.username || nick.split('@')[0]) : nick;
+        const name = creatorInfo?.display_name || resolvedNick || profileInfo?.username || '익명';
+
+        // Resolve avatar: ensure HTTPS (Kakao uses http://)
+        let avatarUrl = creatorInfo?.profile_image_url || profileInfo?.avatar_url || null;
+        if (avatarUrl && avatarUrl.startsWith('http://')) {
+          avatarUrl = avatarUrl.replace('http://', 'https://');
+        }
+
+        return { name, avatar_url: avatarUrl, bio: creatorInfo?.bio || profileInfo?.bio || null };
+      })(),
       creator_id: content.creator_id,
       // P2P Payment info (only if creator has set up payment)
       payment_info: creatorInfo?.payment_method ? {

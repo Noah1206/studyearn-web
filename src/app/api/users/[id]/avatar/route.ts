@@ -36,9 +36,14 @@ export async function GET(
     const { data: { user } } = await supabase.auth.admin.getUserById(id);
 
     if (user) {
-      const oauthAvatar = user.user_metadata?.avatar_url ||
+      let oauthAvatar = user.user_metadata?.avatar_url ||
                           user.user_metadata?.picture ||
                           user.user_metadata?.profile_image;
+
+      // Ensure HTTPS (Kakao uses http://)
+      if (oauthAvatar && oauthAvatar.startsWith('http://')) {
+        oauthAvatar = oauthAvatar.replace('http://', 'https://');
+      }
 
       if (oauthAvatar) {
         // Sync to profiles for future use
