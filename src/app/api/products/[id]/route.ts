@@ -104,10 +104,13 @@ export async function GET(
               // Always set OAuth avatar on profileInfo
               if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: oauthAvatar, bio: null };
               else profileInfo = { ...profileInfo, avatar_url: oauthAvatar };
-
-              // Also get full_name from OAuth metadata for name resolution
-              const oauthName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.user_name;
-              if (oauthName && profileInfo) {
+            }
+            // Store OAuth name separately (don't overwrite profileInfo.nickname)
+            const oauthName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.user_name;
+            if (oauthName) {
+              if (!profileInfo) profileInfo = { nickname: null, username: null, avatar_url: null, bio: null };
+              // Only set if profileInfo has no valid nickname
+              if (!profileInfo.nickname || profileInfo.nickname.includes('@')) {
                 profileInfo = { ...profileInfo, nickname: oauthName };
               }
             }
