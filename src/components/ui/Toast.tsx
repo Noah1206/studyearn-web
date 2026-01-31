@@ -170,58 +170,50 @@ const ToastItem = ({ toast, onDismiss }: ToastItemProps) => {
 
   const Icon = icons[toast.type];
 
+  const bgColors = {
+    success: 'bg-gray-900',
+    error: 'bg-red-600',
+    warning: 'bg-amber-600',
+    info: 'bg-gray-900',
+  };
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      initial={{ opacity: 0, y: -20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+      exit={{ opacity: 0, y: -10, scale: 0.9 }}
       transition={{
         type: 'spring',
-        stiffness: 400,
-        damping: 25,
+        stiffness: 500,
+        damping: 30,
       }}
       className={cn(
-        'relative flex items-start gap-3 p-4 rounded-xl border',
-        'bg-white shadow-toss-4',
-        'pointer-events-auto'
+        'relative flex items-center gap-2.5 px-5 py-3 rounded-full',
+        bgColors[toast.type],
+        'shadow-lg pointer-events-auto'
       )}
     >
       {/* Icon */}
-      <div className={cn('flex-shrink-0 mt-0.5', iconColors[toast.type])}>
-        <Icon className="w-5 h-5" />
-      </div>
+      <Icon className="w-4 h-4 text-white flex-shrink-0" />
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{toast.title}</p>
-        {toast.message && (
-          <p className="mt-1 text-sm text-gray-500">{toast.message}</p>
-        )}
-        {toast.action && (
-          <button
-            onClick={() => {
-              toast.action?.onClick();
-              onDismiss();
-            }}
-            className={cn(
-              'mt-2 text-sm font-medium',
-              'text-gray-900 hover:text-gray-700',
-              'transition-colors'
-            )}
-          >
-            {toast.action.label}
-          </button>
-        )}
-      </div>
+      <p className="text-sm font-medium text-white whitespace-nowrap">
+        {toast.title}
+        {toast.message && <span className="text-white/70 ml-1">{toast.message}</span>}
+      </p>
 
-      {/* Close Button */}
-      <button
-        onClick={onDismiss}
-        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
-      >
-        <X className="w-4 h-4" />
-      </button>
+      {toast.action && (
+        <button
+          onClick={() => {
+            toast.action?.onClick();
+            onDismiss();
+          }}
+          className="text-sm font-semibold text-orange-400 hover:text-orange-300 ml-1 whitespace-nowrap"
+        >
+          {toast.action.label}
+        </button>
+      )}
     </motion.div>
   );
 };
