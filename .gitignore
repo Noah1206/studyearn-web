@@ -1,0 +1,16 @@
+node_modules/
+.expo/
+.env
+.env.local
+dist/
+build/
+.DS_Store
+.watchmanconfig
+.next/
+node_modules/
+node_modules/
+.next/
+.env*
+.vercel/
+
+.vercel
