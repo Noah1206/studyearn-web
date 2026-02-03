@@ -73,9 +73,25 @@ export async function GET(request: Request) {
         console.error('Profile creation error (non-blocking):', profileError);
       }
 
+      // 앱 딥링크인 경우 토큰과 함께 리다이렉트
+      if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
+        const session = sessionData.session;
+        if (session) {
+          const separator = redirectTo.includes('?') ? '&' : '?';
+          return NextResponse.redirect(
+            `${redirectTo}${separator}access_token=${session.access_token}&refresh_token=${session.refresh_token}`
+          );
+        }
+      }
+
       const separator = redirectTo.includes('?') ? '&' : '?';
       return NextResponse.redirect(`${origin}${redirectTo}${separator}login=success`);
     }
+  }
+
+  // 앱 딥링크인 경우 에러와 함께 리다이렉트
+  if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
+    return NextResponse.redirect(`${redirectTo}?error=auth_callback_error`);
   }
 
   // Return the user to an error page with instructions
