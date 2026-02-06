@@ -10,7 +10,14 @@ export async function GET(request: Request) {
   }
 
   const state = Buffer.from(JSON.stringify({ redirectTo })).toString('base64url');
-  const callbackUrl = `${new URL(request.url).origin}/api/auth/naver/callback`;
+
+  // Production URL 명시 (네이버 개발자 센터에 등록된 URL과 일치해야 함)
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'https://www.stuple.kr'
+    : new URL(request.url).origin;
+  const callbackUrl = `${baseUrl}/api/auth/naver/callback`;
+
+  console.log('[Naver OAuth] baseUrl:', baseUrl, 'callbackUrl:', callbackUrl);
 
   const naverAuthUrl = new URL('https://nid.naver.com/oauth2.0/authorize');
   naverAuthUrl.searchParams.set('response_type', 'code');
