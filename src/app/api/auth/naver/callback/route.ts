@@ -65,9 +65,8 @@ export async function GET(request: Request) {
   const naverUser = profileData.response;
   const email = naverUser.email;
 
-  if (!email) {
-    return NextResponse.redirect(`${origin}/login?error=naver_no_email`);
-  }
+  // 이메일이 없으면 네이버 ID로 가상 이메일 생성 (카카오와 동일한 방식)
+  const userEmail = email || `naver_${naverUser.id}@naver.local`;
 
   // 3. Supabase에서 사용자 찾기 또는 생성
   const adminClient = createAdminClient();
@@ -75,16 +74,16 @@ export async function GET(request: Request) {
 
   // 이메일로 기존 사용자 검색
   const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-  const existingUser = existingUsers?.users?.find((u: { email?: string }) => u.email === email);
+  const existingUser = existingUsers?.users?.find((u: { email?: string }) => u.email === userEmail);
 
   let userId: string;
 
   if (existingUser) {
     userId = existingUser.id;
   } else {
-    // 새 사용자 생성 (랜덤 비밀번호로)
+    // 새 사용자 생성
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
+      email: userEmail,
       email_confirm: true,
       user_metadata: {
         provider: 'naver',
@@ -106,7 +105,7 @@ export async function GET(request: Request) {
   // generateLink로 magiclink를 생성하고 그 token으로 verifyOtp
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: 'magiclink',
-    email,
+    email: userEmail,
   });
 
   if (linkError || !linkData) {
@@ -148,7 +147,7 @@ export async function GET(request: Request) {
         id: userId,
         nickname,
         avatar_url: avatarUrl,
-        email,
+        email: email || null, // 실제 이메일만 저장 (가상 이메일은 저장하지 않음)
         total_study_minutes: 0,
         streak_days: 0,
         follower_count: 0,

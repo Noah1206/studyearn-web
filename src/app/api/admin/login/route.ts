@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const ADMIN_EMAIL = 'abc@com';
-const ADMIN_PASSWORD = 'pw';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'abc@com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'pw';
 const ADMIN_SESSION_TOKEN = 'studyearn-admin-session-2025';
 
 export async function POST(request: NextRequest) {
