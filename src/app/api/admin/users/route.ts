@@ -22,9 +22,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('profiles')
-      .select('*, creator_settings(id, display_name, total_subscribers)', {
-        count: 'exact',
-      });
+      .select('*', { count: 'exact' });
 
     // Apply search filter on nickname and email
     if (search) {

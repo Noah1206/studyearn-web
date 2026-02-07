@@ -10,12 +10,6 @@ import {
   Users,
 } from 'lucide-react';
 
-interface CreatorSettings {
-  id: string;
-  display_name: string | null;
-  total_subscribers: number;
-}
-
 interface User {
   id: string;
   nickname: string | null;
@@ -24,7 +18,6 @@ interface User {
   is_creator: boolean;
   avatar_url: string | null;
   created_at: string;
-  creator_settings: CreatorSettings[] | null;
 }
 
 interface Pagination {

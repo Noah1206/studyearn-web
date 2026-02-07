@@ -41,50 +41,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch profiles for all creators
-    const userIds = (creators || []).map((c: { user_id: string }) => c.user_id);
-    let profilesMap = new Map();
-
-    if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, nickname, email, avatar_url')
-        .in('id', userIds);
-
-      profilesMap = new Map(
-        (profiles || []).map((p: { id: string; nickname: string; email: string; avatar_url: string }) => [p.id, p])
-      );
-    }
-
-    // Enrich each creator with profile data, content count and active subscription count
-    const enrichedCreators = await Promise.all(
-      (creators || []).map(async (creator: { user_id: string; [key: string]: unknown }) => {
-        const profile = profilesMap.get(creator.user_id);
-
-        // Get content count for this creator
-        const { count: contentCount } = await supabase
-          .from('contents')
-          .select('id', { count: 'exact', head: true })
-          .eq('creator_id', creator.user_id);
-
-        // Get active IAP subscription count for this creator
-        const { count: activeSubscriptionCount } = await supabase
-          .from('iap_subscriptions')
-          .select('id', { count: 'exact', head: true })
-          .eq('creator_id', creator.user_id)
-          .eq('status', 'active');
-
-        return {
-          ...creator,
-          profiles: profile || null,
-          content_count: contentCount || 0,
-          active_subscription_count: activeSubscriptionCount || 0,
-        };
-      })
-    );
-
     return NextResponse.json({
-      creators: enrichedCreators,
+      creators: creators || [],
       pagination: {
         page,
         limit,
