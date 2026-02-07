@@ -16,6 +16,7 @@ import {
   Building2,
   Settings,
   CreditCard,
+  Bell,
 } from 'lucide-react';
 
 interface Payout {
@@ -56,6 +57,8 @@ export default function AdminPayoutsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [newRequestAlert, setNewRequestAlert] = useState(false);
+  const [lastKnownCount, setLastKnownCount] = useState<number | null>(null);
 
   const fetchPayouts = async (page = 1) => {
     setLoading(true);
@@ -78,6 +81,21 @@ export default function AdminPayoutsPage() {
       const data = await response.json();
       setPayouts(data.payouts);
       setPagination(data.pagination);
+
+      // 새 정산 요청 알림 (pending 탭에서만)
+      if (status === 'pending' && lastKnownCount !== null && data.pagination.total > lastKnownCount) {
+        setNewRequestAlert(true);
+        // 브라우저 알림 (권한 있는 경우)
+        if (Notification.permission === 'granted') {
+          new Notification('새 정산 요청', {
+            body: `${data.pagination.total - lastKnownCount}건의 새 정산 요청이 있습니다.`,
+            icon: '/favicon.ico',
+          });
+        }
+      }
+      if (status === 'pending') {
+        setLastKnownCount(data.pagination.total);
+      }
     } catch (err) {
       console.error('Error fetching payouts:', err);
       setError('정산 목록을 불러오는데 실패했습니다.');
@@ -88,7 +106,23 @@ export default function AdminPayoutsPage() {
 
   useEffect(() => {
     fetchPayouts(1);
+    // 브라우저 알림 권한 요청
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }, [status]);
+
+  // 실시간 업데이트: 10초마다 새 정산 요청 확인
+  useEffect(() => {
+    // pending 탭에서만 자동 새로고침
+    if (status !== 'pending') return;
+
+    const interval = setInterval(() => {
+      fetchPayouts(pagination.page);
+    }, 10000); // 10초마다
+
+    return () => clearInterval(interval);
+  }, [status, pagination.page]);
 
   const handleProcess = async (payoutId: string) => {
     if (processingId) return;
@@ -165,7 +199,13 @@ export default function AdminPayoutsPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">정산 관리</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-gray-900">정산 관리</h1>
+                <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  실시간
+                </span>
+              </div>
               <p className="text-sm text-gray-500 mt-1">
                 크리에이터 정산 요청을 처리합니다 (수익의 80% 지급)
               </p>
@@ -191,6 +231,27 @@ export default function AdminPayoutsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* 새 정산 요청 알림 */}
+        {newRequestAlert && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-blue-600" />
+              <span className="text-blue-800 font-medium">
+                새로운 정산 요청이 있습니다!
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setNewRequestAlert(false);
+                fetchPayouts(1);
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+            >
+              확인
+            </button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex items-center justify-between">

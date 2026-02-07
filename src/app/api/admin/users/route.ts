@@ -50,8 +50,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch user_preferences separately for each user
+    const userIds = (users || []).map((u: { id: string }) => u.id);
+    const { data: preferences } = await supabase
+      .from('user_preferences')
+      .select('user_id, notification_settings')
+      .in('user_id', userIds);
+
+    // Map preferences to users
+    const preferencesMap = new Map(
+      (preferences || []).map((p: { user_id: string; notification_settings: unknown }) => [p.user_id, p])
+    );
+
+    const usersWithPreferences = (users || []).map((user: { id: string }) => ({
+      ...user,
+      user_preferences: preferencesMap.has(user.id) ? [preferencesMap.get(user.id)] : null,
+    }));
+
     return NextResponse.json({
-      users: users || [],
+      users: usersWithPreferences,
       pagination: {
         page,
         limit,

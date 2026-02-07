@@ -16,6 +16,22 @@ interface CreatorSettings {
   total_subscribers: number;
 }
 
+interface NotificationSettings {
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  notificationEmail: string;
+  marketingEnabled: boolean;
+  newContentEnabled: boolean;
+  answerEnabled: boolean;
+  dmEnabled: boolean;
+  newSubscriberEnabled: boolean;
+  salesEnabled: boolean;
+}
+
+interface UserPreferences {
+  notification_settings: NotificationSettings | null;
+}
+
 interface User {
   id: string;
   nickname: string | null;
@@ -25,6 +41,7 @@ interface User {
   avatar_url: string | null;
   created_at: string;
   creator_settings: CreatorSettings[] | null;
+  user_preferences: UserPreferences[] | null;
 }
 
 interface Pagination {
@@ -181,6 +198,9 @@ export default function AdminUsersPage() {
                     이메일
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    알림 이메일
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
                     유저타입
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">
@@ -202,6 +222,15 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       {user.email || '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.user_preferences?.[0]?.notification_settings?.emailEnabled ? (
+                        <span className="text-blue-600">
+                          {user.user_preferences[0].notification_settings.notificationEmail || '-'}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {user.user_type === 'runner' && (
