@@ -18,13 +18,10 @@ export async function POST(
     const { id } = await params;
     const supabase = await createClient();
 
-    // Get the payout request with creator info for email
+    // Get the payout request
     const { data: payout, error: payoutError } = await supabase
       .from('payout_requests')
-      .select(`
-        *,
-        creator:profiles!payout_requests_creator_id_fkey(email, nickname)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -34,6 +31,13 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    // Get creator info separately
+    const { data: creator } = await supabase
+      .from('profiles')
+      .select('email, nickname')
+      .eq('id', payout.creator_id)
+      .single();
 
     if (payout.status !== 'pending' && payout.status !== 'processing') {
       return NextResponse.json(
@@ -84,10 +88,10 @@ export async function POST(
     }
 
     // Send payout complete email to creator
-    if (payout.creator?.email) {
+    if (creator?.email) {
       try {
         await sendPayoutCompleteEmail(
-          payout.creator.email,
+          creator.email,
           payout.amount,
           payout.bank_name,
           payout.bank_account

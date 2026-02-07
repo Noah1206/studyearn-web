@@ -21,9 +21,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('contents')
-      .select('*, profiles!contents_creator_id_fkey(nickname, email)', {
-        count: 'exact',
-      });
+      .select('*', { count: 'exact' });
 
     // Apply search filter on title
     if (search) {
@@ -42,8 +40,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch profiles separately
+    const creatorIds = (contents || []).map((c: { creator_id: string }) => c.creator_id);
+    let profilesMap = new Map();
+
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, nickname, email')
+        .in('id', creatorIds);
+
+      if (profiles) {
+        profilesMap = new Map(profiles.map((p: { id: string; nickname: string; email: string }) => [p.id, p]));
+      }
+    }
+
+    // Add profiles to contents
+    const enrichedContents = (contents || []).map((content: { creator_id: string }) => ({
+      ...content,
+      profiles: profilesMap.get(content.creator_id) || null,
+    }));
+
     return NextResponse.json({
-      contents: contents || [],
+      contents: enrichedContents,
       pagination: {
         page,
         limit,

@@ -41,8 +41,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch profiles separately
+    const userIds = (creators || []).map((c: { user_id: string }) => c.user_id);
+    let profilesMap = new Map();
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, nickname, email, avatar_url')
+        .in('id', userIds);
+
+      if (profiles) {
+        profilesMap = new Map(profiles.map((p: { id: string; nickname: string; email: string; avatar_url: string }) => [p.id, p]));
+      }
+    }
+
+    // Add profiles to creators
+    const enrichedCreators = (creators || []).map((creator: { user_id: string }) => ({
+      ...creator,
+      profiles: profilesMap.get(creator.user_id) || null,
+      content_count: 0,
+      active_subscription_count: 0,
+    }));
+
     return NextResponse.json({
-      creators: creators || [],
+      creators: enrichedCreators,
       pagination: {
         page,
         limit,
