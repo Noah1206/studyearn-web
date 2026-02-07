@@ -50,33 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user_preferences separately for each user (if table exists and users found)
-    const userIds = (users || []).map((u: { id: string }) => u.id);
-    let preferencesMap = new Map();
-
-    if (userIds.length > 0) {
-      try {
-        const { data: preferences } = await supabase
-          .from('user_preferences')
-          .select('user_id, notification_settings')
-          .in('user_id', userIds);
-
-        preferencesMap = new Map(
-          (preferences || []).map((p: { user_id: string; notification_settings: unknown }) => [p.user_id, p])
-        );
-      } catch {
-        // user_preferences table might not exist yet, ignore error
-        console.log('user_preferences table not accessible, skipping');
-      }
-    }
-
-    const usersWithPreferences = (users || []).map((user: { id: string }) => ({
-      ...user,
-      user_preferences: preferencesMap.has(user.id) ? [preferencesMap.get(user.id)] : null,
-    }));
-
     return NextResponse.json({
-      users: usersWithPreferences,
+      users: users || [],
       pagination: {
         page,
         limit,

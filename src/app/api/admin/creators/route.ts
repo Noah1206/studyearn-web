@@ -19,13 +19,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // Query creator_settings with joined profile data
+    // Query creator_settings
     let query = supabase
       .from('creator_settings')
-      .select(
-        '*, profiles!creator_settings_user_id_fkey(nickname, email, avatar_url)',
-        { count: 'exact' }
-      );
+      .select('*', { count: 'exact' });
 
     // Apply search filter on display_name
     if (search) {
@@ -44,9 +41,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Enrich each creator with content count and active subscription count
+    // Fetch profiles for all creators
+    const userIds = (creators || []).map((c: { user_id: string }) => c.user_id);
+    let profilesMap = new Map();
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, nickname, email, avatar_url')
+        .in('id', userIds);
+
+      profilesMap = new Map(
+        (profiles || []).map((p: { id: string; nickname: string; email: string; avatar_url: string }) => [p.id, p])
+      );
+    }
+
+    // Enrich each creator with profile data, content count and active subscription count
     const enrichedCreators = await Promise.all(
       (creators || []).map(async (creator: { user_id: string; [key: string]: unknown }) => {
+        const profile = profilesMap.get(creator.user_id);
+
         // Get content count for this creator
         const { count: contentCount } = await supabase
           .from('contents')
@@ -62,6 +76,7 @@ export async function GET(request: NextRequest) {
 
         return {
           ...creator,
+          profiles: profile || null,
           content_count: contentCount || 0,
           active_subscription_count: activeSubscriptionCount || 0,
         };
