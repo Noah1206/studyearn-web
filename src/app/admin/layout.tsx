@@ -7,6 +7,7 @@ import Link from 'next/link';
 const NAV_ITEMS = [
   { href: '/admin', label: '대시보드', icon: '📊' },
   { href: '/admin/users', label: '유저 관리', icon: '👤' },
+  { href: '/admin/creator-applications', label: '스터디언 신청', icon: '✨' },
   { href: '/admin/creators', label: '크리에이터', icon: '🎨' },
   { href: '/admin/content', label: '콘텐츠', icon: '📝' },
   { href: '/admin/transactions', label: '거래 내역', icon: '💳' },
