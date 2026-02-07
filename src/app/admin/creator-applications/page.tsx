@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-interface CreatorApplication {
+interface CreatorApplicationRaw {
   id: string;
   user_id: string;
   categories: string[];
@@ -35,6 +35,9 @@ interface CreatorApplication {
   admin_note: string | null;
   submitted_at: string;
   reviewed_at: string | null;
+}
+
+interface CreatorApplication extends CreatorApplicationRaw {
   user: {
     nickname: string;
     email: string | null;
@@ -110,7 +113,7 @@ export default function AdminCreatorApplicationsPage() {
 
       // 유저 정보 조회
       const enrichedData = await Promise.all(
-        (data || []).map(async (app) => {
+        (data || []).map(async (app: CreatorApplicationRaw) => {
           const { data: profile } = await supabase
             .from('profiles')
             .select('nickname, email, avatar_url')
