@@ -404,19 +404,14 @@ export default function HomePage() {
               배우고 싶었던 모든 것.
             </p>
 
-            {/* Google Play Button */}
+            {/* Google Play Button - Coming Soon */}
             <div className="mt-8 flex justify-center">
-              <a
-                href={process.env.NEXT_PUBLIC_PLAY_STORE_URL || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl transition-colors"
-              >
+              <div className="inline-flex items-center gap-3 bg-gray-400 text-white px-6 py-3 rounded-xl cursor-not-allowed">
                 <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                 </svg>
-                <span className="text-lg font-medium">Google Play</span>
-              </a>
+                <span className="text-lg font-medium">준비중</span>
+              </div>
             </div>
           </div>
 
@@ -838,7 +833,7 @@ export default function HomePage() {
                   <span>평균 평점 4.8</span>
                 </div>
                 <div>|</div>
-                <div>평균 가격 29,900원</div>
+                <div>평균 가격 4,900원</div>
               </div>
             </div>
             <div className="flex justify-center animate-fade-right animate-delay-200">
@@ -942,7 +937,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="text-2xl font-bold text-gray-900">29,900원</div>
+                        <div className="text-2xl font-bold text-gray-900">9,900원</div>
                         <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-full">
                           구매하기
                         </button>
@@ -976,7 +971,7 @@ export default function HomePage() {
                   <span>평균 평점 4.8</span>
                 </div>
                 <div>|</div>
-                <div>평균 가격 24,900원</div>
+                <div>평균 가격 7,900원</div>
               </div>
               </div>
             </div>
@@ -1008,7 +1003,7 @@ export default function HomePage() {
                   <span>평균 평점 4.9</span>
                 </div>
                 <div>|</div>
-                <div>무료~19,900원</div>
+                <div>평균 가격 3,900원</div>
               </div>
             </div>
             <div className="flex justify-center animate-fade-right animate-delay-200">
@@ -1237,21 +1232,16 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <a
-                href={process.env.NEXT_PUBLIC_PLAY_STORE_URL || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl transition-colors"
-              >
+              <div className="inline-flex items-center gap-3 bg-gray-400 text-white px-6 py-3 rounded-xl cursor-not-allowed">
                 <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                 </svg>
-                <span className="text-lg font-medium">Google Play</span>
-              </a>
+                <span className="text-lg font-medium">준비중</span>
+              </div>
             </div>
 
             <p className="text-sm text-gray-400">
-              Android 지원
+              곧 출시 예정
             </p>
           </div>
         </div>
