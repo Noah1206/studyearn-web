@@ -812,7 +812,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Content Type 1 - Notes */}
+          {/* Content Type 1 - 수능 강의 */}
           <div className="border-b border-gray-100 pb-20 mb-20">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="animate-fade-left">
@@ -820,18 +820,17 @@ export default function HomePage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-900 rounded-xl flex items-center justify-center text-white font-bold text-fluid-body">
                     01
                   </div>
-                  <h3 className="text-fluid-subheading font-bold text-gray-900">손글씨 노트</h3>
+                  <h3 className="text-fluid-subheading font-bold text-gray-900">수능 강의 콘텐츠</h3>
                 </div>
               <p className="text-gray-500 text-fluid-body leading-relaxed mb-6">
-                과목별 정리노트, 오답노트, 암기노트 등
-                직접 정리한 노트를 판매하세요.
-                사진만 찍어서 올리면 끝!
+                국어·수학·영어 핵심 강의부터 탐구 과목까지!
+                수능 전문 강사들의 검증된 콘텐츠를 만나보세요.
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수학 오답노트</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">영어 문법정리</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">한국사 암기노트</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">과학 개념정리</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수능 국어 비문학</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수학 킬러문항</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">영어 빈칸추론</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">탐구 기출분석</span>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
@@ -839,7 +838,7 @@ export default function HomePage() {
                   <span>평균 평점 4.8</span>
                 </div>
                 <div>|</div>
-                <div>평균 가격 4,900원</div>
+                <div>평균 가격 29,900원</div>
               </div>
             </div>
             <div className="flex justify-center animate-fade-right animate-delay-200">
@@ -862,14 +861,14 @@ export default function HomePage() {
                       <div className="aspect-[3/4] bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl mb-4 flex items-center justify-center">
                         <div className="text-center">
                           <FileText className="w-16 h-16 text-cta mx-auto mb-2 animate-float-slow" />
-                          <p className="text-sm text-gray-500">노트 미리보기</p>
+                          <p className="text-sm text-gray-500">강의 미리보기</p>
                         </div>
                       </div>
 
-                      <h4 className="text-lg font-bold text-gray-900 mb-2">수학 오답노트 - 미적분</h4>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">수능 수학 공식 암기 PDF</h4>
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-6 h-6 bg-gray-200 rounded-full" />
-                        <span className="text-sm text-gray-600">민지 · 고3</span>
+                        <span className="text-sm text-gray-600">수학천재 이수학</span>
                         <div className="flex items-center gap-1 ml-auto">
                           <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
                           <span className="text-sm text-gray-600">4.9</span>
@@ -877,9 +876,9 @@ export default function HomePage() {
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="text-2xl font-bold text-gray-900">4,900원</div>
+                        <div className="text-2xl font-bold text-cta">무료</div>
                         <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-full">
-                          구매하기
+                          다운로드
                         </button>
                       </div>
                     </div>
@@ -913,10 +912,10 @@ export default function HomePage() {
                         <BookOpen className="w-12 h-12 text-cta" />
                       </div>
 
-                      <h4 className="text-lg font-bold text-gray-900 mb-2">전교 1등의 공부법</h4>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">수능 국어 비문학 독해 비법</h4>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-6 h-6 bg-gray-200 rounded-full" />
-                        <span className="text-sm text-gray-600">준호 · 서울대 재학</span>
+                        <span className="text-sm text-gray-600">국어의신 박쌤</span>
                       </div>
 
                       {/* Table of Contents */}
@@ -925,25 +924,25 @@ export default function HomePage() {
                         <div className="space-y-2 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <div className="w-5 h-5 bg-orange-100 rounded text-cta flex items-center justify-center text-xs font-medium">1</div>
-                            <span>시간 관리의 기본</span>
+                            <span>비문학 구조 파악법</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-5 h-5 bg-orange-100 rounded text-cta flex items-center justify-center text-xs font-medium">2</div>
-                            <span>과목별 공부 순서</span>
+                            <span>3분 안에 읽는 비법</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-5 h-5 bg-orange-100 rounded text-cta flex items-center justify-center text-xs font-medium">3</div>
-                            <span>효율적인 암기법</span>
+                            <span>EBS 연계 지문 공략</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-5 h-5 bg-orange-100 rounded text-cta flex items-center justify-center text-xs font-medium">4</div>
-                            <span>시험 직전 전략</span>
+                            <span>킬러 문항 대비 전략</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="text-2xl font-bold text-gray-900">9,900원</div>
+                        <div className="text-2xl font-bold text-gray-900">29,900원</div>
                         <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-full">
                           구매하기
                         </button>
@@ -966,18 +965,18 @@ export default function HomePage() {
                 실제로 효과 본 방법만 올려주세요!
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">전교1등 공부법</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수능 국어 전략</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">내신 올리는 법</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">집중력 높이기</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">비문학 독해법</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수능 킬러문항</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">영어 1등급 비법</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">탐구 만점 전략</span>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
-                  <span>평균 평점 4.7</span>
+                  <span>평균 평점 4.8</span>
                 </div>
                 <div>|</div>
-                <div>평균 가격 7,900원</div>
+                <div>평균 가격 24,900원</div>
               </div>
               </div>
             </div>
@@ -998,18 +997,18 @@ export default function HomePage() {
                 템플릿 형태로 바로 사용 가능!
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">새벽형 루틴</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">시험기간 플래너</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">방학 계획표</span>
-                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">일일 체크리스트</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수능 D-100 플래너</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">과목별 시간표</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">실전 모의고사 일정</span>
+                <span className="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">수능 당일 체크리스트</span>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
-                  <span>평균 평점 4.6</span>
+                  <span>평균 평점 4.9</span>
                 </div>
                 <div>|</div>
-                <div>평균 가격 3,900원</div>
+                <div>무료~19,900원</div>
               </div>
             </div>
             <div className="flex justify-center animate-fade-right animate-delay-200">
@@ -1028,43 +1027,43 @@ export default function HomePage() {
                     </div>
 
                     <div className="px-4 py-4">
-                      <h4 className="text-lg font-bold text-gray-900 mb-2">재수생 하루 루틴표</h4>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">수능 D-100 학습 플래너</h4>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-6 h-6 bg-gray-200 rounded-full" />
-                        <span className="text-sm text-gray-600">서연 · 재수생</span>
+                        <span className="text-sm text-gray-600">수능멘토 정선생</span>
                       </div>
 
                       {/* Routine Preview */}
                     <div className="bg-orange-50 rounded-xl p-4 mb-4">
-                      <div className="text-sm font-semibold text-gray-900 mb-3">하루 일과</div>
+                      <div className="text-sm font-semibold text-gray-900 mb-3">D-100 학습 로드맵</div>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-3">
-                          <span className="w-14 text-gray-500">06:00</span>
-                          <div className="flex-1 bg-white rounded px-2 py-1.5 text-gray-700">기상 & 운동</div>
+                          <span className="w-14 text-gray-500">D-100</span>
+                          <div className="flex-1 bg-orange-100 rounded px-2 py-1.5 text-cta">개념 완성 기간</div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="w-14 text-gray-500">07:00</span>
-                          <div className="flex-1 bg-white rounded px-2 py-1.5 text-gray-700">아침 식사</div>
+                          <span className="w-14 text-gray-500">D-70</span>
+                          <div className="flex-1 bg-white rounded px-2 py-1.5 text-gray-700">기출 분석 시작</div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="w-14 text-gray-500">08:00</span>
-                          <div className="flex-1 bg-orange-100 rounded px-2 py-1.5 text-cta">국어 공부</div>
+                          <span className="w-14 text-gray-500">D-40</span>
+                          <div className="flex-1 bg-gray-900 rounded px-2 py-1.5 text-white">파이널 모의고사</div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="w-14 text-gray-500">10:00</span>
-                          <div className="flex-1 bg-gray-900 rounded px-2 py-1.5 text-white">수학 공부</div>
+                          <span className="w-14 text-gray-500">D-14</span>
+                          <div className="flex-1 bg-white rounded px-2 py-1.5 text-gray-700">실전 감각 유지</div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="w-14 text-gray-500">12:00</span>
-                          <div className="flex-1 bg-white rounded px-2 py-1.5 text-gray-700">점심 & 휴식</div>
+                          <span className="w-14 text-gray-500">D-Day</span>
+                          <div className="flex-1 bg-orange-100 rounded px-2 py-1.5 text-cta">수능 당일 전략</div>
                         </div>
                       </div>
                     </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="text-2xl font-bold text-gray-900">3,900원</div>
+                        <div className="text-2xl font-bold text-cta">무료</div>
                         <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-full">
-                          구매하기
+                          다운로드
                         </button>
                       </div>
                     </div>
@@ -1191,7 +1190,7 @@ export default function HomePage() {
                       <div className="text-xs text-gray-500 mb-1">제목</div>
                       <input
                         type="text"
-                        placeholder="예: 수학 오답노트"
+                        placeholder="예: 수능 영어 빈칸추론 공략"
                         className="w-full text-sm text-gray-900 outline-none"
                         readOnly
                       />
@@ -1203,7 +1202,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-1">
                         <input
                           type="text"
-                          placeholder="4,900"
+                          placeholder="24,900"
                           className="w-full text-sm text-gray-900 outline-none"
                           readOnly
                         />
