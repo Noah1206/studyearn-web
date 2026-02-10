@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { User } from '@supabase/supabase-js';
 
 // Toss 앱인토스 연결 끊기 콜백
 // 사용자가 Toss 앱에서 연결을 해제하면 이 엔드포인트가 호출됩니다
@@ -99,7 +100,7 @@ async function handleDisconnect(params: { email?: string; tossUserId?: string })
   // 이메일로 사용자 찾기
   if (email) {
     const { data: users } = await adminClient.auth.admin.listUsers();
-    const user = users?.users?.find((u) => u.email === email);
+    const user = users?.users?.find((u: User) => u.email === email);
 
     if (user) {
       // 사용자의 Toss 연동 정보 제거 (user_metadata에서)
@@ -121,7 +122,7 @@ async function handleDisconnect(params: { email?: string; tossUserId?: string })
   if (tossUserId) {
     const { data: users } = await adminClient.auth.admin.listUsers();
     const user = users?.users?.find(
-      (u) => u.user_metadata?.toss_id === tossUserId
+      (u: User) => u.user_metadata?.toss_id === tossUserId
     );
 
     if (user) {
