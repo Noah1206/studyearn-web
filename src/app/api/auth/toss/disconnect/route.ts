@@ -14,18 +14,18 @@ interface TossDisconnectPayload {
   [key: string]: unknown;
 }
 
-// Basic Auth 검증
+// Basic Auth 검증 (선택적)
 function validateBasicAuth(request: NextRequest): boolean {
+  const expectedAuth = process.env.TOSS_DISCONNECT_BASIC_AUTH;
+
+  // Basic Auth가 설정되지 않은 경우 검증 스킵
+  if (!expectedAuth) {
+    return true;
+  }
+
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Basic ')) {
     return false;
-  }
-
-  const expectedAuth = process.env.TOSS_DISCONNECT_BASIC_AUTH;
-  if (!expectedAuth) {
-    // Basic Auth가 설정되지 않은 경우 검증 스킵 (개발 환경)
-    console.warn('TOSS_DISCONNECT_BASIC_AUTH not configured');
-    return true;
   }
 
   const credentials = authHeader.slice(6); // 'Basic ' 제거
