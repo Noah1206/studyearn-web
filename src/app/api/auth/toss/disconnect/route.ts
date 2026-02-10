@@ -46,8 +46,10 @@ export async function GET(request: NextRequest) {
 
   console.log('[Toss Disconnect] GET request:', { email, tossUserId });
 
+  // 테스트 요청인 경우 성공 응답
   if (!email && !tossUserId) {
-    return NextResponse.json({ error: 'Missing user identifier' }, { status: 400 });
+    console.log('[Toss Disconnect] Test request received (no params)');
+    return NextResponse.json({ success: true });
   }
 
   try {
@@ -77,8 +79,10 @@ export async function POST(request: NextRequest) {
 
   const { email, tossUserId, userId } = payload;
 
+  // 테스트 요청 (빈 바디)인 경우 성공 응답
   if (!email && !tossUserId && !userId) {
-    return NextResponse.json({ error: 'Missing user identifier' }, { status: 400 });
+    console.log('[Toss Disconnect] Test request received (empty body)');
+    return NextResponse.json({ success: true });
   }
 
   try {
