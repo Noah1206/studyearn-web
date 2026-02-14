@@ -167,12 +167,34 @@ export async function GET(request: Request) {
 
   if (verifyError) {
     console.error('Kakao verify error:', verifyError);
-    // 앱 딥링크인 경우 에러와 함께 리다이렉트
     if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
       return NextResponse.redirect(`${redirectTo}?error=kakao_verify_error`);
     }
     return NextResponse.redirect(`${origin}/login?error=kakao_verify_error`);
   }
+
+  // 세션 확인 - verifyOtp 결과에서 먼저 확인
+  let session = sessionData?.session;
+
+  // 세션이 없으면 딜레이 후 getSession으로 재확인
+  if (!session) {
+    console.log('Kakao: session not in verifyOtp result, retrying after delay...');
+    await new Promise(r => setTimeout(r, 300));
+
+    const { data: { session: retrySession } } = await supabase.auth.getSession();
+    session = retrySession;
+  }
+
+  // 여전히 세션이 없으면 에러 반환
+  if (!session) {
+    console.error('Kakao: session not created after verifyOtp');
+    if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
+      return NextResponse.redirect(`${redirectTo}?error=session_not_created`);
+    }
+    return NextResponse.redirect(`${origin}/login?error=session_not_created`);
+  }
+
+  console.log('Kakao: session created successfully for user:', userId);
 
   // 5. 프로필 생성/업데이트
   try {
@@ -225,14 +247,10 @@ export async function GET(request: Request) {
 
   // 앱 딥링크인 경우 토큰과 함께 리다이렉트
   if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
-    const session = sessionData?.session;
-    if (session) {
-      const separator = redirectTo.includes('?') ? '&' : '?';
-      return NextResponse.redirect(
-        `${redirectTo}${separator}access_token=${session.access_token}&refresh_token=${session.refresh_token}`
-      );
-    }
-    return NextResponse.redirect(`${redirectTo}?login=success`);
+    const separator = redirectTo.includes('?') ? '&' : '?';
+    return NextResponse.redirect(
+      `${redirectTo}${separator}access_token=${session.access_token}&refresh_token=${session.refresh_token}`
+    );
   }
 
   const separator = redirectTo.includes('?') ? '&' : '?';

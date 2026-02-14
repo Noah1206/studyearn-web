@@ -147,11 +147,30 @@ export async function GET(request: Request) {
 
   if (verifyError) {
     console.error('Google verify error:', verifyError);
-    // 앱 딥링크인 경우 에러와 함께 리다이렉트
     if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
       return NextResponse.redirect(`${redirectTo}?error=google_verify_error`);
     }
     return NextResponse.redirect(`${origin}/login?error=google_verify_error`);
+  }
+
+  // 세션 확인
+  let session = sessionData?.session;
+
+  // 세션이 없으면 딜레이 후 재확인
+  if (!session) {
+    console.log('Google: session not in verifyOtp result, retrying after delay...');
+    await new Promise(r => setTimeout(r, 300));
+
+    const { data: { session: retrySession } } = await supabase.auth.getSession();
+    session = retrySession;
+  }
+
+  if (!session) {
+    console.error('Google: session not created');
+    if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
+      return NextResponse.redirect(`${redirectTo}?error=session_not_created`);
+    }
+    return NextResponse.redirect(`${origin}/login?error=session_not_created`);
   }
 
   // 5. 프로필 생성/업데이트
@@ -201,14 +220,10 @@ export async function GET(request: Request) {
 
   // 앱 딥링크인 경우 토큰과 함께 리다이렉트
   if (redirectTo.startsWith('exp://') || redirectTo.startsWith('studyearn://')) {
-    const session = sessionData?.session;
-    if (session) {
-      const separator = redirectTo.includes('?') ? '&' : '?';
-      return NextResponse.redirect(
-        `${redirectTo}${separator}access_token=${session.access_token}&refresh_token=${session.refresh_token}`
-      );
-    }
-    return NextResponse.redirect(`${redirectTo}?login=success`);
+    const separator = redirectTo.includes('?') ? '&' : '?';
+    return NextResponse.redirect(
+      `${redirectTo}${separator}access_token=${session.access_token}&refresh_token=${session.refresh_token}`
+    );
   }
 
   const separator = redirectTo.includes('?') ? '&' : '?';
